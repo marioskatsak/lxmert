@@ -19,8 +19,8 @@ TINY_IMG_NUM = 512
 FAST_IMG_NUM = 5000
 
 # The path to data and image features.
-VQA_DATA_ROOT = 'data/vqa/'
-MSCOCO_IMGFEAT_ROOT = 'data/mscoco_imgfeat/'
+VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
+MSCOCO_IMGFEAT_ROOT = '/scratch/mmk11/data/mscoco_imgfeat/'
 SPLIT2NAME = {
     'train': 'train2014',
     'valid': 'val2014',
@@ -184,5 +184,3 @@ class VQAEvaluator:
                     'answer': ans
                 })
             json.dump(result, f, indent=4, sort_keys=True)
-
-

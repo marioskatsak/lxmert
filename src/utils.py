@@ -4,10 +4,12 @@
 import sys
 import csv
 import base64
-import time
+import time, ast
+
+
 
 import numpy as np
-
+from tqdm import tqdm
 csv.field_size_limit(sys.maxsize)
 FIELDNAMES = ["img_id", "img_h", "img_w", "objects_id", "objects_conf",
               "attrs_id", "attrs_conf", "num_boxes", "boxes", "features"]
@@ -54,7 +56,7 @@ def load_obj_tsv(fname, topk=None):
     elapsed_time = time.time() - start_time
     print("Loaded %d images in file %s in %d seconds." % (len(data), fname, elapsed_time))
     return data
-    
+
 def gen_chunks(reader, chunksize=100):
     """
     Chunk generator. Take a CSV `reader` and yield

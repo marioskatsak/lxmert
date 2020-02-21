@@ -20,7 +20,7 @@ FAST_IMG_NUM = 5000
 
 # The path to data and image features.
 VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
-IMGFEAT_ROOT = '/scratch/mmk11/data/ROSMI/'
+IMGFEAT_ROOT = '/scratch/mmk11/data/rosmi/'
 SPLIT2NAME = {
     'train': 'train',
     'valid': 'val',

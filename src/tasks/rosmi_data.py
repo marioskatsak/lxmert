@@ -10,7 +10,7 @@ import torch
 from torch.utils.data import Dataset
 
 from param import args
-from utils import load_obj_tsv
+from utils import load_det_obj_tsv
 
 # Load part of the dataset for fast checking.
 # Notice that here is the number of images instead of the number of data,
@@ -20,7 +20,7 @@ FAST_IMG_NUM = 5000
 
 # The path to data and image features.
 VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
-IMGFEAT_ROOT = '/scratch/mmk11/data/ROSMI_imgfeat/'
+IMGFEAT_ROOT = '/scratch/mmk11/data/ROSMI/'
 SPLIT2NAME = {
     'train': 'train2014',
     'valid': 'val2014',
@@ -28,7 +28,13 @@ SPLIT2NAME = {
     'nominival': 'val2014',
     'test': 'test2015',
 }
-
+# SPLIT2NAME = {
+#     'train': 'train2014',
+#     'valid': 'val2014',
+#     'minival': 'val2014',
+#     'nominival': 'val2014',
+#     'test': 'test2015',
+# }
 
 class ROSMIDataset:
     """
@@ -132,7 +138,7 @@ class ROSMITorchDataset(Dataset):
             # Minival is 5K images in MS COCO, which is used in evaluating VQA/LXMERT-pre-training.
             # It is saved as the top 5K features in val2014_***.tsv
             load_topk = 5000 if (split == 'minival' and topk is None) else topk
-            img_data.extend(load_obj_tsv(
+            img_data.extend(load_det_obj_tsv(
                 os.path.join(IMGFEAT_ROOT, '%s_obj36.tsv' % (SPLIT2NAME[split])),
                 topk=load_topk))
 

@@ -54,6 +54,19 @@ def load_obj_tsv(fname, topk=None):
     elapsed_time = time.time() - start_time
     print("Loaded %d images in file %s in %d seconds." % (len(data), fname, elapsed_time))
     return data
+    
+def gen_chunks(reader, chunksize=100):
+    """
+    Chunk generator. Take a CSV `reader` and yield
+    `chunksize` sized slices.
+    """
+    chunk = []
+    for index, line in enumerate(tqdm(reader)):
+        if (index % chunksize == 0 and index > 0):
+            yield chunk
+            del chunk[:]
+        chunk.append(line)
+    yield chunk
 
 def load_det_obj_tsv(fname, topk=None):
     """Load object features from tsv file.
@@ -67,18 +80,31 @@ def load_det_obj_tsv(fname, topk=None):
     data = []
     start_time = time.time()
     print("Start to load Faster-RCNN detected objects from %s" % fname)
-    with open(fname) as f:
+    with open(fname, 'r') as f:
         reader = csv.DictReader(f, FIELDITEMS, delimiter="\t")
-        for i, item in enumerate(reader):
+        for it in gen_chunks(reader,  chunksize=1000):
+            # print(len(item[0]))
+            # input(len(item))
+            for i, item in enumerate(it):
+                for key in ['img_h', 'img_w', 'num_boxes']:
+                    item[key] = int(item[key])
 
-            for key in ['img_h', 'img_w', 'num_boxes', "num_boxes", "boxes",
-                          "features","names"]:
-                item[key] = item[key]
+                boxes = item['num_boxes']
+                decode_config = [
+                    ('boxes', (boxes, 4), np.float64),
+                    ('features', (boxes, -1), np.float64),
+                    ('names', (boxes, -1), np.dtype('<U100'))
+                ]
+                for key, shape, dtype in decode_config:
+                    # print(key)
+                    # print(item[key])
+                    item[key] = np.frombuffer(base64.b64decode(ast.literal_eval(item[key])), dtype=dtype)
+                    item[key] = item[key].reshape(shape)
+                    item[key].setflags(write=False)
 
-
-            data.append(item)
-            if topk is not None and len(data) == topk:
-                break
+                data.append(item)
+                if topk is not None and len(data) == topk:
+                    break
     elapsed_time = time.time() - start_time
     print("Loaded %d images in file %s in %d seconds." % (len(data), fname, elapsed_time))
     return data

@@ -22,11 +22,9 @@ FAST_IMG_NUM = 5000
 VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
 IMGFEAT_ROOT = '/scratch/mmk11/data/ROSMI/'
 SPLIT2NAME = {
-    'train': 'train2014',
-    'valid': 'val2014',
-    'minival': 'val2014',
-    'nominival': 'val2014',
-    'test': 'test2015',
+    'train': 'train',
+    'valid': 'val',
+    'test': 'test',
 }
 # SPLIT2NAME = {
 #     'train': 'train2014',

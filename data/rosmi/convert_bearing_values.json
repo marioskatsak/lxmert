@@ -1,0 +1,12 @@
+{
+    "-1": "None",
+    "0": "North",
+    "180": "South",
+    "270": "West",
+    "90": "East",
+    "315": "North West",
+    "45": "North East",
+    "225": "South West",
+    "135":"South East",
+    "null":"Not sure"
+}

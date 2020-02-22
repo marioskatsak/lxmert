@@ -146,8 +146,8 @@ class ROSMI:
                 logit = self.model(feats.float(), boxes.float(), sent)
                 score, label = logit.max(1)
                 for qid, l in zip(ques_id, label.cpu().numpy()):
-                    ans = dset.label2ans[l]
-                    sentid2ans[qid.item()] = ans
+                    # ans = dset.label2ans[l]
+                    sentid2ans[qid.item()] = l
         if dump is not None:
             evaluator.dump_result(sentid2ans, dump)
         return sentid2ans

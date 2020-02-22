@@ -126,13 +126,13 @@ def calc_iou_individual(pred_box, gt_box):
     """
     x1_t, y1_t, x2_t, y2_t = gt_box
     x1_p, y1_p, x2_p, y2_p = pred_box
-
-    if (x1_p > x2_p) or (y1_p > y2_p):
-        raise AssertionError(
-            "Prediction box is malformed? pred box: {}".format(pred_box))
-    if (x1_t > x2_t) or (y1_t > y2_t):
-        raise AssertionError(
-            "Ground Truth box is malformed? true box: {}".format(gt_box))
+    # 
+    # if (x1_p > x2_p) or (y1_p > y2_p):
+    #     raise AssertionError(
+    #         "Prediction box is malformed? pred box: {}".format(pred_box))
+    # if (x1_t > x2_t) or (y1_t > y2_t):
+    #     raise AssertionError(
+    #         "Ground Truth box is malformed? true box: {}".format(gt_box))
 
     if (x2_t < x1_p or x2_p < x1_t or y2_t < y1_p or y2_p < y1_t):
         return 0.0

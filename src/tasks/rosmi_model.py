@@ -27,7 +27,7 @@ class ROSMIModel(nn.Module):
         self.logit_fc = nn.Sequential(
             nn.Linear(hid_dim, hid_dim * 2),
             # GeLU(),
-            BertLayerNorm(hid_dim * 2, eps=1e-12),
+            # BertLayerNorm(hid_dim * 2, eps=1e-12),
             nn.Linear(hid_dim * 2, 4)
         )
         self.logit_fc.apply(self.lxrt_encoder.model.init_bert_weights)

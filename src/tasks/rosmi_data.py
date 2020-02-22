@@ -162,6 +162,7 @@ class ROSMITorchDataset(Dataset):
         img_id = datum['img_id']
         sent_id = datum['sentid']
         sent = datum['sentence']['tokens']
+        target = datum['gold_pixels']
 
         # Get image info
         img_info = self.imgid2img[img_id]
@@ -190,7 +191,7 @@ class ROSMITorchDataset(Dataset):
                 else:
                     bearing[self.raw_dataset.bearing2label[ans]] = 1
 
-        return sent_id, feats, boxes, sent, bearing
+        return sent_id, feats, boxes, sent, target#bearing
             # else:
             #     return ques_id, feats, boxes, ques
 

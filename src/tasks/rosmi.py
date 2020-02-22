@@ -105,7 +105,7 @@ class ROSMI:
 
                 label = logit
                 # score, label = logit.max(1)
-                for sid, l in zip(sent_id, label):
+                for sid, l in zip(sent_id, label.detach().numpy()):
                     # ans = dset.label2ans[l]
                     sentid2ans[sid.item()] = l
 

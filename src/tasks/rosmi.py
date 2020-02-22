@@ -105,9 +105,9 @@ class ROSMI:
 
                 label = logit
                 # score, label = logit.max(1)
-                for sid, l in zip(sent_id, label.cpu().numpy()):
-                    ans = dset.label2ans[l]
-                    sentid2ans[sid.item()] = ans
+                for sid, l in zip(sent_id, label):
+                    # ans = dset.label2ans[l]
+                    sentid2ans[sid.item()] = l
 
             log_str = "\nEpoch %d: Train %0.2f\n" % (epoch, evaluator.evaluate(sentid2ans) * 100.)
 

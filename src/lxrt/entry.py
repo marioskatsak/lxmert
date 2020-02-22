@@ -39,11 +39,10 @@ def convert_sents_to_features(sents, max_seq_length, tokenizer):
     features = []
     for (i, sent) in enumerate(sents):
         tokens_a = tokenizer.tokenize(sent.strip())
-
         # Account for [CLS] and [SEP] with "- 2"
         if len(tokens_a) > max_seq_length - 2:
             tokens_a = tokens_a[:(max_seq_length - 2)]
-        
+
         # Keep segment id which allows loading BERT-weights.
         tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
         segment_ids = [0] * len(tokens)
@@ -150,7 +149,3 @@ class LXRTEncoder(nn.Module):
 
         # Load weights to model
         self.model.load_state_dict(state_dict, strict=False)
-
-
-
-

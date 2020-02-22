@@ -21,6 +21,7 @@ class ROSMIModel(nn.Module):
             max_seq_length=MAX_VQA_LENGTH
         )
         hid_dim = self.lxrt_encoder.dim
+        print(hid_dim)
 
         # VQA Answer heads
         self.logit_fc = nn.Sequential(

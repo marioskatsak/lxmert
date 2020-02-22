@@ -8,10 +8,10 @@ cp -r src/* $output/src/
 cp $0 $output/run.bash
 
 # See Readme.md for option details.
-CUDA_VISIBLE_DEVICES=$1 PYTHONPATH=$PYTHONPATH:./src \
+CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
     --train train --valid valid  \
     --llayers 9 --xlayers 5 --rlayers 5 \
-    --loadLXMERT /scratch/mmk11/snap/pretrained/model \
-    --batchSize 32 --optim bert --lr 5e-5 --epochs 4 \
+    --fromScratch \
+    --batchSize 1 --optim bert --lr 5e-5 --epochs 4 \
     --tqdm --output $output ${@:3}

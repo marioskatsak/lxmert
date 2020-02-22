@@ -10,7 +10,7 @@ import torch
 from torch.utils.data import Dataset
 
 from param import args
-from utils import load_det_obj_tsv
+from utils import load_det_obj_tsv, calc_iou_individual
 
 # Load part of the dataset for fast checking.
 # Notice that here is the number of images instead of the number of data,
@@ -19,8 +19,8 @@ TINY_IMG_NUM = 512
 FAST_IMG_NUM = 5000
 
 # The path to data and image features.
-VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
-IMGFEAT_ROOT = '/scratch/mmk11/data/rosmi/'
+# VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
+# IMGFEAT_ROOT = '/scratch/mmk11/data/rosmi/'
 SPLIT2NAME = {
     'train': 'train',
     'valid': 'val',
@@ -89,7 +89,7 @@ class ROSMIDataset:
         # Loading datasets
         self.data = []
         for split in self.splits:
-            self.data.extend(json.load(open("/scratch/mmk11/data/rosmi/%s.json" % SPLIT2NAME[split])))
+            self.data.extend(json.load(open(os.path.join(args.data_path,"%s.json" % SPLIT2NAME[split]))))
         print("Load %d data from split(s) %s." % (len(self.data), self.name))
 
         # Convert list to dict (for evaluation)
@@ -99,9 +99,9 @@ class ROSMIDataset:
         }
 
         # Answers
-        self.bearing2label = json.load(open("/scratch/mmk11/data/rosmi/trainval_bearing2label.json"))
-        self.label2bearing = json.load(open("/scratch/mmk11/data/rosmi/trainval_label2bearing.json"))
-        self.convert2bearing = json.load(open("/scratch/mmk11/data/rosmi/convert_bearing_values.json"))
+        self.bearing2label = json.load(open(os.path.join(args.data_path,"trainval_bearing2label.json")))
+        self.label2bearing = json.load(open(os.path.join(args.data_path,"trainval_label2bearing.json")))
+        self.convert2bearing = json.load(open(os.path.join(args.data_path,"convert_bearing_values.json")))
         assert len(self.bearing2label) == len(self.label2bearing)
 
     @property
@@ -130,6 +130,7 @@ class ROSMITorchDataset(Dataset):
         else:
             topk = None
 
+        IMGFEAT_ROOT = args.data_path
         # Loading detection features to img_data
         img_data = []
         for split in dataset.splits:
@@ -161,14 +162,15 @@ class ROSMITorchDataset(Dataset):
 
         img_id = datum['img_id']
         sent_id = datum['sentid']
-        sent = datum['sentence']['tokens']
-        target = datum['gold_pixels']
+        sent = datum['sentence']['raw']
+        target = torch.tensor(datum['gold_pixels'])
 
         # Get image info
         img_info = self.imgid2img[img_id]
         obj_num = img_info['num_boxes']
         feats = img_info['features'].copy()
         boxes = img_info['boxes'].copy()
+
         assert obj_num == len(boxes) == len(feats)
 
         # Normalize the boxes (to 0 ~ 1)

@@ -38,7 +38,7 @@ class ROSMI:
         )
         if args.valid != "":
             self.valid_tuple = get_data_tuple(
-                args.valid, bs=1024,
+                args.valid, bs=args.batch_size,
                 shuffle=False, drop_last=False
             )
         else:
@@ -60,7 +60,7 @@ class ROSMI:
             self.model.lxrt_encoder.multi_gpu()
 
         # Loss and Optimizer
-        self.bce_loss = nn.BCEWithLogitsLoss()
+        # self.bce_loss = nn.BCEWithLogitsLoss()
         self.mse_loss = nn.MSELoss()
 
         if 'bert' in args.optim:
@@ -92,7 +92,9 @@ class ROSMI:
                 self.optim.zero_grad()
 
                 feats, boxes, target = feats.cuda(), boxes.cuda(), target.cuda()
-                logit = self.model(feats, boxes, sent)
+
+                logit = self.model(feats.float(), boxes.float(), sent)
+
                 assert logit.dim() == target.dim() == 2
                 loss = self.mse_loss(logit, target)
                 loss = loss * logit.size(1)
@@ -101,7 +103,8 @@ class ROSMI:
                 nn.utils.clip_grad_norm_(self.model.parameters(), 5.)
                 self.optim.step()
 
-                score, label = logit.max(1)
+                label = logit
+                # score, label = logit.max(1)
                 for sid, l in zip(sent_id, label.cpu().numpy()):
                     ans = dset.label2ans[l]
                     sentid2ans[sid.item()] = ans
@@ -158,11 +161,13 @@ class ROSMI:
     def oracle_score(data_tuple):
         dset, loader, evaluator = data_tuple
         sentid2ans = {}
+
         for i, (ques_id, feats, boxes, sent, target) in enumerate(loader):
-            _, label = target.max(1)
+            # input(target)
+            label = target
             for qid, l in zip(ques_id, label.cpu().numpy()):
-                ans = dset.label2ans[l]
-                sentid2ans[qid.item()] = ans
+                # ans = dset.label2ans[l]
+                sentid2ans[qid.item()] = l
         return evaluator.evaluate(sentid2ans)
 
     def save(self, name):

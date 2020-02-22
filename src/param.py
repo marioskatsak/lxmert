@@ -48,6 +48,7 @@ def parse_args():
 
     # Debugging
     parser.add_argument('--output', type=str, default='snap/test')
+    parser.add_argument("--dataPath", dest='data_path', default='data/rosmi', type=str)
     parser.add_argument("--fast", action='store_const', default=False, const=True)
     parser.add_argument("--tiny", action='store_const', default=False, const=True)
     parser.add_argument("--tqdm", action='store_const', default=False, const=True)

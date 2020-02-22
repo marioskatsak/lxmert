@@ -161,7 +161,7 @@ class ROSMITorchDataset(Dataset):
 
         img_id = datum['img_id']
         sent_id = datum['sentid']
-        sent = datum['sent']
+        sent = datum['sentence']['tokens']
 
         # Get image info
         img_info = self.imgid2img[img_id]

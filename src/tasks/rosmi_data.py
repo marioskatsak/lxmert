@@ -206,6 +206,7 @@ class ROSMIEvaluator:
         score = 0.
         for sentid, pred_box in sentid2ans.items():
             datum = self.dataset.id2datum[sentid]
+            print(pred_box,datum['gold_pixels'])
             iou = calc_iou_individual(pred_box, datum['gold_pixels'])
             if iou > 0.5:
             # if ans in label:

@@ -144,8 +144,8 @@ class ROSMI:
             with torch.no_grad():
                 feats, boxes = feats.cuda(), boxes.cuda()
                 logit = self.model(feats.float(), boxes.float(), sent)
-                score, label = logit.max(1)
-                for qid, l in zip(ques_id, label.cpu().numpy()):
+                label = logit
+                for qid, l in zip(ques_id, label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
                     sentid2ans[qid.item()] = l
         if dump is not None:

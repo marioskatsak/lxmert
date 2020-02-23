@@ -496,7 +496,7 @@ class VisualFeatEncoder(nn.Module):
         pos_dim = VISUAL_CONFIG.visual_pos_dim
 
         # Object feature encoding
-        self.visn_fc = nn.Linear(feat_dim, config.hidden_size)
+        self.visn_fc2 = nn.Linear(feat_dim, config.hidden_size)
         self.visn_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
 
         # Box position encoding
@@ -508,7 +508,7 @@ class VisualFeatEncoder(nn.Module):
     def forward(self, visn_input):
         feats, boxes = visn_input
 
-        x = self.visn_fc(feats)
+        x = self.visn_fc2(feats)
         x = self.visn_layer_norm(x)
         y = self.box_fc(boxes)
         y = self.box_layer_norm(y)

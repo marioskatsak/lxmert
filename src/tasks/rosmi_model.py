@@ -23,7 +23,7 @@ class ROSMIModel(nn.Module):
         hid_dim = self.lxrt_encoder.dim
         print(hid_dim)
 
-        # VQA Answer heads
+        # ROSMI Pred heads
         self.logit_fc = nn.Sequential(
             nn.Linear(hid_dim, hid_dim * 2),
             # GeLU(),

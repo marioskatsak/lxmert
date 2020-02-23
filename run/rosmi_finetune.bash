@@ -13,7 +13,7 @@ CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
     --train train --valid valid  \
     --llayers 9 --xlayers 5 --rlayers 5 \
-    --fromScratch \
+    --loadLXMERT snap/pretrained/model \
     --dataPath /scratch/mmk11/data/rosmi/ \
     --batchSize 1 --optim bert --lr 5e-5 --epochs 4 \
     --tqdm --output $output ${@:3}

@@ -191,7 +191,14 @@ class ROSMITorchDataset(Dataset):
         feat_mask = 0
 
 
-
+        # Normalize the boxes (to 0 ~ 1)
+        img_h, img_w = img_info['img_h'], img_info['img_w']
+        boxes = boxes.copy()
+        boxes[:, (0, 2)] /= img_w
+        boxes[:, (1, 3)] /= img_h
+        np.testing.assert_array_less(boxes, 1+1e-5)
+        np.testing.assert_array_less(-boxes, 0+1e-5)
+        
         if self.named_entities:
 
 
@@ -264,13 +271,7 @@ class ROSMITorchDataset(Dataset):
         # input(names_mask.shape)
 
 
-        # Normalize the boxes (to 0 ~ 1)
-        img_h, img_w = img_info['img_h'], img_info['img_w']
-        boxes = boxes.copy()
-        boxes[:, (0, 2)] /= img_w
-        boxes[:, (1, 3)] /= img_h
-        np.testing.assert_array_less(boxes, 1+1e-5)
-        np.testing.assert_array_less(-boxes, 0+1e-5)
+
 
         return sent_id, feats, feat_mask, boxes, _names, sent, target#bearing
             # else:

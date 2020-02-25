@@ -151,6 +151,7 @@ class VisualConfig(object):
         # self.visual_feat_dim = 2048
         self.visual_feat_dim = 1024
         self.visual_pos_dim = 4
+        self.visual_name_dim = 300
 
         self.obj_id_num = 1600
         self.attr_id_num = 400
@@ -277,7 +278,7 @@ class BertEmbeddings(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, input_ids, token_type_ids=None):
-        seq_length = input_ids.size(1)
+        seq_length = input_ids.size(-1)
         position_ids = torch.arange(seq_length, dtype=torch.long, device=input_ids.device)
         position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
         if token_type_ids is None:
@@ -314,8 +315,12 @@ class BertAttention(nn.Module):
         self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
 
     def transpose_for_scores(self, x):
+        # print(x.shape)
+        # print(self.num_attention_heads, self.attention_head_size)
         new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+        # print(new_x_shape)
         x = x.view(*new_x_shape)
+        # input(x.shape)
         return x.permute(0, 2, 1, 3)
 
     def forward(self, hidden_states, context, attention_mask=None):
@@ -330,6 +335,9 @@ class BertAttention(nn.Module):
         # Take the dot product between "query" and "key" to get the raw attention scores.
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
         attention_scores = attention_scores / math.sqrt(self.attention_head_size)
+
+        # print(attention_scores.shape)
+        # print(attention_mask.shape)
         # Apply the attention mask is (precomputed for all layers in BertModel forward() function)
         if attention_mask is not None:
             attention_scores = attention_scores + attention_mask
@@ -494,6 +502,7 @@ class VisualFeatEncoder(nn.Module):
         super().__init__()
         feat_dim = VISUAL_CONFIG.visual_feat_dim
         pos_dim = VISUAL_CONFIG.visual_pos_dim
+        names_dim = VISUAL_CONFIG.visual_name_dim
 
         # Object feature encoding
         self.visn_fc2 = nn.Linear(feat_dim, config.hidden_size)
@@ -503,16 +512,32 @@ class VisualFeatEncoder(nn.Module):
         self.box_fc = nn.Linear(pos_dim, config.hidden_size)
         self.box_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
 
+        # # Named Entities encoding
+        # self.names_fc = nn.Linear(config.hidden_size, config.hidden_size)
+        # self.names_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
+
+
+
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
-    def forward(self, visn_input):
-        feats, boxes = visn_input
+    def forward(self, visn_input, names_input = None):
+        feats, boxes, _ = visn_input
 
         x = self.visn_fc2(feats)
         x = self.visn_layer_norm(x)
         y = self.box_fc(boxes)
         y = self.box_layer_norm(y)
-        output = (x + y) / 2
+        if names_input is not None:
+            # z = self.names_fc(names_input)
+            # z = self.names_layer_norm(z)
+            # print(x.shape)
+            # print(y.shape)
+            # input(names_input.shape)
+            z = names_input
+
+            output = (x + y + z) / 3
+        else:
+            output = (x + y) / 2
 
         output = self.dropout(output)
         return output
@@ -545,11 +570,11 @@ class LXRTEncoder(nn.Module):
         )
 
     def forward(self, lang_feats, lang_attention_mask,
-                visn_feats, visn_attention_mask=None):
+                visn_feats, visn_attention_mask=None, names = None):
         # Run visual embedding layer
         # Note: Word embedding layer was executed outside this module.
         #       Keep this design to allow loading BERT weights.
-        visn_feats = self.visn_fc(visn_feats)
+        visn_feats = self.visn_fc(visn_feats, names)
 
         # Run language layers
         for layer_module in self.layer:
@@ -839,12 +864,13 @@ class LXRTModel(BertPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.embeddings = BertEmbeddings(config)
+        self.crossAtt = BertCrossattLayer(config)
         self.encoder = LXRTEncoder(config)
         self.pooler = BertPooler(config)
         self.apply(self.init_bert_weights)
 
     def forward(self, input_ids, token_type_ids=None, attention_mask=None,
-                visual_feats=None, visual_attention_mask=None):
+                visual_feats=None, visual_attention_mask=None, names_feat=None):
         if attention_mask is None:
             attention_mask = torch.ones_like(input_ids)
         if token_type_ids is None:
@@ -872,16 +898,44 @@ class LXRTModel(BertPreTrainedModel):
             extended_visual_attention_mask = (1.0 - extended_visual_attention_mask) * -10000.0
         else:
             extended_visual_attention_mask = None
-
         # Positional Word Embeddings
         embedding_output = self.embeddings(input_ids, token_type_ids)
+
+        # print(embedding_output.shape)
+        # print(extended_attention_mask.shape)
+        # input(names_feat)
+        if names_feat is not None:
+            # TO DO
+            names_output = self.embeddings(names_feat[0], names_feat[1])
+            # print(names_output.shape)
+            _names = []
+            for id in range(names_output.shape[1]):
+
+                extended_names_attention_mask = names_feat[2][:,id,:].unsqueeze(1).unsqueeze(2)
+                # print(extended_names_attention_mask.shape)
+                extended_names_attention_mask = extended_names_attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
+                extended_names_attention_mask = (1.0 - extended_names_attention_mask) * -10000.0
+                # print(names_feat[0].shape, names_feat[1].shape)
+                # print(input_ids.shape, token_type_ids.shape)
+                # print(extended_attention_mask.shape)
+
+                # print(names_output[:,id,:,:].squeeze(1).shape)
+                new_name = self.crossAtt(embedding_output, names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
+                # input(new_name)
+                _names.append(torch.max(new_name,dim=1).values)
+            _names = torch.stack(_names).permute(1,0,2)
+            # input(_names.shape)
+            # _names = None
+        else:
+            _names = None
 
         # Run LXRT backbone
         lang_feats, visn_feats = self.encoder(
             embedding_output,
             extended_attention_mask,
             visn_feats=visual_feats,
-            visn_attention_mask=extended_visual_attention_mask)
+            visn_attention_mask=extended_visual_attention_mask,
+            names = _names)
         pooled_output = self.pooler(lang_feats)
 
         return (lang_feats, visn_feats), pooled_output
@@ -1006,10 +1060,11 @@ class LXRTFeatureExtraction(BertPreTrainedModel):
         self.apply(self.init_bert_weights)
 
     def forward(self, input_ids, token_type_ids=None, attention_mask=None, visual_feats=None,
-                visual_attention_mask=None):
+                visual_attention_mask=None, names_feat=None):
         feat_seq, pooled_output = self.bert(input_ids, token_type_ids, attention_mask,
                                             visual_feats=visual_feats,
-                                            visual_attention_mask=visual_attention_mask)
+                                            visual_attention_mask=visual_attention_mask,
+                                            names_feat=names_feat)
         if 'x' == self.mode:
             return pooled_output
         elif 'x' in self.mode and ('l' in self.mode or 'r' in self.mode):

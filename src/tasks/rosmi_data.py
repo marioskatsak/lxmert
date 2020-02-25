@@ -11,13 +11,18 @@ from torch.utils.data import Dataset
 
 from param import args
 from utils import load_det_obj_tsv, calc_iou_individual
+from lxrt.entry import convert_sents_to_features
+
+from lxrt.tokenization import BertTokenizer
+
 
 # Load part of the dataset for fast checking.
 # Notice that here is the number of images instead of the number of data,
 # which means all related data to the images would be used.
 TINY_IMG_NUM = 512
 FAST_IMG_NUM = 5000
-
+# Max length including <bos> and <eos>
+MAX_SENT_LENGTH = 20
 # The path to data and image features.
 # VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
 # IMGFEAT_ROOT = '/scratch/mmk11/data/rosmi/'
@@ -122,7 +127,17 @@ class ROSMITorchDataset(Dataset):
     def __init__(self, dataset: ROSMIDataset):
         super().__init__()
         self.raw_dataset = dataset
+        self.max_seq_length = MAX_SENT_LENGTH
 
+        if args.n_ent:
+            self.named_entities = True
+        else:
+            self.named_entities = False
+        # Using the bert tokenizer
+        self.tokenizer = BertTokenizer.from_pretrained(
+            "bert-base-uncased",
+            do_lower_case=True
+        )
         if args.tiny:
             topk = TINY_IMG_NUM
         elif args.fast:
@@ -170,8 +185,84 @@ class ROSMITorchDataset(Dataset):
         obj_num = img_info['num_boxes']
         feats = img_info['features'].copy()
         boxes = img_info['boxes'].copy()
+        names = img_info['names'].copy()
 
-        assert obj_num == len(boxes) == len(feats)
+
+        feat_mask = 0
+
+
+
+        if self.named_entities:
+
+
+            feats = torch.from_numpy(feats)
+            boxes = torch.from_numpy(boxes)
+            # if names:
+            names_ids = []
+            names_segment_ids = []
+            names_mask = []
+            for obj in names:
+                # for obj in img:
+                # input(f"objects to tokenize: {obj}")
+                names_features = convert_sents_to_features(
+                    obj, self.max_seq_length, self.tokenizer)
+
+                # input(names_features[0].input_ids)
+                # for f in names_features
+                names_ids.append(torch.tensor(names_features[0].input_ids, dtype=torch.long))
+                names_segment_ids.append(torch.tensor(names_features[0].segment_ids, dtype=torch.long))
+                names_mask.append(torch.tensor(names_features[0].input_mask, dtype=torch.long))
+
+            # names_ids = torch.stack(names_ids)
+            # input(len(names_ids))
+
+            # sentence = convert_sents_to_features(
+            #     [sent], self.max_seq_length, self.tokenizer)
+            #
+            # names_ids.append(torch.tensor(sentence[0].input_ids, dtype=torch.long))
+            # names_segment_ids.append(torch.tensor(sentence[0].segment_ids, dtype=torch.long))
+            # names_mask.append(torch.tensor(sentence[0].input_mask, dtype=torch.long))
+
+            if (100 - len(names_ids)) > 0:
+                # Zero-pad up to the sequence length.
+                padding = (100 - len(names_ids))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
+
+                feats_vis_padding = torch.zeros(((100 - feats.shape[0]),feats.shape[1]), dtype=torch.double)
+                box_vis_padding = torch.zeros(((100 - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
+                feats = torch.cat((feats,feats_vis_padding))
+                boxes = torch.cat((boxes,box_vis_padding))
+
+                names_ids = torch.stack(names_segment_ids + padding)
+                names_segment_ids = torch.stack(names_segment_ids + padding)
+                names_mask = torch.stack(names_mask + padding)
+
+                    # bert hidden_size = 768
+                feat_mask = torch.ones(feats.shape[0], dtype=torch.double)
+                feats_padding = torch.zeros((100 - feats.shape[0]), dtype=torch.double)
+                feat_mask = torch.cat((feat_mask,feats_padding))
+            else:
+
+                # feats_vis_padding = torch.zeros(((100 - feats.shape[0]),feats.shape[1]), dtype=torch.double)
+                # box_vis_padding = torch.zeros(((100 - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
+                # feats = torch.cat((feats,feats_vis_padding))
+                # boxes = torch.cat((boxes,box_vis_padding))
+                names_ids = torch.stack(names_segment_ids)
+                names_segment_ids = torch.stack(names_segment_ids)
+                names_mask = torch.stack(names_mask)
+
+            _names = (names_ids, names_segment_ids, names_mask)
+        else:
+            _names = 0
+
+            assert obj_num == len(boxes) == len(feats)
+
+        # print(feats.shape)
+        # print(boxes.shape)
+        # print(names_ids.shape)
+        # print(names_segment_ids.shape)
+        # print(feat_mask.shape)
+        # input(names_mask.shape)
+
 
         # Normalize the boxes (to 0 ~ 1)
         img_h, img_w = img_info['img_h'], img_info['img_w']
@@ -181,19 +272,7 @@ class ROSMITorchDataset(Dataset):
         np.testing.assert_array_less(boxes, 1+1e-5)
         np.testing.assert_array_less(-boxes, 0+1e-5)
 
-        # Provide label (target) for bearings
-        _bearing = []
-        bearing = torch.zeros(self.raw_dataset.num_bearings*2)
-        for land in datum['landmarks']:
-            if 'bearing' in land:
-                _bearing.append(self.raw_dataset.convert2bearing[land['bearing']])
-            for idx,ans in enumerate(_bearing):
-                if idx > 0:
-                    bearing[self.raw_dataset.num_bearings+self.raw_dataset.bearing2label[ans]] = 1
-                else:
-                    bearing[self.raw_dataset.bearing2label[ans]] = 1
-
-        return sent_id, feats, boxes, sent, target#bearing
+        return sent_id, feats, feat_mask, boxes, _names, sent, target#bearing
             # else:
             #     return ques_id, feats, boxes, ques
 
@@ -208,7 +287,7 @@ class ROSMIEvaluator:
             datum = self.dataset.id2datum[sentid]
             print(pred_box,datum['gold_pixels'])
             iou = calc_iou_individual(pred_box, datum['gold_pixels'])
-            if iou > 0.5:
+            if iou > 0.4:
             # if ans in label:
                 score += 1
         return score / len(sentid2ans)

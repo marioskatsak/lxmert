@@ -109,13 +109,36 @@ class LXRTEncoder(nn.Module):
         train_features = convert_sents_to_features(
             sents, self.max_seq_length, self.tokenizer)
 
+
+        _, _, names_features = feats
+        # if names_features:
+                # names_ids.append(torch.tensor([f.names_ids for f in name_feat], dtype=torch.long).cuda())
+                # names_segment_ids.append(torch.tensor([f.names_segment_ids for f in name_feat], dtype=torch.long).cuda())
+                # names_mask.append(torch.tensor([f.names_mask for f in name_feat], dtype=torch.long).cuda())
+            # names_ids = torch.tensor(names_features[0]).cuda()
+            # names_segment_ids = torch.tensor(names_features[1]).cuda()
+            # names_mask = torch.tensor(names_features[2]).cuda()
+
+            # input(names_features[0].shape)
+
+            # b = torch.Tensor(len(names_features[0]), self.max_seq_length)
+            # torch.cat(names_ids, out=b)
+            # input(b.shape)
+            # input(names_ids)
+            # names_ids = torch.tensor(names_ids).cuda()
+            # names_segment_ids = torch.tensor(names_segment_ids).cuda()
+            # names_mask = torch.tensor(names_mask).cuda()
+
+
+
         input_ids = torch.tensor([f.input_ids for f in train_features], dtype=torch.long).cuda()
-        input_mask = torch.tensor([f.input_mask for f in train_features], dtype=torch.long).cuda()
         segment_ids = torch.tensor([f.segment_ids for f in train_features], dtype=torch.long).cuda()
+        input_mask = torch.tensor([f.input_mask for f in train_features], dtype=torch.long).cuda()
 
         output = self.model(input_ids, segment_ids, input_mask,
                             visual_feats=feats,
-                            visual_attention_mask=visual_attention_mask)
+                            visual_attention_mask=visual_attention_mask,
+                            names_feat = names_features)
         return output
 
     def save(self, path):

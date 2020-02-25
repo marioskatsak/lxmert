@@ -86,14 +86,25 @@ class ROSMI:
         best_valid = 0.
         for epoch in range(args.epochs):
             sentid2ans = {}
-            for i, (sent_id, feats, boxes, sent, target) in iter_wrapper(enumerate(loader)):
+            for i, (sent_id, feats, feat_mask, boxes, names, sent, target) in iter_wrapper(enumerate(loader)):
 
                 self.model.train()
                 self.optim.zero_grad()
 
-                feats, boxes, target = feats.cuda(), boxes.cuda(), target.cuda()
+                # print(feats.shape)
+                # print(names[0].squeeze(2).cuda())
+                # print(names[1].shape)
+                # input(names[2].shape)
+                if args.n_ent:
+                    names = (names[0].squeeze(2).cuda(), \
+                                  names[1].squeeze(2).cuda(), \
+                                  names[2].squeeze(2).cuda())
+                else:
+                    names = None
 
-                logit = self.model(feats.float(), boxes.float(), sent)
+                feats, feat_mask, boxes, target = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda()
+
+                logit = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
 
                 assert logit.dim() == target.dim() == 2
                 loss = self.mse_loss(logit, target)
@@ -140,10 +151,16 @@ class ROSMI:
         dset, loader, evaluator = eval_tuple
         sentid2ans = {}
         for i, datum_tuple in enumerate(loader):
-            ques_id, feats, boxes, sent = datum_tuple[:4]   # Avoid seeing ground truth
+            ques_id, feats, feat_mask, boxes, names, sent = datum_tuple[:6]   # Avoid seeing ground truth
             with torch.no_grad():
-                feats, boxes = feats.cuda(), boxes.cuda()
-                logit = self.model(feats.float(), boxes.float(), sent)
+                if args.n_ent:
+                    names = (names[0].squeeze(2).cuda(), \
+                                  names[1].squeeze(2).cuda(), \
+                                  names[2].squeeze(2).cuda())
+                else:
+                    names = None
+                feats, feat_mask, boxes = feats.cuda(),feat_mask.cuda(), boxes.cuda()
+                logit = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
                 label = logit
                 for qid, l in zip(ques_id, label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
@@ -162,7 +179,7 @@ class ROSMI:
         dset, loader, evaluator = data_tuple
         sentid2ans = {}
 
-        for i, (ques_id, feats, boxes, sent, target) in enumerate(loader):
+        for i, (ques_id, feats, feat_mask, boxes, names, sent, target) in enumerate(loader):
             # input(target)
             label = target
             for qid, l in zip(ques_id, label.cpu().numpy()):

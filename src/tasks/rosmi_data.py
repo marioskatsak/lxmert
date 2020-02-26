@@ -267,9 +267,9 @@ class ROSMITorchDataset(Dataset):
 
             assert obj_num == len(boxes) == len(feats)
 
-        print(feats.shape)
-        print(feat_mask.shape)
-        print(boxes.shape)
+        # print(feats.shape)
+        # print(feat_mask.shape)
+        # print(boxes.shape)
         # print(boxes.shape)
         # print(names_ids.shape)
         # print(names_segment_ids.shape)

@@ -45,6 +45,7 @@ class ROSMI:
         else:
             self.valid_tuple = None
 
+        
         self.writer = SummaryWriter(f'snap/rosmi/logging_rosmi_{args.n_ent}_names')
         # Model
         self.model = ROSMIModel(self.train_tuple.dataset.num_bearings)
@@ -132,9 +133,9 @@ class ROSMI:
                 # awlf.writer.close()
                 n_iter += 1
                 # writer.add_scalar('Loss/test', np.random.random(), n_iter)
-            log_str = "\nEpoch %d: Loss %0.2f\%\n" % (epoch, loss)
+            log_str = f"\nEpoch {epoch}: Loss {loss}\n"
             tmp_acc = evaluator.evaluate(sentid2ans) * 100.
-            log_str += "\nEpoch %d: Train %0.2f\%\n" % (epoch, tmp_acc)
+            log_str += f"\nEpoch {epoch}: Train {tmp_acc}%\n"
             self.writer.add_scalar('Accuracy/train [IoU=0.5]', tmp_acc, n_iter)
             # awlf.writer.close()
 
@@ -146,8 +147,8 @@ class ROSMI:
 
                 self.writer.add_scalar('Accuracy/valid [IoU=0.5]', valid_score * 100., n_iter)
                 # awlf.writer.close()
-                log_str += "Epoch %d: Valid %0.2f\%\n" % (epoch, valid_score * 100.) + \
-                           "Epoch %d: Best %0.2f\%\n" % (epoch, best_valid * 100.)
+                log_str += f"Epoch {epoch}: Valid {valid_score * 100.}%\n" + \
+                           f"Epoch {epoch}: Best {best_valid * 100.}%\n"
 
             print(log_str, end='')
 

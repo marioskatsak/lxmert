@@ -198,7 +198,7 @@ class ROSMITorchDataset(Dataset):
         boxes[:, (1, 3)] /= img_h
         np.testing.assert_array_less(boxes, 1+1e-5)
         np.testing.assert_array_less(-boxes, 0+1e-5)
-        
+
         if self.named_entities:
 
 
@@ -288,7 +288,7 @@ class ROSMIEvaluator:
             datum = self.dataset.id2datum[sentid]
             print(pred_box,datum['gold_pixels'])
             iou = calc_iou_individual(pred_box, datum['gold_pixels'])
-            if iou > 0.4:
+            if iou > 0.5:
             # if ans in label:
                 score += 1
         return score / len(sentid2ans)

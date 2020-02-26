@@ -13,6 +13,7 @@ from param import args
 from pretrain.qa_answer_table import load_lxmert_qa
 from tasks.rosmi_model import ROSMIModel
 from tasks.rosmi_data import ROSMIDataset, ROSMITorchDataset, ROSMIEvaluator
+from torch.utils.tensorboard import SummaryWriter
 
 DataTuple = collections.namedtuple("DataTuple", 'dataset loader evaluator')
 
@@ -44,6 +45,7 @@ class ROSMI:
         else:
             self.valid_tuple = None
 
+        self.writer = SummaryWriter(f'snap/rosmi/logging_rosmi_{args.n_ent}_names')
         # Model
         self.model = ROSMIModel(self.train_tuple.dataset.num_bearings)
 
@@ -83,10 +85,15 @@ class ROSMI:
         dset, loader, evaluator = train_tuple
         iter_wrapper = (lambda x: tqdm(x, total=len(loader))) if args.tqdm else (lambda x: x)
 
+
+        # self.writer.add_graph(self.model,loader)
+        # self.writer.close()
         best_valid = 0.
+        n_iter = 0
         for epoch in range(args.epochs):
             sentid2ans = {}
             for i, (sent_id, feats, feat_mask, boxes, names, sent, target) in iter_wrapper(enumerate(loader)):
+
 
                 self.model.train()
                 self.optim.zero_grad()
@@ -108,7 +115,7 @@ class ROSMI:
 
                 assert logit.dim() == target.dim() == 2
                 loss = self.mse_loss(logit, target)
-                loss = loss * logit.size(1)
+                # loss = loss * logit.size(1)
 
                 loss.backward()
                 nn.utils.clip_grad_norm_(self.model.parameters(), 5.)
@@ -120,7 +127,16 @@ class ROSMI:
                     # ans = dset.label2ans[l]
                     sentid2ans[sid.item()] = l
 
-            log_str = "\nEpoch %d: Train %0.2f\n" % (epoch, evaluator.evaluate(sentid2ans) * 100.)
+
+                self.writer.add_scalar('Loss/train', loss, n_iter)
+                # awlf.writer.close()
+                n_iter += 1
+                # writer.add_scalar('Loss/test', np.random.random(), n_iter)
+            log_str = "\nEpoch %d: Loss %0.2f\%\n" % (epoch, loss)
+            tmp_acc = evaluator.evaluate(sentid2ans) * 100.
+            log_str += "\nEpoch %d: Train %0.2f\%\n" % (epoch, tmp_acc)
+            self.writer.add_scalar('Accuracy/train [IoU=0.5]', tmp_acc, n_iter)
+            # awlf.writer.close()
 
             if self.valid_tuple is not None:  # Do Validation
                 valid_score = self.evaluate(eval_tuple)
@@ -128,8 +144,10 @@ class ROSMI:
                     best_valid = valid_score
                     self.save("BEST")
 
-                log_str += "Epoch %d: Valid %0.2f\n" % (epoch, valid_score * 100.) + \
-                           "Epoch %d: Best %0.2f\n" % (epoch, best_valid * 100.)
+                self.writer.add_scalar('Accuracy/valid [IoU=0.5]', valid_score * 100., n_iter)
+                # awlf.writer.close()
+                log_str += "Epoch %d: Valid %0.2f\%\n" % (epoch, valid_score * 100.) + \
+                           "Epoch %d: Best %0.2f\%\n" % (epoch, best_valid * 100.)
 
             print(log_str, end='')
 
@@ -210,7 +228,7 @@ if __name__ == "__main__":
         args.fast = args.tiny = False       # Always loading all data in test
         if 'test' in args.test:
             rosmi.predict(
-                get_data_tuple(args.test, bs=950,
+                get_data_tuple(args.test, bs=args.batch_size,
                                shuffle=False, drop_last=False),
                 dump=os.path.join(args.output, 'test_predict.json')
             )
@@ -218,7 +236,7 @@ if __name__ == "__main__":
             # Since part of valididation data are used in pre-training/fine-tuning,
             # only validate on the minival set.
             result = rosmi.evaluate(
-                get_data_tuple('val', bs=950,
+                get_data_tuple('val', bs=args.batch_size,
                                shuffle=False, drop_last=False),
                 dump=os.path.join(args.output, 'val_predict.json')
             )

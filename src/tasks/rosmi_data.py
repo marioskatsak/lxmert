@@ -257,13 +257,19 @@ class ROSMITorchDataset(Dataset):
                 names_segment_ids = torch.stack(names_segment_ids)
                 names_mask = torch.stack(names_mask)
 
+                feat_mask = torch.ones(feats.shape[0], dtype=torch.double)
+                feats_padding = torch.zeros((100 - feats.shape[0]), dtype=torch.double)
+                feat_mask = torch.cat((feat_mask,feats_padding))
+
             _names = (names_ids, names_segment_ids, names_mask)
         else:
             _names = 0
 
             assert obj_num == len(boxes) == len(feats)
 
-        # print(feats.shape)
+        print(feats.shape)
+        print(feat_mask.shape)
+        print(boxes.shape)
         # print(boxes.shape)
         # print(names_ids.shape)
         # print(names_segment_ids.shape)

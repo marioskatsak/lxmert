@@ -1,7 +1,7 @@
 # coding=utf-8
 # Copyleft 2019 project LXRT.
 
-import os
+import os, time
 import collections
 
 import torch
@@ -45,8 +45,8 @@ class ROSMI:
         else:
             self.valid_tuple = None
 
-        
-        self.writer = SummaryWriter(f'snap/rosmi/logging_rosmi_{args.n_ent}_names')
+
+        self.writer = SummaryWriter(f'snap/rosmi/logging_rosmi_{args.n_ent}_names/{os.uname()[1]}.{time.time()}')
         # Model
         self.model = ROSMIModel(self.train_tuple.dataset.num_bearings)
 
@@ -64,7 +64,7 @@ class ROSMI:
 
         # Loss and Optimizer
         # self.bce_loss = nn.BCEWithLogitsLoss()
-        self.mse_loss = nn.MSELoss()
+        self.mse_loss = nn.SmoothL1Loss()
 
         if 'bert' in args.optim:
             batch_per_epoch = len(self.train_tuple.loader)
@@ -130,7 +130,7 @@ class ROSMI:
 
 
                 self.writer.add_scalar('Loss/train', loss, n_iter)
-                # awlf.writer.close()
+
                 n_iter += 1
                 # writer.add_scalar('Loss/test', np.random.random(), n_iter)
             log_str = f"\nEpoch {epoch}: Loss {loss}\n"

@@ -110,7 +110,11 @@ class LXRTEncoder(nn.Module):
             sents, self.max_seq_length, self.tokenizer)
 
 
-        _, _, names_features = feats
+        try:
+            _, _, names_features = feats
+        except:
+            print("No name features")
+            names_features = None
         # if names_features:
                 # names_ids.append(torch.tensor([f.names_ids for f in name_feat], dtype=torch.long).cuda())
                 # names_segment_ids.append(torch.tensor([f.names_segment_ids for f in name_feat], dtype=torch.long).cuda())

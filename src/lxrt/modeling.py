@@ -521,8 +521,10 @@ class VisualFeatEncoder(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, visn_input, names_input = None):
-        feats, boxes, _ = visn_input
-
+        try:
+            feats, boxes, _ = visn_input
+        except:
+            feats, boxes = visn_input
         x = self.visn_fc2(feats)
         x = self.visn_layer_norm(x)
         y = self.box_fc(boxes)

@@ -113,7 +113,7 @@ class LXRTEncoder(nn.Module):
         try:
             _, _, names_features = feats
         except:
-            print("No name features")
+            # print("No name features")
             names_features = None
         # if names_features:
                 # names_ids.append(torch.tensor([f.names_ids for f in name_feat], dtype=torch.long).cuda())

@@ -148,8 +148,8 @@ class VisualConfig(object):
         self.x_layers = x_layers
         self.r_layers = r_layers
 
-        # self.visual_feat_dim = 2048
-        self.visual_feat_dim = 1024
+        self.visual_feat_dim = 2048
+        # self.visual_feat_dim = 1024
         self.visual_pos_dim = 4
         self.visual_name_dim = 300
 

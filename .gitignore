@@ -1,5 +1,6 @@
 *.caffemodel
 *.tsv
 *.pyc
+**/__pycache__/*
 /snap
 /data/rosmi

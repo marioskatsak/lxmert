@@ -10,7 +10,7 @@ import torch
 from torch.utils.data import Dataset
 
 from param import args
-from utils import load_det_obj_tsv, calc_iou_individual
+from utils import load_obj_tsv, load_det_obj_tsv, calc_iou_individual
 from lxrt.entry import convert_sents_to_features
 
 from lxrt.tokenization import BertTokenizer
@@ -188,7 +188,6 @@ class ROSMITorchDataset(Dataset):
         obj_num = img_info['num_boxes']
         feats = img_info['features'].copy()
         boxes = img_info['boxes'].copy()
-        names = img_info['names'].copy()
 
 
         feat_mask = 0
@@ -205,6 +204,7 @@ class ROSMITorchDataset(Dataset):
         if self.named_entities:
 
 
+            names = img_info['names'].copy()
             feats = torch.from_numpy(feats)
             boxes = torch.from_numpy(boxes)
             # if names:

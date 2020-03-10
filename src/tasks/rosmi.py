@@ -14,7 +14,8 @@ from pretrain.qa_answer_table import load_lxmert_qa
 from tasks.rosmi_model import ROSMIModel
 from tasks.rosmi_data import ROSMIDataset, ROSMITorchDataset, ROSMIEvaluator
 from torch.utils.tensorboard import SummaryWriter
-
+from utils import iou_loss, giou_loss
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 DataTuple = collections.namedtuple("DataTuple", 'dataset loader evaluator')
 
 
@@ -78,6 +79,7 @@ class ROSMI:
         else:
             self.optim = args.optimizer(self.model.parameters(), args.lr)
 
+        self.scheduler = ReduceLROnPlateau(self.optim, 'min')
         # Output Directory
         self.output = args.output
         os.makedirs(self.output, exist_ok=True)
@@ -90,12 +92,14 @@ class ROSMI:
         # self.writer.add_graph(self.model,loader)
         # self.writer.close()
         best_valid = 0.
+        best_train = 0.
+        loss = 99999
         n_iter = 0
-        for epoch in range(args.epochs):
+        for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
             for i, (sent_id, feats, feat_mask, boxes, names, sent, target) in iter_wrapper(enumerate(loader)):
 
-
+                # input("lol")
                 self.model.train()
                 self.optim.zero_grad()
 
@@ -111,18 +115,32 @@ class ROSMI:
                     names = None
 
                 feats, feat_mask, boxes, target = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda()
-
                 logit = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
 
-                assert logit.dim() == target.dim() == 2
+                # assert logit.dim() == target.dim() == 2
                 loss = self.mse_loss(logit, target)
-                # loss = loss * logit.size(1)
-
+                print(logit)
+                print(target)
+                # loss = iou_loss(logit, target)
+                iou,loss2 = giou_loss(logit, target)
+                # print(iou,giou)
+                # input(loss)
+                # if not loss:
+                #     print("Not ready yet")
+                #     loss = self.mse_loss(logit, target)
+                # print(loss)
+                # print(loss2)
+                # if loss > 100:
+                #     loss = loss + loss2
+                # else:
+                #     loss = loss2
+                loss = loss + loss2
+                print(loss)
                 loss.backward()
                 nn.utils.clip_grad_norm_(self.model.parameters(), 5.)
                 self.optim.step()
-
                 label = logit
+                # input(logit)
                 # score, label = logit.max(1)
                 for sid, l in zip(sent_id, label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
@@ -133,10 +151,12 @@ class ROSMI:
 
                 n_iter += 1
                 # writer.add_scalar('Loss/test', np.random.random(), n_iter)
+
+            # self.scheduler.step(loss)
             log_str = f"\nEpoch {epoch}: Loss {loss}\n"
-            tmp_acc = evaluator.evaluate(sentid2ans) * 100.
-            log_str += f"\nEpoch {epoch}: Train {tmp_acc}%\n"
-            self.writer.add_scalar('Accuracy/train [IoU=0.5]', tmp_acc, n_iter)
+            tmp_acc = evaluator.evaluate(sentid2ans)
+            log_str += f"\nEpoch {epoch}: Train {tmp_acc * 100.}%\n"
+            self.writer.add_scalar('Accuracy/train [IoU=0.5]', tmp_acc * 100., n_iter)
             # awlf.writer.close()
 
             if self.valid_tuple is not None:  # Do Validation
@@ -144,11 +164,14 @@ class ROSMI:
                 if valid_score > best_valid:
                     best_valid = valid_score
                     self.save("BEST")
+                if tmp_acc > best_train:
+                    best_train = tmp_acc
 
                 self.writer.add_scalar('Accuracy/valid [IoU=0.5]', valid_score * 100., n_iter)
                 # awlf.writer.close()
                 log_str += f"Epoch {epoch}: Valid {valid_score * 100.}%\n" + \
-                           f"Epoch {epoch}: Best {best_valid * 100.}%\n"
+                           f"Epoch {epoch}: Best Train {best_train * 100.}%\n" + \
+                           f"Epoch {epoch}: Best Val {best_valid * 100.}%\n"
 
             print(log_str, end='')
 

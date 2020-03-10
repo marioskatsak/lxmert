@@ -10,7 +10,7 @@ import torch
 from torch.utils.data import Dataset
 
 from param import args
-from utils import load_obj_tsv, load_det_obj_tsv, calc_iou_individual
+from utils import load_obj_tsv, load_det_obj_tsv, calc_iou_individual, iou_loss
 from lxrt.entry import convert_sents_to_features
 
 from lxrt.tokenization import BertTokenizer
@@ -22,14 +22,17 @@ from lxrt.tokenization import BertTokenizer
 TINY_IMG_NUM = 512
 FAST_IMG_NUM = 5000
 # Max length including <bos> and <eos>
-MAX_SENT_LENGTH = 20
+MAX_SENT_LENGTH = 25
 # The path to data and image features.
 # VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
 # IMGFEAT_ROOT = '/scratch/mmk11/data/rosmi/'
 SPLIT2NAME = {
-    'train': 'train',
-    'valid': 'val',
+    'train': 'easy_train',
+    'valid': 'easy_val',
     'test': 'test',
+    'mini_train': 'mini_train',
+    'mini_valid': 'mini_val',
+    'mini_test': 'mini_test',
 }
 # SPLIT2NAME = {
 #     'train': 'train2014',
@@ -182,20 +185,23 @@ class ROSMITorchDataset(Dataset):
         sent_id = datum['sentid']
         sent = datum['sentence']['raw']
         target = torch.tensor(datum['gold_pixels'])
-
         # Get image info
         img_info = self.imgid2img[img_id]
         obj_num = img_info['num_boxes']
         feats = img_info['features'].copy()
         boxes = img_info['boxes'].copy()
 
-
+        # target = torch.tensor(datum['landmarks'][0]['raw_pixels'])
+        # target = torch.tensor(boxes[-1]).float()
+        # print(boxes)
+        #
+        # input(target)
         feat_mask = 0
-
 
         # Normalize the boxes (to 0 ~ 1)
         img_h, img_w = img_info['img_h'], img_info['img_w']
         boxes = boxes.copy()
+
         boxes[:, (0, 2)] /= img_w
         boxes[:, (1, 3)] /= img_h
         np.testing.assert_array_less(boxes, 1+1e-5)
@@ -271,6 +277,7 @@ class ROSMITorchDataset(Dataset):
             assert obj_num == len(boxes) == len(feats)
 
         # print(feats.shape)
+        # print(type(feats))
         # print(feat_mask.shape)
         # print(boxes.shape)
         # print(boxes.shape)
@@ -278,10 +285,16 @@ class ROSMITorchDataset(Dataset):
         # print(names_segment_ids.shape)
         # print(feat_mask.shape)
         # input(names_mask.shape)
+        #
+        # print(np.mean(feats))
+        # print(np.mean(boxes))
 
+        # x = np.random.randn(N, D_in)
+        boxes = np.random.rand(boxes.shape[0],boxes.shape[1])
+        feats = np.random.rand(feats.shape[0],feats.shape[1])
 
-
-
+        # print(np.mean(feats))
+        # input(np.mean(boxes))
         return sent_id, feats, feat_mask, boxes, _names, sent, target#bearing
             # else:
             #     return ques_id, feats, boxes, ques
@@ -294,12 +307,23 @@ class ROSMIEvaluator:
     def evaluate(self, sentid2ans: dict):
         score = 0.
         for sentid, pred_box in sentid2ans.items():
+            # datum = self.dataset.id2datum[sentid]
+            # gold = torch.tensor(self.dataset.imgid2img[datum['img_id']]['boxes'][-1])
             datum = self.dataset.id2datum[sentid]
-            print(pred_box,datum['gold_pixels'])
+            # input(gold)
             iou = calc_iou_individual(pred_box, datum['gold_pixels'])
-            if iou > 0.5:
+            # iou2 = 1 - iou_loss(pred_box, datum['gold_pixels'])
+            # print(iou, iou2)
+            # if iou > 0:
+            print(iou)
+            print(pred_box,datum['gold_pixels'])
+
+            if iou > 0.65:
+                print("ONE CORRECT")
             # if ans in label:
                 score += 1
+        # if score >=50:
+        #     input("?")
         return score / len(sentid2ans)
 
     def dump_result(self, sentid2ans: dict, path):

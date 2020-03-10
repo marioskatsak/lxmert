@@ -2,13 +2,13 @@
 # Copyleft 2019 project LXRT.
 
 import torch.nn as nn
-
+import torch
 from param import args
 from lxrt.entry import LXRTEncoder
 from lxrt.modeling import BertLayerNorm, GeLU
 
 # Max length including <bos> and <eos>
-MAX_VQA_LENGTH = 20
+MAX_VQA_LENGTH = 25
 
 
 class ROSMIModel(nn.Module):
@@ -20,15 +20,16 @@ class ROSMIModel(nn.Module):
             args,
             max_seq_length=MAX_VQA_LENGTH
         )
-        hid_dim = self.lxrt_encoder.dim
-        print(hid_dim)
+        self.hid_dim = self.lxrt_encoder.dim
+        print(self.hid_dim)
 
         # ROSMI Pred heads
         self.logit_fc = nn.Sequential(
-            nn.Linear(hid_dim, hid_dim * 2),
+            # nn.Linear(68 * self.hid_dim* 3, self.hid_dim),
+            nn.Linear(self.hid_dim, self.hid_dim*4),
             GeLU(),
-            BertLayerNorm(hid_dim * 2, eps=1e-12),
-            nn.Linear(hid_dim * 2, 4)
+            BertLayerNorm(self.hid_dim*4, eps=1e-12),
+            nn.Linear(self.hid_dim*4, 4)
         )
         self.logit_fc.apply(self.lxrt_encoder.model.init_bert_weights)
 
@@ -47,7 +48,11 @@ class ROSMIModel(nn.Module):
             x = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
         else:
             x = self.lxrt_encoder(sent, (feat, pos, names))
-
+        # print(x)
+        # print((x.shape))
+        # input(torch.mean(x))
+        # x = x.view(-1, 68 * self.hid_dim* 3)
+        # print(x.shape)
         logit = self.logit_fc(x)
 
         return logit

@@ -38,7 +38,9 @@ def convert_sents_to_features(sents, max_seq_length, tokenizer):
 
     features = []
     for (i, sent) in enumerate(sents):
+        
         tokens_a = tokenizer.tokenize(sent.strip())
+
         # Account for [CLS] and [SEP] with "- 2"
         if len(tokens_a) > max_seq_length - 2:
             tokens_a = tokens_a[:(max_seq_length - 2)]
@@ -49,6 +51,7 @@ def convert_sents_to_features(sents, max_seq_length, tokenizer):
 
         input_ids = tokenizer.convert_tokens_to_ids(tokens)
 
+
         # The mask has 1 for real tokens and 0 for padding tokens. Only real
         # tokens are attended to.
         input_mask = [1] * len(input_ids)
@@ -58,6 +61,9 @@ def convert_sents_to_features(sents, max_seq_length, tokenizer):
         input_ids += padding
         input_mask += padding
         segment_ids += padding
+
+
+
 
         assert len(input_ids) == max_seq_length
         assert len(input_mask) == max_seq_length
@@ -113,17 +119,11 @@ class LXRTEncoder(nn.Module):
         try:
             _, _, names_features = feats
         except:
-            # print("No name features")
+            print("No name features")
             names_features = None
-        # if names_features:
-                # names_ids.append(torch.tensor([f.names_ids for f in name_feat], dtype=torch.long).cuda())
-                # names_segment_ids.append(torch.tensor([f.names_segment_ids for f in name_feat], dtype=torch.long).cuda())
-                # names_mask.append(torch.tensor([f.names_mask for f in name_feat], dtype=torch.long).cuda())
-            # names_ids = torch.tensor(names_features[0]).cuda()
-            # names_segment_ids = torch.tensor(names_features[1]).cuda()
-            # names_mask = torch.tensor(names_features[2]).cuda()
 
-            # input(names_features[0].shape)
+
+
 
             # b = torch.Tensor(len(names_features[0]), self.max_seq_length)
             # torch.cat(names_ids, out=b)

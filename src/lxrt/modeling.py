@@ -290,7 +290,7 @@ class BertEmbeddings(nn.Module):
 
         embeddings = words_embeddings + position_embeddings + token_type_embeddings
         embeddings = self.LayerNorm(embeddings)
-        embeddings = self.dropout(embeddings)
+        # embeddings = self.dropout(embeddings)
         return embeddings
 
 
@@ -312,7 +312,7 @@ class BertAttention(nn.Module):
         self.key = nn.Linear(ctx_dim, self.all_head_size)
         self.value = nn.Linear(ctx_dim, self.all_head_size)
 
-        self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
+        # self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
 
     def transpose_for_scores(self, x):
         # print(x.shape)
@@ -347,7 +347,7 @@ class BertAttention(nn.Module):
 
         # This is actually dropping out entire tokens to attend to, which might
         # seem a bit unusual, but is taken from the original Transformer paper.
-        attention_probs = self.dropout(attention_probs)
+        # attention_probs = self.dropout(attention_probs)
 
         context_layer = torch.matmul(attention_probs, value_layer)
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
@@ -365,7 +365,7 @@ class BertAttOutput(nn.Module):
 
     def forward(self, hidden_states, input_tensor):
         hidden_states = self.dense(hidden_states)
-        hidden_states = self.dropout(hidden_states)
+        # hidden_states = self.dropout(hidden_states)
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         return hidden_states
 
@@ -406,7 +406,7 @@ class BertIntermediate(nn.Module):
 
     def forward(self, hidden_states):
         hidden_states = self.dense(hidden_states)
-        hidden_states = self.intermediate_act_fn(hidden_states)
+        # hidden_states = self.intermediate_act_fn(hidden_states)
         return hidden_states
 
 
@@ -419,7 +419,7 @@ class BertOutput(nn.Module):
 
     def forward(self, hidden_states, input_tensor):
         hidden_states = self.dense(hidden_states)
-        hidden_states = self.dropout(hidden_states)
+        # hidden_states = self.dropout(hidden_states)
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         return hidden_states
 
@@ -507,7 +507,6 @@ class VisualFeatEncoder(nn.Module):
         # Object feature encoding
         self.visn_fc2 = nn.Linear(feat_dim, config.hidden_size)
         self.visn_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
-
         # Box position encoding
         self.box_fc = nn.Linear(pos_dim, config.hidden_size)
         self.box_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
@@ -518,7 +517,7 @@ class VisualFeatEncoder(nn.Module):
 
 
 
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        # self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, visn_input, names_input = None):
         try:
@@ -540,15 +539,15 @@ class VisualFeatEncoder(nn.Module):
             output = (x + y + z) / 3
         else:
             output = (x + y) / 2
-
-        output = self.dropout(output)
+            # output = y
+        # input(output.shape)
+        # output = self.dropout(output)
         return output
 
 
 class LXRTEncoder(nn.Module):
     def __init__(self, config):
         super().__init__()
-
         # Obj-level image embedding layer
         self.visn_fc = VisualFeatEncoder(config)
 
@@ -576,6 +575,8 @@ class LXRTEncoder(nn.Module):
         # Run visual embedding layer
         # Note: Word embedding layer was executed outside this module.
         #       Keep this design to allow loading BERT weights.
+        # input(visn_feats)
+        # input(visn_feats.shape)
         visn_feats = self.visn_fc(visn_feats, names)
 
         # Run language layers
@@ -590,7 +591,8 @@ class LXRTEncoder(nn.Module):
         for layer_module in self.x_layers:
             lang_feats, visn_feats = layer_module(lang_feats, lang_attention_mask,
                                                   visn_feats, visn_attention_mask)
-
+        # print(visn_feats)
+        # input(visn_feats.shape)
         return lang_feats, visn_feats
 
 
@@ -1068,8 +1070,10 @@ class LXRTFeatureExtraction(BertPreTrainedModel):
                                             visual_attention_mask=visual_attention_mask,
                                             names_feat=names_feat)
         if 'x' == self.mode:
+            # print("x")
             return pooled_output
         elif 'x' in self.mode and ('l' in self.mode or 'r' in self.mode):
+            # print("2")
             return feat_seq, pooled_output
         elif 'l' in self.mode or 'r' in self.mode:
             return feat_seq

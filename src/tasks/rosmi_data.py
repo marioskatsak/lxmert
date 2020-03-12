@@ -33,6 +33,17 @@ SPLIT2NAME = {
     'mini_train': 'mini_train',
     'mini_valid': 'mini_val',
     'mini_test': 'mini_test',
+    '0_easy_train':'0_easy_train',
+    '0_easy_val':'0_easy_val',
+    '1_easy_train':'1_easy_train',
+    '1_easy_val':'1_easy_val',
+    '2_easy_train':'2_easy_train',
+    '2_easy_val':'2_easy_val',
+    '3_easy_train':'3_easy_train',
+    '3_easy_val':'3_easy_val',
+    '4_easy_train':'4_easy_train',
+    '4_easy_val':'4_easy_val',
+
 }
 # SPLIT2NAME = {
 #     'train': 'train2014',
@@ -315,11 +326,11 @@ class ROSMIEvaluator:
             # iou2 = 1 - iou_loss(pred_box, datum['gold_pixels'])
             # print(iou, iou2)
             # if iou > 0:
-            print(iou)
-            print(pred_box,datum['gold_pixels'])
+            # print(iou)
+            # print(pred_box,datum['gold_pixels'])
 
             if iou > 0.65:
-                print("ONE CORRECT")
+                # print("ONE CORRECT")
             # if ans in label:
                 score += 1
         # if score >=50:

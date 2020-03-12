@@ -12,6 +12,5 @@ CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
     --train train --valid valid \
     --llayers 1 --xlayers 0 --rlayers 1 \
-    --dropout 0.0 \
-    --batchSize 64 --optim bert --lr 1e-3 --epochs 10000 \
+    --batchSize 250 --optim bert --lr 1e-3 --epochs 8000 \
     --output $output ${@:3}

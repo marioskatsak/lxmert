@@ -79,7 +79,7 @@ class ROSMI:
         else:
             self.optim = args.optimizer(self.model.parameters(), args.lr)
 
-        self.scheduler = ReduceLROnPlateau(self.optim, 'min')
+        # self.scheduler = ReduceLROnPlateau(self.optim, 'min')
         # Output Directory
         self.output = args.output
         os.makedirs(self.output, exist_ok=True)
@@ -119,8 +119,8 @@ class ROSMI:
 
                 # assert logit.dim() == target.dim() == 2
                 loss = self.mse_loss(logit, target)
-                print(logit)
-                print(target)
+                # print(logit)
+                # print(target)
                 # loss = iou_loss(logit, target)
                 iou,loss2 = giou_loss(logit, target)
                 # print(iou,giou)
@@ -135,7 +135,7 @@ class ROSMI:
                 # else:
                 #     loss = loss2
                 loss = loss + loss2
-                print(loss)
+                # print(loss)
                 loss.backward()
                 nn.utils.clip_grad_norm_(self.model.parameters(), 5.)
                 self.optim.step()
@@ -180,6 +180,7 @@ class ROSMI:
                 f.flush()
 
         self.save("LAST")
+        return best_valid
 
     def predict(self, eval_tuple: DataTuple, dump=None):
         """
@@ -229,49 +230,57 @@ class ROSMI:
                 sentid2ans[qid.item()] = l
         return evaluator.evaluate(sentid2ans)
 
-    def save(self, name):
+    def save(self, name, k = ''):
         torch.save(self.model.state_dict(),
-                   os.path.join(self.output, "%s.pth" % name))
+                   os.path.join(self.output, f"{k}{name}.pth"))
 
-    def load(self, path):
-        print("Load model from %s" % path)
-        state_dict = torch.load("%s.pth" % path)
+    def load(self, path, k = ''):
+        print(f"Load model from {k}{path}")
+        state_dict = torch.load(f"{k}{path}.pth")
         self.model.load_state_dict(state_dict)
 
 
 if __name__ == "__main__":
-    # Build Class
-    rosmi = ROSMI()
-    # Load ROSMI model weights
-    # Note: It is different from loading LXMERT pre-trained weights.
-    if args.load is not None:
-        rosmi.load(args.load)
 
-    # Test or Train
-    if args.test is not None:
-        args.fast = args.tiny = False       # Always loading all data in test
-        if 'test' in args.test:
-            rosmi.predict(
-                get_data_tuple(args.test, bs=args.batch_size,
-                               shuffle=False, drop_last=False),
-                dump=os.path.join(args.output, 'test_predict.json')
-            )
-        elif 'val' in args.test:
-            # Since part of valididation data are used in pre-training/fine-tuning,
-            # only validate on the minival set.
-            result = rosmi.evaluate(
-                get_data_tuple('val', bs=args.batch_size,
-                               shuffle=False, drop_last=False),
-                dump=os.path.join(args.output, 'val_predict.json')
-            )
-            print(result)
+    scores = []
+    for k in range(5):
+        print(f"{k} on cross")
+        args.train = f'{k}_easy_train'
+        args.valid = f'{k}_easy_val'
+        # Build Class
+        rosmi = ROSMI()
+        # Load ROSMI model weights
+        # Note: It is different from loading LXMERT pre-trained weights.
+        if args.load is not None:
+            rosmi.load(args.load)
+
+        # Test or Train
+        if args.test is not None:
+            args.fast = args.tiny = False       # Always loading all data in test
+            if 'test' in args.test:
+                rosmi.predict(
+                    get_data_tuple(args.test, bs=args.batch_size,
+                                   shuffle=False, drop_last=False),
+                    dump=os.path.join(args.output, 'test_predict.json')
+                )
+            elif 'val' in args.test:
+                # Since part of valididation data are used in pre-training/fine-tuning,
+                # only validate on the minival set.
+                result = rosmi.evaluate(
+                    get_data_tuple('val', bs=args.batch_size,
+                                   shuffle=False, drop_last=False),
+                    dump=os.path.join(args.output, 'val_predict.json')
+                )
+                print(result)
+            else:
+                assert False, "No such test option for %s" % args.test
         else:
-            assert False, "No such test option for %s" % args.test
-    else:
-        print('Splits in Train data:', rosmi.train_tuple.dataset.splits)
-        if rosmi.valid_tuple is not None:
-            print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
-            print("Valid Oracle: %0.2f" % (rosmi.oracle_score(rosmi.valid_tuple) * 100))
-        else:
-            print("DO NOT USE VALIDATION")
-        rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
+            print('Splits in Train data:', rosmi.train_tuple.dataset.splits)
+            if rosmi.valid_tuple is not None:
+                print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
+                print("Valid Oracle: %0.2f" % (rosmi.oracle_score(rosmi.valid_tuple) * 100))
+            else:
+                print("DO NOT USE VALIDATION")
+            scores.append(rosmi.train(rosmi.train_tuple, rosmi.valid_tuple))
+    print(f"Best scores: {scores}")
+    print(f"Mean 5-fold accuracy {sum(scores) / len(scores)}")

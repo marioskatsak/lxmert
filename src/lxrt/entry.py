@@ -38,7 +38,7 @@ def convert_sents_to_features(sents, max_seq_length, tokenizer):
 
     features = []
     for (i, sent) in enumerate(sents):
-        
+
         tokens_a = tokenizer.tokenize(sent.strip())
 
         # Account for [CLS] and [SEP] with "- 2"
@@ -119,7 +119,7 @@ class LXRTEncoder(nn.Module):
         try:
             _, _, names_features = feats
         except:
-            print("No name features")
+            # print("No name features")
             names_features = None
 
 

@@ -290,7 +290,7 @@ class BertEmbeddings(nn.Module):
 
         embeddings = words_embeddings + position_embeddings + token_type_embeddings
         embeddings = self.LayerNorm(embeddings)
-        # embeddings = self.dropout(embeddings)
+        embeddings = self.dropout(embeddings)
         return embeddings
 
 
@@ -312,7 +312,7 @@ class BertAttention(nn.Module):
         self.key = nn.Linear(ctx_dim, self.all_head_size)
         self.value = nn.Linear(ctx_dim, self.all_head_size)
 
-        # self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
+        self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
 
     def transpose_for_scores(self, x):
         # print(x.shape)
@@ -347,7 +347,7 @@ class BertAttention(nn.Module):
 
         # This is actually dropping out entire tokens to attend to, which might
         # seem a bit unusual, but is taken from the original Transformer paper.
-        # attention_probs = self.dropout(attention_probs)
+        attention_probs = self.dropout(attention_probs)
 
         context_layer = torch.matmul(attention_probs, value_layer)
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
@@ -365,7 +365,7 @@ class BertAttOutput(nn.Module):
 
     def forward(self, hidden_states, input_tensor):
         hidden_states = self.dense(hidden_states)
-        # hidden_states = self.dropout(hidden_states)
+        hidden_states = self.dropout(hidden_states)
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         return hidden_states
 
@@ -419,7 +419,7 @@ class BertOutput(nn.Module):
 
     def forward(self, hidden_states, input_tensor):
         hidden_states = self.dense(hidden_states)
-        # hidden_states = self.dropout(hidden_states)
+        hidden_states = self.dropout(hidden_states)
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         return hidden_states
 
@@ -517,7 +517,7 @@ class VisualFeatEncoder(nn.Module):
 
 
 
-        # self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, visn_input, names_input = None):
         try:
@@ -541,7 +541,7 @@ class VisualFeatEncoder(nn.Module):
             output = (x + y) / 2
             # output = y
         # input(output.shape)
-        # output = self.dropout(output)
+        output = self.dropout(output)
         return output
 
 

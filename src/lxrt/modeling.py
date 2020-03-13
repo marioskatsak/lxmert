@@ -406,7 +406,7 @@ class BertIntermediate(nn.Module):
 
     def forward(self, hidden_states):
         hidden_states = self.dense(hidden_states)
-        # hidden_states = self.intermediate_act_fn(hidden_states)
+        hidden_states = self.intermediate_act_fn(hidden_states)
         return hidden_states
 
 
@@ -505,7 +505,7 @@ class VisualFeatEncoder(nn.Module):
         names_dim = VISUAL_CONFIG.visual_name_dim
 
         # Object feature encoding
-        self.visn_fc2 = nn.Linear(feat_dim, config.hidden_size)
+        self.visn_fc = nn.Linear(feat_dim, config.hidden_size)
         self.visn_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
         # Box position encoding
         self.box_fc = nn.Linear(pos_dim, config.hidden_size)
@@ -524,7 +524,7 @@ class VisualFeatEncoder(nn.Module):
             feats, boxes, _ = visn_input
         except:
             feats, boxes = visn_input
-        x = self.visn_fc2(feats)
+        x = self.visn_fc(feats)
         x = self.visn_layer_norm(x)
         y = self.box_fc(boxes)
         y = self.box_layer_norm(y)

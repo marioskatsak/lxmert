@@ -16,6 +16,15 @@ from lxrt.entry import convert_sents_to_features
 from lxrt.tokenization import BertTokenizer
 
 
+SCALES = {
+            '0':25,
+            '1':25,
+            '2':4,
+            '3':12,
+            '4':4,
+            '5':4,
+            '6':4
+        }
 # Load part of the dataset for fast checking.
 # Notice that here is the number of images instead of the number of data,
 # which means all related data to the images would be used.
@@ -323,13 +332,17 @@ class ROSMIEvaluator:
             datum = self.dataset.id2datum[sentid]
             # input(gold)
             iou = calc_iou_individual(pred_box, datum['gold_pixels'])
+            _scale = 25/SCALES[datum['scenario_items'].split('rio')[1].split('.json')[0]]
+            siou = iou*_scale
             # iou2 = 1 - iou_loss(pred_box, datum['gold_pixels'])
-            # print(iou, iou2)
             # if iou > 0:
-            # print(iou)
-            # print(pred_box,datum['gold_pixels'])
+            print("Stats:---------------")
+            print(datum['sentence']['raw'])
+            print(pred_box,datum['gold_pixels'])
+            print(iou, siou)
+            print("-----------------")
 
-            if iou > 0.65:
+            if siou > 0.65:
                 # print("ONE CORRECT")
             # if ans in label:
                 score += 1

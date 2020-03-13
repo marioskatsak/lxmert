@@ -34,6 +34,7 @@ def get_data_tuple(splits: str, bs:int, shuffle=False, drop_last=False) -> DataT
 
 class ROSMI:
     def __init__(self):
+
         # Datasets
         self.train_tuple = get_data_tuple(
             args.train, bs=args.batch_size, shuffle=True, drop_last=True
@@ -243,7 +244,7 @@ class ROSMI:
 if __name__ == "__main__":
 
     scores = []
-    for k in range(5):
+    for k in range(1):
         print(f"{k} on cross")
         args.train = f'{k}_easy_train'
         args.valid = f'{k}_easy_val'

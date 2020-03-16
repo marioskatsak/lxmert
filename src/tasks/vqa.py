@@ -43,7 +43,7 @@ class VQA:
             )
         else:
             self.valid_tuple = None
-        
+
         # Model
         self.model = VQAModel(self.train_tuple.dataset.num_answers)
 
@@ -53,7 +53,7 @@ class VQA:
         if args.load_lxmert_qa is not None:
             load_lxmert_qa(args.load_lxmert_qa, self.model,
                            label2ans=self.train_tuple.dataset.label2ans)
-        
+
         # GPU options
         self.model = self.model.cuda()
         if args.multiGPU:
@@ -72,7 +72,7 @@ class VQA:
                                   t_total=t_total)
         else:
             self.optim = args.optimizer(self.model.parameters(), args.lr)
-        
+
         # Output Directory
         self.output = args.output
         os.makedirs(self.output, exist_ok=True)
@@ -90,7 +90,7 @@ class VQA:
                 self.optim.zero_grad()
 
                 feats, boxes, target = feats.cuda(), boxes.cuda(), target.cuda()
-                logit = self.model(feats, boxes, sent)
+                logit = self.model(feats.float(), boxes.float(), sent)
                 assert logit.dim() == target.dim() == 2
                 loss = self.bce_loss(logit, target)
                 loss = loss * logit.size(1)
@@ -191,7 +191,7 @@ if __name__ == "__main__":
                                shuffle=False, drop_last=False),
                 dump=os.path.join(args.output, 'test_predict.json')
             )
-        elif 'val' in args.test:    
+        elif 'val' in args.test:
             # Since part of valididation data are used in pre-training/fine-tuning,
             # only validate on the minival set.
             result = vqa.evaluate(
@@ -210,5 +210,3 @@ if __name__ == "__main__":
         else:
             print("DO NOT USE VALIDATION")
         vqa.train(vqa.train_tuple, vqa.valid_tuple)
-
-

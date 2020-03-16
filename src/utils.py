@@ -85,7 +85,11 @@ def load_det_obj_tsv(fname, topk=None):
     print("Start to load Faster-RCNN detected objects from %s" % fname)
     with open(fname, 'r') as f:
         reader = csv.DictReader(f, FIELDITEMS, delimiter="\t")
-        for it in gen_chunks(reader,  chunksize=1000):
+        if topk:
+            chunk = topk
+        else:
+            chunk = 1000
+        for it in gen_chunks(reader,  chunksize=chunk):
             # print(len(item[0]))
             # input(len(item))
             for i, item in enumerate(it):
@@ -110,7 +114,7 @@ def load_det_obj_tsv(fname, topk=None):
                         input(key)
 
                 data.append(item)
-                if topk is not None and len(data) == topk:
+                if topk is not None and len(data) >= topk:
                     break
     elapsed_time = time.time() - start_time
     print("Loaded %d images in file %s in %d seconds." % (len(data), fname, elapsed_time))

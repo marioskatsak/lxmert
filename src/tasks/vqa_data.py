@@ -104,8 +104,11 @@ class VQATorchDataset(Dataset):
         # Convert img list to dict
         self.imgid2img = {}
         for img_datum in img_data:
-            if not len(img_datum['features']):
+            if not len(img_datum['features']) or img_datum['features'].shape[0] < 32:
+                print(img_datum['features'])
+                input("zero")
                 continue
+
             self.imgid2img[img_datum['img_id']] = img_datum
 
         # Only kept the data with loaded image features

@@ -99,7 +99,7 @@ def load_det_obj_tsv(fname, topk=None):
                 ]
                 for key, shape, dtype in decode_config:
                     print(key)
-                    print(item[key])
+                    # print(item[key])
                     item[key] = np.frombuffer(base64.b64decode(ast.literal_eval(item[key])), dtype=dtype)
                     item[key] = item[key].reshape(shape)
                     item[key].setflags(write=False)

@@ -204,7 +204,14 @@ class ROSMITorchDataset(Dataset):
         img_id = datum['img_id']
         sent_id = datum['sentid']
         sent = datum['sentence']['raw']
+        dist = torch.tensor([int(datum['landmarks'][0]['distance'])])
+        # if datum['landmarks'][0]['g_type'] == 'Point':
+        #     target = torch.tensor(datum['landmarks'][0]['raw_pixels'])
+        # else:
+        #     target = torch.tensor(datum['landmarks'][0]['landmark_pixels'])
         target = torch.tensor(datum['gold_pixels'])
+        # print(target)
+        # print(dist)
         # Get image info
         img_info = self.imgid2img[img_id]
         obj_num = img_info['num_boxes']
@@ -215,7 +222,7 @@ class ROSMITorchDataset(Dataset):
         # target = torch.tensor(boxes[-1]).float()
         # print(boxes)
         #
-        # input(target)
+        # print(target)
         feat_mask = 0
 
         # Normalize the boxes (to 0 ~ 1)
@@ -315,7 +322,7 @@ class ROSMITorchDataset(Dataset):
 
         # print(np.mean(feats))
         # input(np.mean(boxes))
-        return sent_id, feats, feat_mask, boxes, _names, sent, target#bearing
+        return sent_id, feats, feat_mask, boxes, _names, sent,dist, target#bearing
             # else:
             #     return ques_id, feats, boxes, ques
 
@@ -326,7 +333,7 @@ class ROSMIEvaluator:
 
     def evaluate(self, sentid2ans: dict):
         score = 0.
-        for sentid, pred_box in sentid2ans.items():
+        for sentid, (pred_box, dis) in sentid2ans.items():
             # datum = self.dataset.id2datum[sentid]
             # gold = torch.tensor(self.dataset.imgid2img[datum['img_id']]['boxes'][-1])
             datum = self.dataset.id2datum[sentid]
@@ -339,8 +346,8 @@ class ROSMIEvaluator:
             print("Stats:---------------")
             print(datum['sentence']['raw'])
             print(pred_box,datum['gold_pixels'])
+            print(dis, datum['landmarks'][0]['distance'])
             print(iou, siou)
-            print("-----------------")
 
             if siou > 0.65:
                 # print("ONE CORRECT")

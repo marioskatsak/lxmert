@@ -22,7 +22,11 @@ class ROSMIModel(nn.Module):
         )
         self.hid_dim = self.lxrt_encoder.dim
         print(self.hid_dim)
-
+        self.distance_fc = nn.Sequential(
+            # nn.Linear(self.hid_dim, self.hid_dim*2),
+            # GeLU(),
+            nn.Linear(self.hid_dim, 1)
+        )
         # ROSMI Pred heads
         self.logit_fc = nn.Sequential(
             # nn.Linear(68 * self.hid_dim* 3, self.hid_dim),
@@ -54,5 +58,5 @@ class ROSMIModel(nn.Module):
         # x = x.view(-1, 68 * self.hid_dim* 3)
         # print(x.shape)
         logit = self.logit_fc(x)
-
-        return logit
+        dist_ = self.distance_fc(x)
+        return logit, dist_

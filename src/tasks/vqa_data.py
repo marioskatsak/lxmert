@@ -20,7 +20,7 @@ FAST_IMG_NUM = 5000
 
 # The path to data and image features.
 VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
-MSCOCO_IMGFEAT_ROOT = '/scratch/mmk11/data/mscoco_imgfeat/'
+MSCOCO_IMGFEAT_ROOT = '/scratch/mmk11/data/vqa/mscoco'
 SPLIT2NAME = {
     'train': 'train2014',
     'valid': 'val2014',
@@ -97,7 +97,7 @@ class VQATorchDataset(Dataset):
             # Minival is 5K images in MS COCO, which is used in evaluating VQA/LXMERT-pre-training.
             # It is saved as the top 5K features in val2014_***.tsv
             load_topk = 5000 if (split == 'minival' and topk is None) else topk
-            img_data.extend(load_obj_tsv(
+            img_data.extend(load_det_obj_tsv(
                 os.path.join(MSCOCO_IMGFEAT_ROOT, '%s_obj36.tsv' % (SPLIT2NAME[split])),
                 topk=load_topk))
 

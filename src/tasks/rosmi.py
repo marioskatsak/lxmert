@@ -89,7 +89,6 @@ class ROSMI:
         dset, loader, evaluator = train_tuple
         iter_wrapper = (lambda x: tqdm(x, total=len(loader))) if args.tqdm else (lambda x: x)
 
-
         # self.writer.add_graph(self.model,loader)
         # self.writer.close()
         best_valid = 0.
@@ -98,7 +97,7 @@ class ROSMI:
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
-            for i, (sent_id, feats, feat_mask, boxes, names, sent, target) in iter_wrapper(enumerate(loader)):
+            for i, (sent_id, feats, feat_mask, boxes, names, sent, dist, target) in iter_wrapper(enumerate(loader)):
 
                 # input("lol")
                 self.model.train()
@@ -115,16 +114,24 @@ class ROSMI:
                 else:
                     names = None
 
-                feats, feat_mask, boxes, target = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda()
-                logit = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
-
+                feats, feat_mask, boxes, target, dist = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda(), dist.cuda()
+                logit, p_dist = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
+                # print(names.shape)
+                # input(sent.shape)
+                # if i == 0:
+                #     self.writer.add_graph(self.model, (feats.float(), feat_mask.float(), boxes.float(),names,sent ))
                 # assert logit.dim() == target.dim() == 2
                 loss = self.mse_loss(logit, target)
                 # print(logit)
                 # print(target)
                 # loss = iou_loss(logit, target)
+
                 iou,loss2 = giou_loss(logit, target)
-                # print(iou,giou)
+                # print(p_dist)
+                # print(dist)
+                loss += self.mse_loss(p_dist,dist.float())
+
+                # print(p_dist,torch.Tensor([[int(di)]for di in dist]))
                 # input(loss)
                 # if not loss:
                 #     print("Not ready yet")
@@ -143,9 +150,9 @@ class ROSMI:
                 label = logit
                 # input(logit)
                 # score, label = logit.max(1)
-                for sid, l in zip(sent_id, label.cpu().detach().numpy()):
+                for sid,dis, l in zip(sent_id,p_dist.cpu().detach(), label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
-                    sentid2ans[sid.item()] = l
+                    sentid2ans[sid.item()] = (l, dis)
 
 
                 self.writer.add_scalar('Loss/train', loss, n_iter)
@@ -195,7 +202,7 @@ class ROSMI:
         dset, loader, evaluator = eval_tuple
         sentid2ans = {}
         for i, datum_tuple in enumerate(loader):
-            ques_id, feats, feat_mask, boxes, names, sent = datum_tuple[:6]   # Avoid seeing ground truth
+            ques_id, feats, feat_mask, boxes, names, sent, g_d = datum_tuple[:7]   # Avoid seeing ground truth
             with torch.no_grad():
                 if args.n_ent:
                     names = (names[0].squeeze(2).cuda(), \
@@ -205,10 +212,10 @@ class ROSMI:
                     names = None
                 feats, feat_mask, boxes = feats.cuda(),feat_mask.cuda(), boxes.cuda()
                 logit = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
-                label = logit
-                for qid, l in zip(ques_id, label.cpu().detach().numpy()):
+                label, dist_ = logit
+                for qid,dis, l in zip(ques_id,dist_.cpu().detach().numpy(), label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
-                    sentid2ans[qid.item()] = l
+                    sentid2ans[qid.item()] = (l, dis)
         if dump is not None:
             evaluator.dump_result(sentid2ans, dump)
         return sentid2ans
@@ -223,12 +230,12 @@ class ROSMI:
         dset, loader, evaluator = data_tuple
         sentid2ans = {}
 
-        for i, (ques_id, feats, feat_mask, boxes, names, sent, target) in enumerate(loader):
+        for i, (ques_id, feats, feat_mask, boxes, names, sent,dist, target) in enumerate(loader):
             # input(target)
             label = target
-            for qid, l in zip(ques_id, label.cpu().numpy()):
+            for qid,dis, l in zip(ques_id,dist.cpu().numpy(), label.cpu().numpy()):
                 # ans = dset.label2ans[l]
-                sentid2ans[qid.item()] = l
+                sentid2ans[qid.item()] = (l,dis)
         return evaluator.evaluate(sentid2ans)
 
     def save(self, name, k = ''):

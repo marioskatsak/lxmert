@@ -71,6 +71,7 @@ def gen_chunks(reader, chunksize=100):
     yield chunk
 
 def load_det_obj_tsv(fname, topk=None):
+    print(topk)
     """Load object features from tsv file.
 
     :param fname: The path to the tsv file.
@@ -98,7 +99,7 @@ def load_det_obj_tsv(fname, topk=None):
                     ('names', (boxes, -1), np.dtype('<U100'))
                 ]
                 for key, shape, dtype in decode_config:
-                    print(key)
+                    # print(key)
                     # print(item[key])
                     try:
                         item[key] = np.frombuffer(base64.b64decode(ast.literal_eval(item[key])), dtype=dtype)

@@ -90,7 +90,7 @@ class VQA:
                 self.optim.zero_grad()
 
                 feats, boxes, target = feats.cuda(), boxes.cuda(), target.cuda()
-                logit = self.model(feats.float(), boxes.float(), sent)
+                logit = self.model(feats.double(), boxes.double(), sent)
                 assert logit.dim() == target.dim() == 2
                 loss = self.bce_loss(logit, target)
                 loss = loss * logit.size(1)

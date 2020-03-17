@@ -132,8 +132,8 @@ class VQATorchDataset(Dataset):
         # Get image info
         img_info = self.imgid2img[img_id]
         obj_num = img_info['num_boxes']
-        feats = img_info['features'].copy()
-        boxes = img_info['boxes'].copy()
+        feats = img_info['features'].copy().astype(np.float32)
+        boxes = img_info['boxes'].copy().astype(np.float32)
         assert obj_num == len(boxes) == len(feats)
 
         # Normalize the boxes (to 0 ~ 1)

@@ -97,7 +97,7 @@ class ROSMI:
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
-            for i, (sent_id, feats, feat_mask, boxes, names, sent, dist, target) in iter_wrapper(enumerate(loader)):
+            for i, (sent_id, feats, feat_mask, boxes, names, sent, dist, land_, bear_ , target) in iter_wrapper(enumerate(loader)):
 
                 # input("lol")
                 self.model.train()
@@ -114,22 +114,25 @@ class ROSMI:
                 else:
                     names = None
 
-                feats, feat_mask, boxes, target, dist = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda(), dist.cuda()
-                logit, p_dist = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
+                feats, feat_mask, boxes, target, dist, land_, bear_ = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda(), dist.cuda(), land_.cuda(), bear_.cuda()
+                logit, auxilaries = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
                 # print(names.shape)
                 # input(sent.shape)
                 # if i == 0:
                 #     self.writer.add_graph(self.model, (feats.float(), feat_mask.float(), boxes.float(),names,sent ))
                 # assert logit.dim() == target.dim() == 2
-                loss = self.mse_loss(logit, target)
-                # print(logit)
+                loss = self.mse_loss(logit, target)*logit.size(1)
+                # print(logit.size(1))
                 # print(target)
                 # loss = iou_loss(logit, target)
 
                 iou,loss2 = giou_loss(logit, target)
                 # print(p_dist)
                 # print(dist)
-                loss += self.mse_loss(p_dist,dist.float())
+                p_dist, p_land, p_bear = auxilaries
+                loss += self.mse_loss(p_dist,dist.float())*p_dist.size(1)
+                loss += self.mse_loss(p_land,land_.float())*p_land.size(1)
+                loss += self.mse_loss(p_bear,bear_.float())*p_bear.size(1)
 
                 # print(p_dist,torch.Tensor([[int(di)]for di in dist]))
                 # input(loss)
@@ -150,9 +153,12 @@ class ROSMI:
                 label = logit
                 # input(logit)
                 # score, label = logit.max(1)
-                for sid,dis, l in zip(sent_id,p_dist.cpu().detach(), label.cpu().detach().numpy()):
+                for sid,dis,ln,br, l in zip(sent_id, p_dist.cpu().detach().numpy(), \
+                                                p_land.cpu().detach().numpy(), \
+                                                p_bear.cpu().detach().numpy(), \
+                                                    label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
-                    sentid2ans[sid.item()] = (l, dis)
+                    sentid2ans[sid.item()] = (l, dis, ln, br)
 
 
                 self.writer.add_scalar('Loss/train', loss, n_iter)
@@ -162,13 +168,14 @@ class ROSMI:
 
             # self.scheduler.step(loss)
             log_str = f"\nEpoch {epoch}: Loss {loss}\n"
-            tmp_acc = evaluator.evaluate(sentid2ans)
+            tmp_acc, mDist = evaluator.evaluate(sentid2ans)
             log_str += f"\nEpoch {epoch}: Train {tmp_acc * 100.}%\n"
+            log_str += f"\nEpoch {epoch}: Training Av. Distance {mDist}m\n"
             self.writer.add_scalar('Accuracy/train [IoU=0.5]', tmp_acc * 100., n_iter)
             # awlf.writer.close()
 
             if self.valid_tuple is not None:  # Do Validation
-                valid_score = self.evaluate(eval_tuple)
+                valid_score, m_dist = self.evaluate(eval_tuple)
                 if valid_score > best_valid:
                     best_valid = valid_score
                     self.save("BEST")
@@ -178,6 +185,7 @@ class ROSMI:
                 self.writer.add_scalar('Accuracy/valid [IoU=0.5]', valid_score * 100., n_iter)
                 # awlf.writer.close()
                 log_str += f"Epoch {epoch}: Valid {valid_score * 100.}%\n" + \
+                           f"Epoch {epoch}: Valid Av. Distance {m_dist}m\n" + \
                            f"Epoch {epoch}: Best Train {best_train * 100.}%\n" + \
                            f"Epoch {epoch}: Best Val {best_valid * 100.}%\n"
 
@@ -202,7 +210,7 @@ class ROSMI:
         dset, loader, evaluator = eval_tuple
         sentid2ans = {}
         for i, datum_tuple in enumerate(loader):
-            ques_id, feats, feat_mask, boxes, names, sent, g_d = datum_tuple[:7]   # Avoid seeing ground truth
+            ques_id, feats, feat_mask, boxes, names, sent, g_d, land_, bear_ = datum_tuple[:9]   # Avoid seeing ground truth
             with torch.no_grad():
                 if args.n_ent:
                     names = (names[0].squeeze(2).cuda(), \
@@ -211,11 +219,14 @@ class ROSMI:
                 else:
                     names = None
                 feats, feat_mask, boxes = feats.cuda(),feat_mask.cuda(), boxes.cuda()
-                logit = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
-                label, dist_ = logit
-                for qid,dis, l in zip(ques_id,dist_.cpu().detach().numpy(), label.cpu().detach().numpy()):
+                label, aux  = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
+                dist_, lnd, brng = aux
+                for qid,dis, ln, br, l in zip(ques_id,dist_.cpu().detach().numpy(), \
+                                                lnd.cpu().detach().numpy(), \
+                                                brng.cpu().detach().numpy(), \
+                                                    label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
-                    sentid2ans[qid.item()] = (l, dis)
+                    sentid2ans[qid.item()] = (l, dis, ln, br)
         if dump is not None:
             evaluator.dump_result(sentid2ans, dump)
         return sentid2ans
@@ -230,13 +241,17 @@ class ROSMI:
         dset, loader, evaluator = data_tuple
         sentid2ans = {}
 
-        for i, (ques_id, feats, feat_mask, boxes, names, sent,dist, target) in enumerate(loader):
+        for i, (ques_id, feats, feat_mask, boxes, names, sent,dist,land_, bear_, target) in enumerate(loader):
             # input(target)
             label = target
-            for qid,dis, l in zip(ques_id,dist.cpu().numpy(), label.cpu().numpy()):
+            for qid,dis, ln, br, l in zip(ques_id,dist.cpu().detach().numpy(), \
+                                                land_.cpu().detach().numpy(), \
+                                                bear_.cpu().detach().numpy(), \
+                                                    label.cpu().detach().numpy()):
                 # ans = dset.label2ans[l]
-                sentid2ans[qid.item()] = (l,dis)
-        return evaluator.evaluate(sentid2ans)
+                sentid2ans[qid.item()] = (l, dis, ln, br)
+        acc, dist = evaluator.evaluate(sentid2ans)
+        return acc
 
     def save(self, name, k = ''):
         torch.save(self.model.state_dict(),
@@ -251,7 +266,7 @@ class ROSMI:
 if __name__ == "__main__":
 
     scores = []
-    for k in range(1):
+    for k in range(8):
         print(f"{k} on cross")
         args.train = f'{k}_easy_train'
         args.valid = f'{k}_easy_val'
@@ -290,5 +305,7 @@ if __name__ == "__main__":
             else:
                 print("DO NOT USE VALIDATION")
             scores.append(rosmi.train(rosmi.train_tuple, rosmi.valid_tuple))
+            with open('scores.json', 'w') as scores_out:
+                json.dump(scores, scores_out)
     print(f"Best scores: {scores}")
     print(f"Mean 5-fold accuracy {sum(scores) / len(scores)}")

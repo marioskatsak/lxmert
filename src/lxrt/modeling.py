@@ -911,7 +911,7 @@ class LXRTModel(BertPreTrainedModel):
         if names_feat is not None:
             # TO DO
             names_output = self.embeddings(names_feat[0], names_feat[1])
-            # print(names_output.shape)
+            print(names_output.shape)
             _names = []
             for id in range(names_output.shape[1]):
 

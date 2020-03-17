@@ -10,11 +10,90 @@ import time, ast, torch
 
 import numpy as np
 from tqdm import tqdm
+from math import (
+    degrees, radians,
+    sin, cos, asin, tan, atan, atan2, pi,
+    sqrt, exp, log, fabs, log10, pow
+)
+
+from constants import (
+    EARTH_MEAN_RADIUS,
+    EARTH_MEAN_DIAMETER,
+    EARTH_EQUATORIAL_RADIUS,
+    EARTH_EQUATORIAL_METERS_PER_DEGREE,
+    I_EARTH_EQUATORIAL_METERS_PER_DEGREE,
+    HALF_PI,
+    QUARTER_PI,
+)
+
+
 csv.field_size_limit(sys.maxsize)
 FIELDNAMES = ["img_id", "img_h", "img_w", "objects_id", "objects_conf",
               "attrs_id", "attrs_conf", "num_boxes", "boxes", "features"]
 FIELDITEMS = ["img_id", "img_h", "img_w", "num_boxes", "boxes",
               "features","names"]
+
+# -122.44, 34.44 etc.
+def haversine(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance between two points
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+    # haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    r = 6371 # Radius of earth in kilometers. Use 3956 for miles
+    return c * r
+
+def destination(point, distance, bearing):
+
+    # print(point)
+    lon1,lat1 = (radians(float(coord)) for coord in point)
+
+    # print(distance," ",bearing)
+    radians_bearing = radians(float(bearing))
+    # print(radians_bearing)
+
+    delta = float(distance) / EARTH_MEAN_RADIUS
+    lat2 = asin(
+        sin(lat1)*cos(delta) +
+        cos(lat1)*sin(delta)*cos(radians_bearing)
+    )
+    numerator = sin(radians_bearing) * sin(delta) * cos(lat1)
+    denominator = cos(delta) - sin(lat1) * sin(lat2)
+
+    lon2 = lon1 + atan2(numerator, denominator)
+    # print(type(lon2))
+    lon2_deg = (degrees(lon2) + 540) % 360 - 180
+    lat2_deg = degrees(lat2)
+
+    return [lon2_deg,lat2_deg]
+
+def getPointLatLng(x, y,centre_lon,centre_lat,_zoom,height,width):
+    parallelMultiplier = cos(centre_lat * pi / 180)
+    degreesPerPixelX = 360 / pow(2, _zoom + 8)
+    degreesPerPixelY = 360 / pow(2, _zoom + 8) * parallelMultiplier
+    pointLat = centre_lat - degreesPerPixelY * ( y - height / 2)
+    pointLng = centre_lon + degreesPerPixelX * ( x  - width / 2)
+
+    return (pointLat, pointLng)
+# Calculating tile needed for converting GPS to pixels
+# expects latlon like [37.0000, -122.2222]
+def calculateTiles(latlon,zoom):
+
+    lon_rad = radians(latlon[1]);
+    lat_rad = radians(latlon[0]);
+    n = pow(2.0, zoom);
+
+    tileX = ((latlon[1] + 180) / 360) * n;
+    tileY = (1 - (log(tan(lat_rad) + 1.0/cos(lat_rad)) / pi)) * n / 2.0;
+    # print(" X: {}, Y: {}".format(tileX,tileY))
+    return [tileX,tileY]
 
 
 def load_obj_tsv(fname, topk=None):

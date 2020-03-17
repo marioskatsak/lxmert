@@ -27,6 +27,16 @@ class ROSMIModel(nn.Module):
             # GeLU(),
             nn.Linear(self.hid_dim, 1)
         )
+        self.bearing_fc = nn.Sequential(
+            # nn.Linear(self.hid_dim, self.hid_dim*2),
+            # GeLU(),
+            nn.Linear(self.hid_dim, 1)
+        )
+        self.land_fc = nn.Sequential(
+            # nn.Linear(self.hid_dim, self.hid_dim*2),
+            # GeLU(),
+            nn.Linear(self.hid_dim, 4)
+        )
         # ROSMI Pred heads
         self.logit_fc = nn.Sequential(
             # nn.Linear(68 * self.hid_dim* 3, self.hid_dim),
@@ -59,4 +69,6 @@ class ROSMIModel(nn.Module):
         # print(x.shape)
         logit = self.logit_fc(x)
         dist_ = self.distance_fc(x)
-        return logit, dist_
+        landmark_ = self.land_fc(x)
+        bearing_ = self.bearing_fc(x)
+        return logit, (dist_, landmark_, bearing_)

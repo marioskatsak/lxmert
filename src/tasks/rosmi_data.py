@@ -10,7 +10,7 @@ import torch
 from torch.utils.data import Dataset
 
 from param import args
-from utils import load_obj_tsv, load_det_obj_tsv, calc_iou_individual, iou_loss
+from utils import *
 from lxrt.entry import convert_sents_to_features
 
 from lxrt.tokenization import BertTokenizer
@@ -24,6 +24,35 @@ SCALES = {
             '4':4,
             '5':4,
             '6':4
+        }
+
+ZOOMS = {
+            0:18,
+            1:18,
+            2:15,
+            3:17,
+            4:15,
+            5:15,
+            6:15
+        }
+GOLD_SIZES = {
+            0:25,
+            1:25,
+            2:3,
+            3:12,
+            4:3,
+            5:3,
+            6:3
+        }
+#  centers in lat , lon
+CENTRES = {
+            0:[37.73755663692416, -122.19795016945281],
+            1:[32.58577585559755, -117.09164085240766],
+            2:[32.61748188924153, -117.14119088106783],
+            3:[32.60760476678458, -117.08442647549721],
+            4:[37.694753719037756, -122.19294177307802],
+            5:[37.71336706451458, -122.19060472858666],
+            6:[32.59795016014067, -117.11036626803674]
         }
 # Load part of the dataset for fast checking.
 # Notice that here is the number of images instead of the number of data,
@@ -205,10 +234,12 @@ class ROSMITorchDataset(Dataset):
         sent_id = datum['sentid']
         sent = datum['sentence']['raw']
         dist = torch.tensor([int(datum['landmarks'][0]['distance'])])
-        # if datum['landmarks'][0]['g_type'] == 'Point':
-        #     target = torch.tensor(datum['landmarks'][0]['raw_pixels'])
-        # else:
-        #     target = torch.tensor(datum['landmarks'][0]['landmark_pixels'])
+        bearing = torch.tensor([int(datum['landmarks'][0]['bearing'])])
+        if datum['landmarks'][0]['g_type'] == 'Point':
+            landmark = torch.tensor(datum['landmarks'][0]['raw_pixels'])
+        else:
+            landmark = torch.tensor(datum['landmarks'][0]['landmark_pixels'])
+
         target = torch.tensor(datum['gold_pixels'])
         # print(target)
         # print(dist)
@@ -266,12 +297,13 @@ class ROSMITorchDataset(Dataset):
             # names_segment_ids.append(torch.tensor(sentence[0].segment_ids, dtype=torch.long))
             # names_mask.append(torch.tensor(sentence[0].input_mask, dtype=torch.long))
 
-            if (100 - len(names_ids)) > 0:
+            if (68 - len(names_ids)) > 0:
+                print("Zerppp")
                 # Zero-pad up to the sequence length.
-                padding = (100 - len(names_ids))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
+                padding = (68 - len(names_ids))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
 
-                feats_vis_padding = torch.zeros(((100 - feats.shape[0]),feats.shape[1]), dtype=torch.double)
-                box_vis_padding = torch.zeros(((100 - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
+                feats_vis_padding = torch.zeros(((68 - feats.shape[0]),feats.shape[1]), dtype=torch.double)
+                box_vis_padding = torch.zeros(((68 - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
                 feats = torch.cat((feats,feats_vis_padding))
                 boxes = torch.cat((boxes,box_vis_padding))
 
@@ -281,7 +313,7 @@ class ROSMITorchDataset(Dataset):
 
                     # bert hidden_size = 768
                 feat_mask = torch.ones(feats.shape[0], dtype=torch.double)
-                feats_padding = torch.zeros((100 - feats.shape[0]), dtype=torch.double)
+                feats_padding = torch.zeros((68 - feats.shape[0]), dtype=torch.double)
                 feat_mask = torch.cat((feat_mask,feats_padding))
             else:
 
@@ -303,26 +335,18 @@ class ROSMITorchDataset(Dataset):
 
             assert obj_num == len(boxes) == len(feats)
 
-        # print(feats.shape)
-        # print(type(feats))
-        # print(feat_mask.shape)
-        # print(boxes.shape)
-        # print(boxes.shape)
-        # print(names_ids.shape)
-        # print(names_segment_ids.shape)
-        # print(feat_mask.shape)
-        # input(names_mask.shape)
-        #
-        # print(np.mean(feats))
-        # print(np.mean(boxes))
+
 
         # x = np.random.randn(N, D_in)
-        boxes = np.random.rand(boxes.shape[0],boxes.shape[1])
-        feats = np.random.rand(feats.shape[0],feats.shape[1])
+
+
+
+        # boxes = np.random.rand(boxes.shape[0],boxes.shape[1])
+        # feats = np.random.rand(feats.shape[0],feats.shape[1])
 
         # print(np.mean(feats))
-        # input(np.mean(boxes))
-        return sent_id, feats, feat_mask, boxes, _names, sent,dist, target#bearing
+
+        return sent_id, feats, feat_mask, boxes, _names, sent,dist,landmark, bearing, target#bearing
             # else:
             #     return ques_id, feats, boxes, ques
 
@@ -333,7 +357,8 @@ class ROSMIEvaluator:
 
     def evaluate(self, sentid2ans: dict):
         score = 0.
-        for sentid, (pred_box, dis) in sentid2ans.items():
+        mDist = 0.
+        for sentid, (pred_box, dis, ln, br) in sentid2ans.items():
             # datum = self.dataset.id2datum[sentid]
             # gold = torch.tensor(self.dataset.imgid2img[datum['img_id']]['boxes'][-1])
             datum = self.dataset.id2datum[sentid]
@@ -347,15 +372,38 @@ class ROSMIEvaluator:
             print(datum['sentence']['raw'])
             print(pred_box,datum['gold_pixels'])
             print(dis, datum['landmarks'][0]['distance'])
+            print(br, datum['landmarks'][0]['bearing'])
+
+            if datum['landmarks'][0]['g_type'] == 'Point':
+                print(ln, datum['landmarks'][0]['raw_pixels'])
+            else:
+                print(ln, datum['landmarks'][0]['landmark_pixels'])
             print(iou, siou)
 
+
+            sn_id = int(datum['scenario_items'].split('rio')[1].split('.j')[0])
+
+
+            pred_coords = getPointLatLng(pred_box[0]+GOLD_SIZES[sn_id], pred_box[1]+GOLD_SIZES[sn_id],  \
+                            CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
+
+            #
+            # gold_coords = getPointLatLng(datum['gold_pixels'][0]+GOLD_SIZES[sn_id], datum['gold_pixels'][1]+GOLD_SIZES[sn_id],  \
+            #                 CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
+            # print(datum['gold_coordinates'])
+            # print(gold_coords)
+            # print(haversine(gold_coords[1],gold_coords[0],datum['gold_coordinates'][0],datum['gold_coordinates'][1])*1000)
+            distance = haversine(pred_coords[1],pred_coords[0],datum['gold_coordinates'][0],datum['gold_coordinates'][1])*1000
+            print(f"Distance is {distance}m")
+            mDist += distance
             if siou > 0.65:
                 # print("ONE CORRECT")
             # if ans in label:
                 score += 1
         # if score >=50:
         #     input("?")
-        return score / len(sentid2ans)
+
+        return score / len(sentid2ans), mDist / len(sentid2ans)
 
     def dump_result(self, sentid2ans: dict, path):
         """

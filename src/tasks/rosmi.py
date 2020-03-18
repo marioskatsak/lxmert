@@ -130,9 +130,9 @@ class ROSMI:
                 # print(p_dist)
                 # print(dist)
                 p_dist, p_land, p_bear = auxilaries
-                loss += self.mse_loss(p_dist,dist.float())*p_dist.size(1)
-                loss += self.mse_loss(p_land,land_.float())*p_land.size(1)
-                loss += self.mse_loss(p_bear,bear_.float())*p_bear.size(1)
+                # loss += self.mse_loss(p_dist,dist.float())*p_dist.size(1)
+                # loss += self.mse_loss(p_land,land_.float())*p_land.size(1)
+                # loss += self.mse_loss(p_bear,bear_.float())*p_bear.size(1)
 
                 # print(p_dist,torch.Tensor([[int(di)]for di in dist]))
                 # input(loss)

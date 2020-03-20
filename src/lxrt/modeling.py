@@ -946,7 +946,7 @@ class LXRTModel(BertPreTrainedModel):
         pooled_output = self.pooler(visn_feats)
         pooled_output2 = self.pooler(lang_feats)
 
-        pooled_output = torch.cat(pooled_output,pooled_output2, 1)
+        pooled_output = torch.cat((pooled_output,pooled_output2), 1)
         input(pooled_output.shape)
 
         return (lang_feats, visn_feats), pooled_output

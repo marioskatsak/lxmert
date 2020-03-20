@@ -12,7 +12,7 @@ cp $0 $output/run.bash
 CUDA_VISIBLE_DEVICES=3 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
     --train train --valid valid  \
-    --llayers 1 --xlayers 0 --rlayers 1 \
+    --llayers 0 --xlayers 0 --rlayers 0 \
     --dataPath /scratch/mmk11/data/rosmi/ \
     --batchSize 511 --optim bert --lr 1e-3 --epochs 10000 \
     --tqdm --output $output ${@:3}

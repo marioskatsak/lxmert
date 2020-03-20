@@ -81,6 +81,12 @@ SPLIT2NAME = {
     '3_easy_val':'3_easy_val',
     '4_easy_train':'4_easy_train',
     '4_easy_val':'4_easy_val',
+    '5_easy_train':'5_easy_train',
+    '5_easy_val':'5_easy_val',
+    '6_easy_train':'6_easy_train',
+    '6_easy_val':'6_easy_val',
+    '7_easy_train':'7_easy_train',
+    '7_easy_val':'7_easy_val',
 
 }
 # SPLIT2NAME = {

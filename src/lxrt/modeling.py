@@ -933,6 +933,7 @@ class LXRTModel(BertPreTrainedModel):
         else:
             _names = None
 
+
         # Run LXRT backbone
         lang_feats, visn_feats = self.encoder(
             embedding_output,
@@ -940,7 +941,13 @@ class LXRTModel(BertPreTrainedModel):
             visn_feats=visual_feats,
             visn_attention_mask=extended_visual_attention_mask,
             names = _names)
-        pooled_output = self.pooler(lang_feats)
+        print(lang_feats.shape)
+        print(visn_feats.shape)
+        pooled_output = self.pooler(visn_feats)
+        pooled_output2 = self.pooler(lang_feats)
+
+        pooled_output = torch.cat(pooled_output,pooled_output2, 1)
+        input(pooled_output.shape)
 
         return (lang_feats, visn_feats), pooled_output
 

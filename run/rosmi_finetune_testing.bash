@@ -11,6 +11,6 @@ cp $0 $output/run.bash
 CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
     --train train --valid valid \
-    --llayers 1 --xlayers 0 --rlayers 1 \
-    --batchSize 250 --optim bert --lr 1e-3 --epochs 10000 \
+    --llayers 1 --xlayers 1 --rlayers 1 \
+    --batchSize 50 --optim bert --lr 1e-3 --epochs 3000 \
     --output $output ${@:3}

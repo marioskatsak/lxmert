@@ -25,16 +25,22 @@ class ROSMIModel(nn.Module):
         self.distance_fc = nn.Sequential(
             # nn.Linear(self.hid_dim, self.hid_dim*2),
             # GeLU(),
+            GeLU(),
+            BertLayerNorm(self.hid_dim, eps=1e-12),
             nn.Linear(self.hid_dim, 1)
         )
         self.bearing_fc = nn.Sequential(
             # nn.Linear(self.hid_dim, self.hid_dim*2),
             # GeLU(),
+            GeLU(),
+            BertLayerNorm(self.hid_dim, eps=1e-12),
             nn.Linear(self.hid_dim, 1)
         )
         self.land_fc = nn.Sequential(
             # nn.Linear(self.hid_dim, self.hid_dim*2),
             # GeLU(),
+            GeLU(),
+            BertLayerNorm(self.hid_dim, eps=1e-12),
             nn.Linear(self.hid_dim, 4)
         )
         # ROSMI Pred heads
@@ -46,6 +52,9 @@ class ROSMIModel(nn.Module):
             nn.Linear(self.hid_dim*4, 4)
         )
         self.logit_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        self.land_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        self.bearing_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        self.distance_fc.apply(self.lxrt_encoder.model.init_bert_weights)
 
     def forward(self, feat, feat_mask, pos, names, sent):
         """

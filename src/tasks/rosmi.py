@@ -4,7 +4,7 @@
 import os, time
 import collections
 
-import torch
+import torch, json
 import torch.nn as nn
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
@@ -121,7 +121,7 @@ class ROSMI:
                 # if i == 0:
                 #     self.writer.add_graph(self.model, (feats.float(), feat_mask.float(), boxes.float(),names,sent ))
                 # assert logit.dim() == target.dim() == 2
-                loss = self.mse_loss(logit, target)*logit.size(1)
+                loss = self.mse_loss(logit, target)
                 # print(logit.size(1))
                 # print(target)
                 # loss = iou_loss(logit, target)
@@ -130,9 +130,9 @@ class ROSMI:
                 # print(p_dist)
                 # print(dist)
                 p_dist, p_land, p_bear = auxilaries
-                # loss += self.mse_loss(p_dist,dist.float())*p_dist.size(1)
-                # loss += self.mse_loss(p_land,land_.float())*p_land.size(1)
-                # loss += self.mse_loss(p_bear,bear_.float())*p_bear.size(1)
+                loss += self.mse_loss(p_dist,dist.float())#*p_dist.size(1)
+                loss += self.mse_loss(p_land,land_.float())#*p_land.size(1)
+                loss += self.mse_loss(p_bear,bear_.float())#*p_bear.size(1)
 
                 # print(p_dist,torch.Tensor([[int(di)]for di in dist]))
                 # input(loss)
@@ -266,7 +266,8 @@ class ROSMI:
 if __name__ == "__main__":
 
     scores = []
-    for k in range(8):
+    # for k in range(0,8):
+    for k in range(1):
         print(f"{k} on cross")
         args.train = f'{k}_easy_train'
         args.valid = f'{k}_easy_val'

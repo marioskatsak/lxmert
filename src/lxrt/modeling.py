@@ -871,6 +871,7 @@ class LXRTModel(BertPreTrainedModel):
         self.crossAtt = BertCrossattLayer(config)
         self.encoder = LXRTEncoder(config)
         self.pooler = BertPooler(config)
+        self.pooler2 = BertPooler(config)
         self.apply(self.init_bert_weights)
 
     def forward(self, input_ids, token_type_ids=None, attention_mask=None,
@@ -944,7 +945,7 @@ class LXRTModel(BertPreTrainedModel):
         # print(lang_feats.shape)
         # print(visn_feats.shape)
         pooled_output = self.pooler(visn_feats)
-        pooled_output2 = self.pooler(lang_feats)
+        pooled_output2 = self.pooler2(lang_feats)
 
         pooled_output = torch.cat((pooled_output,pooled_output2), 1)
         # input(pooled_output.shape)

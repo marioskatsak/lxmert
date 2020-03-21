@@ -363,8 +363,10 @@ class ROSMIEvaluator:
 
     def evaluate(self, sentid2ans: dict):
         score = 0.
+        score2 = 0.
         mDist = 0.
         for sentid, (pred_box, dis, ln, br) in sentid2ans.items():
+            siou2 = 0
             # datum = self.dataset.id2datum[sentid]
             # gold = torch.tensor(self.dataset.imgid2img[datum['img_id']]['boxes'][-1])
             datum = self.dataset.id2datum[sentid]
@@ -389,11 +391,37 @@ class ROSMIEvaluator:
 
             sn_id = int(datum['scenario_items'].split('rio')[1].split('.j')[0])
 
+            centre = calculateTiles(CENTRES[sn_id],ZOOMS[sn_id])
 
             pred_coords = getPointLatLng(pred_box[0]+GOLD_SIZES[sn_id], pred_box[1]+GOLD_SIZES[sn_id],  \
                             CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
 
-            #
+
+            pred_land_coords = getPointLatLng(ln[0]+GOLD_SIZES[sn_id], ln[1]+GOLD_SIZES[sn_id],  \
+                            CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
+
+            final_coord = destination([pred_land_coords[1], pred_land_coords[0]] , dis, br)
+            # final_coord = destination([datum['landmarks'][0]['raw_gps'][0], datum['landmarks'][0]['raw_gps'][1]] , datum['landmarks'][0]['distance'], datum['landmarks'][0]['bearing'])
+
+            tmp_ob = {'g_type':'Point'}
+            tmp_ob['coordinates'] = final_coord
+            tmp_pixs = generatePixel(tmp_ob,centre,ZOOMS[sn_id],[ 700, 500], GOLD_SIZES[sn_id])
+            print(datum['gold_pixels'])
+            new_bbox = None
+            if tmp_pixs:
+                px = tmp_pixs["points_x"]
+                py = tmp_pixs["points_y"]
+                new_bbox = [np.min(px), np.min(py), np.max(px), np.max(py)]
+            # input(new_bbox)
+
+
+                iou = calc_iou_individual(new_bbox, datum['gold_pixels'])
+                _scale = 25/SCALES[datum['scenario_items'].split('rio')[1].split('.json')[0]]
+                siou2 = iou*_scale
+            if siou2 > 0.65:
+                # print("ONE CORRECT")
+            # if ans in label:
+                score2 += 1
             # gold_coords = getPointLatLng(datum['gold_pixels'][0]+GOLD_SIZES[sn_id], datum['gold_pixels'][1]+GOLD_SIZES[sn_id],  \
             #                 CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
             # print(datum['gold_coordinates'])
@@ -402,14 +430,17 @@ class ROSMIEvaluator:
             distance = haversine(pred_coords[1],pred_coords[0],datum['gold_coordinates'][0],datum['gold_coordinates'][1])*1000
             print(f"Distance is {distance}m")
             mDist += distance
-            if siou > 0.65:
+            if siou > 0.65 or siou2 > 0.65:
                 # print("ONE CORRECT")
             # if ans in label:
                 score += 1
         # if score >=50:
         #     input("?")
+            # if score2 > score:
+            #     print("Better!!")
+            #     score = score2
 
-        return score / len(sentid2ans), mDist / len(sentid2ans)
+        return score / len(sentid2ans), mDist / len(sentid2ans), score2 / len(sentid2ans)
 
     def dump_result(self, sentid2ans: dict, path):
         """

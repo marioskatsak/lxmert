@@ -93,6 +93,7 @@ class ROSMI:
         # self.writer.close()
         best_valid = 0.
         best_train = 0.
+        best_acc2 = 0.
         loss = 99999
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
@@ -168,26 +169,29 @@ class ROSMI:
 
             # self.scheduler.step(loss)
             log_str = f"\nEpoch {epoch}: Loss {loss}\n"
-            tmp_acc, mDist = evaluator.evaluate(sentid2ans)
+            tmp_acc, mDist, acc2 = evaluator.evaluate(sentid2ans)
             log_str += f"\nEpoch {epoch}: Train {tmp_acc * 100.}%\n"
             log_str += f"\nEpoch {epoch}: Training Av. Distance {mDist}m\n"
             self.writer.add_scalar('Accuracy/train [IoU=0.5]', tmp_acc * 100., n_iter)
             # awlf.writer.close()
 
             if self.valid_tuple is not None:  # Do Validation
-                valid_score, m_dist = self.evaluate(eval_tuple)
+                valid_score, m_dist, acc2 = self.evaluate(eval_tuple)
                 if valid_score > best_valid:
                     best_valid = valid_score
                     self.save("BEST")
                 if tmp_acc > best_train:
                     best_train = tmp_acc
+                if acc2 > best_acc2:
+                    best_acc2 = acc2
 
                 self.writer.add_scalar('Accuracy/valid [IoU=0.5]', valid_score * 100., n_iter)
                 # awlf.writer.close()
                 log_str += f"Epoch {epoch}: Valid {valid_score * 100.}%\n" + \
                            f"Epoch {epoch}: Valid Av. Distance {m_dist}m\n" + \
                            f"Epoch {epoch}: Best Train {best_train * 100.}%\n" + \
-                           f"Epoch {epoch}: Best Val {best_valid * 100.}%\n"
+                           f"Epoch {epoch}: Best Val {best_valid * 100.}%\n" + \
+                           f"Epoch {epoch}: Best Val2 {best_acc2 * 100.}%\n"
 
             print(log_str, end='')
 
@@ -250,7 +254,7 @@ class ROSMI:
                                                     label.cpu().detach().numpy()):
                 # ans = dset.label2ans[l]
                 sentid2ans[qid.item()] = (l, dis, ln, br)
-        acc, dist = evaluator.evaluate(sentid2ans)
+        acc, dist, acc2 = evaluator.evaluate(sentid2ans)
         return acc
 
     def save(self, name, k = ''):

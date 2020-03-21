@@ -50,6 +50,219 @@ def haversine(lon1, lat1, lon2, lat2):
     r = 6371 # Radius of earth in kilometers. Use 3956 for miles
     return c * r
 
+
+# returns dictionary with the name 'points_x' and 'points_y'
+def generatePixel(scene_object,centre,zoom,img_dim, size=7):
+    pix_pos = {}
+    # depending on the geometry type generate pixels from the
+    # raw GPS and save them. These are used for prediction and
+    # for the generation of the attention masks
+    if scene_object['g_type'] == 'Point':
+        # print(img_dim)
+        # print(zoom)
+        # print(centre)
+        # print([scene_object['coordinates'][1],scene_object['coordinates'][0]])
+        tmppx = convertGeoToPixel(centre,[scene_object['coordinates'][1],scene_object['coordinates'][0]],zoom,img_dim)
+        # input(tmppx)
+        if tmppx[0] < 0 or tmppx[0] >= img_dim[0]  or tmppx[1] < 0 or tmppx[1] >= img_dim[1]:
+            return None
+        x_,y_ = midPointCircleDraw(tmppx[0],tmppx[1],size,img_dim)
+        pix_pos['points_x'] = x_
+        pix_pos['points_y'] = y_
+        # tmp_land['points_x'] = tmppx[0]
+        # tmp_land['points_y'] = tmppx[1]
+        # tmp_land['all_att_pixels'] = [tmppx[0]-10,tmppx[1]-10,tmppx[0]+10,tmppx[1]+10]
+    elif scene_object['g_type'] == 'LineString':
+        tmppx = []
+        for pnt in scene_object['coordinates']:
+            tmp_px = convertGeoToPixel(centre,[pnt[1],pnt[0]],zoom,img_dim)
+
+            if tmp_px[0] < 0 or tmp_px[0] >= img_dim[0]  or tmp_px[1] < 0 or tmp_px[1] >= img_dim[1]:
+                continue
+            tmppx.append(tmp_px)
+
+        mask = Image.new('L', img_dim, color = 0)
+        mask_draw=ImageDraw.Draw(mask)
+        # highlighted_area = xy
+        # if type == 'Point':
+        new_tmppx = []
+        if len(tmppx) >=2:
+            mask_draw.line([(x_[0],x_[1]) for x_ in tmppx], fill = 255)
+            width, height = mask.size
+            pix2 = mask.load()
+            for x in range(1,width):
+                for y in range(1,height):
+                    if pix2[x,y] == 255:
+                        # input(pix2[x,y])
+                        new_tmppx.append([float(x),float(y)])
+            # mask.show()
+        # input("??")
+        pix_pos['points_x'] = [i[0] for i in new_tmppx]
+        pix_pos['points_y'] = [i[1] for i in new_tmppx]
+
+        # pix_pos['points_x'] = [i[0] for i in tmppx]
+        # pix_pos['points_y'] = [i[1] for i in tmppx]
+        # tmp_land['all_att_pixels'] = tmppx
+        # draw.line(tmppx,fill=color)
+        # dist_ = haversine(c[1],c[0],map['coordinates'][0][0],map['coordinates'][0][1])
+    else:
+        tmppx = []
+        for side in scene_object['coordinates']:
+            for pnt in side:
+                tmp_px = convertGeoToPixel(centre,[pnt[1],pnt[0]],zoom,img_dim)
+                # if tmp_px[0] < 0:
+                #     tmp_px[0] = 0
+                # if tmp_px[0] > img_dim[0]:
+                #     tmp_px[0] = img_dim[0]
+                # if tmp_px[1] < 0:
+                #     tmp_px[1] = 0
+                # if tmp_px[1] > img_dim[1]:
+                #     tmp_px[1] = img_dim[1]
+                if tmp_px[0] < 0 or tmp_px[0] >= img_dim[0]  or tmp_px[1] < 0 or tmp_px[1] >= img_dim[1]:
+                    # print(tmp_px)
+                    continue
+                tmppx.append(tmp_px)
+        mask = Image.new('L', img_dim, color = 0)
+        mask_draw=ImageDraw.Draw(mask)
+        # highlighted_area = xy
+        # if type == 'Point':
+        new_tmppx = []
+        if len(tmppx) >=2:
+            mask_draw.polygon([(x_[0],x_[1]) for x_ in tmppx], fill = 255)
+            width, height = mask.size
+            pix2 = mask.load()
+            for x in range(1,width):
+                for y in range(1,height):
+                    if pix2[x,y] == 255:
+                        # input(pix2[x,y])
+                        new_tmppx.append([float(x),float(y)])
+            # mask.show()
+        # input("??")
+        pix_pos['points_x'] = [i[0] for i in new_tmppx]
+        pix_pos['points_y'] = [i[1] for i in new_tmppx]
+
+    if len(pix_pos['points_x']) < 6 or len(pix_pos['points_y']) < 6:
+        # print("less than 5 points")
+        # print(pix_pos)
+        # print(scene_object['name'])
+        return None
+    # tmp_regions[tmposm['category_id']] = tmp_land
+    return pix_pos
+
+
+# Implementing Mid-PoCircle Drawing
+# Algorithm
+def midPointCircleDraw(x_centre,y_centre, r,im_dim):
+    x_points = []
+    y_points = []
+    x = r
+    y = 0
+
+    # Printing the initial poon the
+    # axes after translation
+    # print("(", x + x_centre, ", ",
+    #            y + y_centre, ")",
+    #            sep = "", end = "")
+    if (x + x_centre) > 0 and (x + x_centre) < (im_dim[0]-1)  and (y + y_centre) > 0 and (y + y_centre) < (im_dim[1]-1):
+        x_points.append(x + x_centre)
+        y_points.append(y + y_centre)
+    # When radius is zero only a single
+    # powill be printed
+    if (r > 0) :
+        # print("(", x + x_centre, ", ",
+        #           -y + y_centre, ")",
+        #           sep = "", end = "")
+        if (x + x_centre) > 0 and (x + x_centre) < (im_dim[0]-1)  and (-y + y_centre) > 0 and (-y + y_centre) < (im_dim[1]-1):
+            x_points.append(x + x_centre)
+            y_points.append(-y + y_centre)
+
+        if (y + x_centre) > 0 and (y + x_centre) < (im_dim[0]-1)  and (x + y_centre) > 0 and (x + y_centre) < (im_dim[1]-1):
+            x_points.append(y + x_centre)
+            y_points.append(x + y_centre)
+
+        if (-y + x_centre) > 0 and (-y + x_centre) < (im_dim[0]-1)  and (x + y_centre) > 0 and (x + y_centre) < (im_dim[1]-1):
+            x_points.append(-y + x_centre)
+            y_points.append(x + y_centre)
+        #
+        # print("(", -y + x_centre, ", ",
+        #             x + y_centre, ")", sep = "")
+    # Initialising the value of P
+    P = 1 - r
+    while (x > y) :
+
+        y += 1
+
+        # Mid-pois inside or on the
+        # perimeter
+        if (P <= 0):
+            P = P + 2 * y + 1
+
+        # Mid-pois outside the perimeter
+        else:
+            x -= 1
+            P = P + 2 * y - 2 * x + 1
+
+        # All the perimeter points have
+        # already been printed
+        if (x < y):
+            break
+
+        # Printing the generated poand its reflection
+        # in the other octants after translation
+
+        if (x + x_centre) > 1 and (x + x_centre) < (im_dim[0]-1)  and (y + y_centre) > 1 and (y + y_centre) < (im_dim[1]-1):
+            x_points.append(x + x_centre)
+            y_points.append(y + y_centre)
+        # print("(", x + x_centre, ", ", y + y_centre,
+        #                     ")", sep = "", end = "")
+
+        if (-x + x_centre) > 1 and (-x + x_centre) < (im_dim[0]-1)  and (y + y_centre) > 1 and (y + y_centre) < (im_dim[1]- 1):
+            x_points.append(-x + x_centre)
+            y_points.append(y + y_centre)
+        # print("(", -x + x_centre, ", ", y + y_centre,
+        #                      ")", sep = "", end = "")
+
+        if (x + x_centre) > 1 and (x + x_centre) < (im_dim[0]-1)  and (-y + y_centre) > 1 and (-y + y_centre) < (im_dim[1]- 1):
+            x_points.append(x + x_centre)
+            y_points.append(-y + y_centre)
+        # print("(", x + x_centre, ", ", -y + y_centre,
+        #                      ")", sep = "", end = "")
+        # print("(", -x + x_centre, ", ", -y + y_centre,
+        #                                 ")", sep = "")
+
+        if (-x + x_centre) > 1 and (-x + x_centre) < (im_dim[0]-1)  and (-y + y_centre) > 1 and (-y + y_centre) < (im_dim[1]- 1):
+            x_points.append(-x + x_centre)
+            y_points.append(-y + y_centre)
+        # If the generated pois on the line x = y then
+        # the perimeter points have already been printed
+        if (x != y) :
+
+            if (y + x_centre) > 1 and (y + x_centre) < (im_dim[0]-1)  and (x + y_centre) > 1 and (x + y_centre) < (im_dim[1]- 1):
+                x_points.append(y + x_centre)
+                y_points.append(x + y_centre)
+            # print("(", y + x_centre, ", ", x + y_centre,
+            #                     ")", sep = "", end = "")
+
+            if (-y + x_centre) > 1 and (-y + x_centre) < (im_dim[0]-1)  and (x + y_centre) > 1 and (x + y_centre) < (im_dim[1]- 1):
+                x_points.append(-y + x_centre)
+                y_points.append(x + y_centre)
+            # print("(", -y + x_centre, ", ", x + y_centre,
+            #                      ")", sep = "", end = "")
+
+            if (y + x_centre) > 1 and (y + x_centre) < (im_dim[0]-1)  and (-x + y_centre) > 1 and (-x + y_centre) < (im_dim[1]- 1):
+                x_points.append(y + x_centre)
+                y_points.append(-x + y_centre)
+            # print("(", y + x_centre, ", ", -x + y_centre,
+            #                      ")", sep = "", end = "")
+
+            if (-y + x_centre) > 1 and (-y + x_centre) < (im_dim[0]-1)  and (-x + y_centre) > 1 and (-x + y_centre) < (im_dim[1]- 1):
+                x_points.append(-y + x_centre)
+                y_points.append(-x + y_centre)
+            # print("(", -y + x_centre, ", ", -x + y_centre,
+            #                                 ")", sep = "")
+    return x_points,y_points
+
+
 def destination(point, distance, bearing):
 
     # print(point)
@@ -94,6 +307,34 @@ def calculateTiles(latlon,zoom):
     tileY = (1 - (log(tan(lat_rad) + 1.0/cos(lat_rad)) / pi)) * n / 2.0;
     # print(" X: {}, Y: {}".format(tileX,tileY))
     return [tileX,tileY]
+
+# Convert GPS to pixels. Need center of the map in GPS, lat/lon GPS, zoom level,
+# dimension of the image.
+def convertGeoToPixel(centre_, latlon, zoom, imgDim, adjust=False):
+    # 	mapWidth = imgDim[0];
+    # 	mapHeight = imgDim[1]
+    #
+    # double lon = lon_centre
+    # double lat = lat_centre
+    # double zoom = 6; # 6.5156731549786215 would be possible too
+    if len(centre_) == 0:
+        # print("New centre")
+        centre_ = calculateTiles(latlon,zoom)
+    point = calculateTiles(latlon,zoom)
+    # print(centre_[0] - point[0])
+    # print(imgDim)
+    # print(zoom)
+    if adjust:
+        pix_x = imgDim[0]/2.13 - (centre_[0] - point[0])*256
+        pix_y = imgDim[1]/2.5 - (centre_[1] - point[1])*256
+    else:
+        pix_x = imgDim[0]/2 - (centre_[0] - point[0])*256
+        pix_y = imgDim[1]/2 - (centre_[1] - point[1])*256
+
+    return [pix_x,pix_y]
+
+
+
 
 
 def load_obj_tsv(fname, topk=None):

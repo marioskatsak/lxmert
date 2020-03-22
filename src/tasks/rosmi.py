@@ -6,6 +6,7 @@ import collections
 
 import torch, json
 import torch.nn as nn
+import numpy as np
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
@@ -65,7 +66,7 @@ class ROSMI:
             self.model.lxrt_encoder.multi_gpu()
 
         # Loss and Optimizer
-        # self.bce_loss = nn.BCEWithLogitsLoss()
+        self.bce_loss = nn.BCEWithLogitsLoss()
         self.mse_loss = nn.SmoothL1Loss()
 
         if 'bert' in args.optim:
@@ -98,7 +99,7 @@ class ROSMI:
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
-            for i, (sent_id, feats, feat_mask, boxes, names, sent, dist, land_, bear_ , target) in iter_wrapper(enumerate(loader)):
+            for i, (sent_id, feats, feat_mask, boxes, names, sent, dists, diste, land_, bear_ , target) in iter_wrapper(enumerate(loader)):
 
                 # input("lol")
                 self.model.train()
@@ -115,7 +116,7 @@ class ROSMI:
                 else:
                     names = None
 
-                feats, feat_mask, boxes, target, dist, land_, bear_ = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda(), dist.cuda(), land_.cuda(), bear_.cuda()
+                feats, feat_mask, boxes, target, dists, diste, land_, bear_ = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda(), dists.cuda(), diste.cuda(), land_.cuda(), bear_.cuda()
                 logit, auxilaries = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
                 # print(names.shape)
                 # input(sent.shape)
@@ -130,10 +131,21 @@ class ROSMI:
                 iou,loss2 = giou_loss(logit, target)
                 # print(p_dist)
                 # print(dist)
-                p_dist, p_land, p_bear = auxilaries
-                loss += self.mse_loss(p_dist,dist.float())#*p_dist.size(1)
+                p_dist_s, p_dist_e, p_land, p_bear = auxilaries
+
+                assert logit.dim() == target.dim() == 2
+                bear_loss = self.bce_loss(p_bear,bear_.float())
+                loss += bear_loss * p_bear.size(1)
+
+                dists_loss = self.bce_loss(p_dist_s,dists.float())
+                loss += dists_loss * p_dist_s.size(1)
+
+                diste_loss = self.bce_loss(p_dist_e,diste.float())
+                loss += diste_loss * p_dist_e.size(1)
+
+                # loss += self.mse_loss(p_dist,dist.float())#*p_dist.size(1)
                 loss += self.mse_loss(p_land,land_.float())#*p_land.size(1)
-                loss += self.mse_loss(p_bear,bear_.float())#*p_bear.size(1)
+                # loss += self.mse_loss(p_bear,bear_.float())#*p_bear.size(1)
 
                 # print(p_dist,torch.Tensor([[int(di)]for di in dist]))
                 # input(loss)
@@ -153,13 +165,19 @@ class ROSMI:
                 self.optim.step()
                 label = logit
                 # input(logit)
+                bear_score, bear_label = p_bear.max(1)
+                _, dist_e = p_dist_e.max(1)
+                _, dist_s = p_dist_s.max(1)
                 # score, label = logit.max(1)
-                for sid,dis,ln,br, l in zip(sent_id, p_dist.cpu().detach().numpy(), \
+                for sid,diss,dise,ln,br, l in zip(sent_id, dist_s.cpu().detach().numpy(), \
+                                                dist_e.cpu().detach().numpy(), \
                                                 p_land.cpu().detach().numpy(), \
-                                                p_bear.cpu().detach().numpy(), \
+                                                bear_label.cpu().detach().numpy(), \
                                                     label.cpu().detach().numpy()):
-                    # ans = dset.label2ans[l]
-                    sentid2ans[sid.item()] = (l, dis, ln, br)
+
+                    br = dset.label2bearing[br]
+                    # print(ans)
+                    sentid2ans[sid.item()] = (l, diss,dise, ln, br)
 
 
                 self.writer.add_scalar('Loss/train', loss, n_iter)
@@ -214,7 +232,7 @@ class ROSMI:
         dset, loader, evaluator = eval_tuple
         sentid2ans = {}
         for i, datum_tuple in enumerate(loader):
-            ques_id, feats, feat_mask, boxes, names, sent, g_d, land_, bear_ = datum_tuple[:9]   # Avoid seeing ground truth
+            ques_id, feats, feat_mask, boxes, names, sent, g_ds, g_de, land_, bear_ = datum_tuple[:10]   # Avoid seeing ground truth
             with torch.no_grad():
                 if args.n_ent:
                     names = (names[0].squeeze(2).cuda(), \
@@ -224,13 +242,20 @@ class ROSMI:
                     names = None
                 feats, feat_mask, boxes = feats.cuda(),feat_mask.cuda(), boxes.cuda()
                 label, aux  = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
-                dist_, lnd, brng = aux
-                for qid,dis, ln, br, l in zip(ques_id,dist_.cpu().detach().numpy(), \
+                dist_s, dist_e, lnd, brng = aux
+
+                bear_score, bear_label = brng.max(1)
+                _, dist_e = dist_e.max(1)
+                _, dist_s = dist_s.max(1)
+                for qid,diss,dise, ln, br, l in zip(ques_id,dist_s.cpu().detach().numpy(), \
+                                                dist_e.cpu().detach().numpy(), \
                                                 lnd.cpu().detach().numpy(), \
-                                                brng.cpu().detach().numpy(), \
+                                                bear_label.cpu().detach().numpy(), \
                                                     label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
-                    sentid2ans[qid.item()] = (l, dis, ln, br)
+                    # input(br)
+                    br = dset.label2bearing[br]
+                    sentid2ans[qid.item()] = (l, diss, dise, ln, br)
         if dump is not None:
             evaluator.dump_result(sentid2ans, dump)
         return sentid2ans
@@ -245,15 +270,20 @@ class ROSMI:
         dset, loader, evaluator = data_tuple
         sentid2ans = {}
 
-        for i, (ques_id, feats, feat_mask, boxes, names, sent,dist,land_, bear_, target) in enumerate(loader):
+        for i, (ques_id, feats, feat_mask, boxes, names, sent,dists,diste,land_, bear_, target) in enumerate(loader):
             # input(target)
             label = target
-            for qid,dis, ln, br, l in zip(ques_id,dist.cpu().detach().numpy(), \
+            for qid,diss,dise, ln, br, l in zip(ques_id,dists.cpu().detach().numpy()[0], \
+                                                diste.cpu().detach().numpy()[1], \
                                                 land_.cpu().detach().numpy(), \
                                                 bear_.cpu().detach().numpy(), \
                                                     label.cpu().detach().numpy()):
-                # ans = dset.label2ans[l]
-                sentid2ans[qid.item()] = (l, dis, ln, br)
+
+                br = np.argmax(br)
+                diss = np.argmax(diss)
+                dise = np.argmax(dise)
+                br = dset.label2bearing[br]
+                sentid2ans[qid.item()] = (l, diss,dise, ln, br)
         acc, dist, acc2 = evaluator.evaluate(sentid2ans)
         return acc
 

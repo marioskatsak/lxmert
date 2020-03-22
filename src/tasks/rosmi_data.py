@@ -44,6 +44,19 @@ GOLD_SIZES = {
             5:3,
             6:3
         }
+
+BEAR2NUMS = {
+    "None": -1,
+    "North": 0,
+    "South": 180,
+    "West": 270,
+    "East": 90,
+    "North West": 315,
+    "North East": 45 ,
+    "South West": 225,
+    "South East": 135
+
+}
 #  centers in lat , lon
 CENTRES = {
             0:[37.73755663692416, -122.19795016945281],
@@ -148,7 +161,11 @@ class ROSMIDataset:
     def __init__(self, splits: str):
         self.name = splits
         self.splits = splits.split(',')
-
+        # Using the bert tokenizer
+        self.tokenizer = BertTokenizer.from_pretrained(
+            "bert-base-uncased",
+            do_lower_case=True
+        )
         # Loading datasets
         self.data = []
         for split in self.splits:
@@ -239,14 +256,48 @@ class ROSMITorchDataset(Dataset):
         img_id = datum['img_id']
         sent_id = datum['sentid']
         sent = datum['sentence']['raw']
-        dist = torch.tensor([int(datum['landmarks'][0]['distance'])])
-        bearing = torch.tensor([int(datum['landmarks'][0]['bearing'])])
+        # dist = torch.tensor([int(datum['landmarks'][0]['distance'])])
+        # bearing = torch.tensor([int(datum['landmarks'][0]['bearing'])])
         if datum['landmarks'][0]['g_type'] == 'Point':
             landmark = torch.tensor(datum['landmarks'][0]['raw_pixels'])
         else:
             landmark = torch.tensor(datum['landmarks'][0]['landmark_pixels'])
 
         target = torch.tensor(datum['gold_pixels'])
+
+
+
+        bearing = torch.zeros(self.raw_dataset.num_bearings)
+        bearing[self.raw_dataset.bearing2label[self.raw_dataset.convert2bearing[datum['landmarks'][0]['bearing']]]] = 1
+
+        # start and end id of distance
+        tokens = ["[CLS]"] + self.tokenizer.tokenize(sent.strip()) + ["[SEP]"]
+        # print(tokens)
+
+        dists = torch.zeros(MAX_SENT_LENGTH)
+        diste = torch.zeros(MAX_SENT_LENGTH)
+        if datum['landmarks'][0]['distance'] != '0':
+            t_distance = self.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
+            # print(len(t_distance))
+
+            # dist = torch.tensor([0,0],dtype=torch.int)
+            # dist[0] = int(tokens.index(t_distance[0]))
+            # dist[1] = int(tokens.index(t_distance[-1]))
+
+            dists[int(tokens.index(t_distance[0]))]  = 1
+            diste[int(tokens.index(t_distance[-1]))]  = 1
+        else:
+            # dist = torch.tensor([-1,-1], dtype=torch.int)
+
+            # dist = torch.zeros(2,MAX_SENT_LENGTH)
+            dists[-1]  = 1
+            diste[-1]  = 1
+
+        # input(tokens)
+        # print(dist)
+        # input(bearing)
+        # dist = torch.tensor([int(datum['landmarks'][0]['distance'])])
+        # bearing = torch.tensor([int(datum['landmarks'][0]['bearing'])])
         # print(target)
         # print(dist)
         # Get image info
@@ -352,7 +403,8 @@ class ROSMITorchDataset(Dataset):
 
         # print(np.mean(feats))
 
-        return sent_id, feats, feat_mask, boxes, _names, sent,dist,landmark, bearing, target#bearing
+
+        return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, bearing, target#bearing
             # else:
             #     return ques_id, feats, boxes, ques
 
@@ -365,7 +417,7 @@ class ROSMIEvaluator:
         score = 0.
         score2 = 0.
         mDist = 0.
-        for sentid, (pred_box, dis, ln, br) in sentid2ans.items():
+        for sentid, (pred_box, diss,dise, ln, br) in sentid2ans.items():
             siou2 = 0
             # datum = self.dataset.id2datum[sentid]
             # gold = torch.tensor(self.dataset.imgid2img[datum['img_id']]['boxes'][-1])
@@ -379,7 +431,8 @@ class ROSMIEvaluator:
             print("Stats:---------------")
             print(datum['sentence']['raw'])
             print(pred_box,datum['gold_pixels'])
-            print(dis, datum['landmarks'][0]['distance'])
+            print(diss, datum['landmarks'][0]['distance'])
+            print(dise, datum['landmarks'][0]['distance'])
             print(br, datum['landmarks'][0]['bearing'])
 
             if datum['landmarks'][0]['g_type'] == 'Point':
@@ -400,13 +453,47 @@ class ROSMIEvaluator:
             pred_land_coords = getPointLatLng(ln[0]+GOLD_SIZES[sn_id], ln[1]+GOLD_SIZES[sn_id],  \
                             CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
 
-            final_coord = destination([pred_land_coords[1], pred_land_coords[0]] , dis, br)
+            # score, label = br.max(1)
+            # print(score, label)
+            # print(br)
+            # bearing = torch.zeros(self.raw_dataset.num_bearings)
+            bearing = BEAR2NUMS[br]
+            # start and end id of distance
+            tokens = ["[CLS]"] + self.dataset.tokenizer.tokenize(datum['sentence']['raw'].strip()) + ["[SEP]"]
+            # print(tokens)
+            if datum['landmarks'][0]['distance'] != '0':
+                t_distance = self.dataset.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
+            #
+            #     dist = torch.tensor([0,0],dtype=torch.int)
+            #     dist[0] = int(tokens.index(t_distance[0]))
+            #     dist[1] = int(tokens.index(t_distance[-1]))
+            # else:
+            #     dist = torch.tensor([-1,-1], dtype=torch.int)
+                # dist = torch.zeros(2,MAX_SENT_LENGTH)
+                # dist[0][int(tokens.index(t_distance[0]))]  = 1
+                # dist[0][int(tokens.index(t_distance[-1]))]  = 1
+                if diss == int(tokens.index(t_distance[0])) and dise == int(tokens.index(t_distance[-1])):
+                    print("Yeah!!")
+                    _distance = int(datum['landmarks'][0]['distance'])
+                else:
+                    _distance = 0
+            else:
+                # dist = torch.tensor([-1,-1], dtype=torch.int)
+
+                if diss == (MAX_SENT_LENGTH-1) and dise == (MAX_SENT_LENGTH-1):
+                    print("Yeah!!")
+                    _distance = int(datum['landmarks'][0]['distance'])
+                else:
+                    # something wrong
+                    _distance = 155
+
+            final_coord = destination([pred_land_coords[1], pred_land_coords[0]] , _distance, bearing)
             # final_coord = destination([datum['landmarks'][0]['raw_gps'][0], datum['landmarks'][0]['raw_gps'][1]] , datum['landmarks'][0]['distance'], datum['landmarks'][0]['bearing'])
 
             tmp_ob = {'g_type':'Point'}
             tmp_ob['coordinates'] = final_coord
             tmp_pixs = generatePixel(tmp_ob,centre,ZOOMS[sn_id],[ 700, 500], GOLD_SIZES[sn_id])
-            print(datum['gold_pixels'])
+            # print(datum['gold_pixels'])
             new_bbox = None
             if tmp_pixs:
                 px = tmp_pixs["points_x"]

@@ -524,6 +524,7 @@ class VisualFeatEncoder(nn.Module):
             feats, boxes, _ = visn_input
         except:
             feats, boxes = visn_input
+        # input(feats.shape)
         x = self.visn_fc(feats)
         x = self.visn_layer_norm(x)
         y = self.box_fc(boxes)
@@ -870,6 +871,7 @@ class LXRTModel(BertPreTrainedModel):
         self.embeddings = BertEmbeddings(config)
         self.crossAtt = BertCrossattLayer(config)
         self.encoder = LXRTEncoder(config)
+        self.crossPooler = BertPooler(config)
         self.pooler = BertPooler(config)
         self.pooler2 = BertPooler(config)
         self.apply(self.init_bert_weights)
@@ -912,7 +914,7 @@ class LXRTModel(BertPreTrainedModel):
         if names_feat is not None:
             # TO DO
             names_output = self.embeddings(names_feat[0], names_feat[1])
-            print(names_output.shape)
+            # print(names_output.shape)
             _names = []
             for id in range(names_output.shape[1]):
 
@@ -926,8 +928,12 @@ class LXRTModel(BertPreTrainedModel):
 
                 # print(names_output[:,id,:,:].squeeze(1).shape)
                 new_name = self.crossAtt(embedding_output, names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
-                # input(new_name)
-                _names.append(torch.max(new_name,dim=1).values)
+                # print(new_name.shape)
+                pooled_name = self.crossPooler(new_name)
+                # input(pooled_name.shape)
+
+                _names.append(pooled_name)
+                # _names.append(torch.max(new_name,dim=1).values)
             _names = torch.stack(_names).permute(1,0,2)
             # input(_names.shape)
             # _names = None

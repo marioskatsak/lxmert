@@ -373,17 +373,18 @@ class ROSMITorchDataset(Dataset):
                 feats_padding = torch.zeros((68 - feats.shape[0]), dtype=torch.double)
                 feat_mask = torch.cat((feat_mask,feats_padding))
             else:
-
+                # print("No mask")
                 # feats_vis_padding = torch.zeros(((100 - feats.shape[0]),feats.shape[1]), dtype=torch.double)
                 # box_vis_padding = torch.zeros(((100 - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
                 # feats = torch.cat((feats,feats_vis_padding))
                 # boxes = torch.cat((boxes,box_vis_padding))
-                names_ids = torch.stack(names_segment_ids)
+                names_ids = torch.stack(names_ids)
                 names_segment_ids = torch.stack(names_segment_ids)
                 names_mask = torch.stack(names_mask)
 
                 feat_mask = torch.ones(feats.shape[0], dtype=torch.double)
-                feats_padding = torch.zeros((100 - feats.shape[0]), dtype=torch.double)
+                feats_padding = torch.zeros((68 - feats.shape[0]), dtype=torch.double)
+                # input(feats_padding.shape)
                 feat_mask = torch.cat((feat_mask,feats_padding))
 
             _names = (names_ids, names_segment_ids, names_mask)

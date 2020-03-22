@@ -273,8 +273,8 @@ class ROSMI:
         for i, (ques_id, feats, feat_mask, boxes, names, sent,dists,diste,land_, bear_, target) in enumerate(loader):
             # input(target)
             label = target
-            for qid,diss,dise, ln, br, l in zip(ques_id,dists.cpu().detach().numpy()[0], \
-                                                diste.cpu().detach().numpy()[1], \
+            for qid,diss,dise, ln, br, l in zip(ques_id,dists.cpu().detach().numpy(), \
+                                                diste.cpu().detach().numpy(), \
                                                 land_.cpu().detach().numpy(), \
                                                 bear_.cpu().detach().numpy(), \
                                                     label.cpu().detach().numpy()):

@@ -3,4 +3,4 @@
 *.pyc
 **/__pycache__/*
 /snap
-/data/rosmi
+/data/

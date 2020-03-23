@@ -513,7 +513,7 @@ class VisualFeatEncoder(nn.Module):
 
         # # Named Entities encoding
         # self.names_fc = nn.Linear(config.hidden_size, config.hidden_size)
-        # self.names_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
+        self.names_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
 
 
 
@@ -530,15 +530,15 @@ class VisualFeatEncoder(nn.Module):
         y = self.box_fc(boxes)
         y = self.box_layer_norm(y)
         if names_input is not None:
+            z = names_input
+
             # z = self.names_fc(names_input)
-            # z = self.names_layer_norm(z)
+            z = self.names_layer_norm(z)
             # print(x.shape)
             # print(y.shape)
             # input(names_input.shape)
-            z = names_input
-
-            output = (y + z) / 2
-            # output = (x + y + z) / 3
+            # output = (y + z) / 2
+            output = (x + y + z) / 3
         else:
             output = (x + y) / 2
             # output = y

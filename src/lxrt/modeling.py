@@ -954,12 +954,13 @@ class LXRTModel(BertPreTrainedModel):
         # tmp_vsn = torch.mean(visn_feats, 1)
         # tmp_lng = torch.mean(lang_feats, 1)
         # input(tmp_vsn.shape)
-        pooled = self.pooler(visn_feats)
-        pooled_output2 = self.pooler2(lang_feats)
-
-        # pooled_output = pooled + pooled_output2
-        # pooled_output = torch.cat((tmp_vsn,tmp_lng), 1)
-        pooled_output = torch.cat((pooled,pooled_output2), 1)
+        pooled_output = self.pooler(lang_feats)
+        # pooled = self.pooler(visn_feats)
+        # pooled_output2 = self.pooler2(lang_feats)
+        #
+        # # pooled_output = pooled + pooled_output2
+        # # pooled_output = torch.cat((tmp_vsn,tmp_lng), 1)
+        # pooled_output = torch.cat((pooled,pooled_output2), 1)
         # input(pooled_output.shape)
 
         return (lang_feats, visn_feats), pooled_output

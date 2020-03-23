@@ -506,10 +506,10 @@ class ROSMIEvaluator:
                 iou = calc_iou_individual(new_bbox, datum['gold_pixels'])
                 _scale = 25/SCALES[datum['scenario_items'].split('rio')[1].split('.json')[0]]
                 siou2 = iou*_scale
-            if siou2 > 0.65:
+            if siou > 0.65:
                 # print("ONE CORRECT")
             # if ans in label:
-                score2 += 1
+                score += 1
             # gold_coords = getPointLatLng(datum['gold_pixels'][0]+GOLD_SIZES[sn_id], datum['gold_pixels'][1]+GOLD_SIZES[sn_id],  \
             #                 CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
             # print(datum['gold_coordinates'])
@@ -521,7 +521,7 @@ class ROSMIEvaluator:
             if siou > 0.65 or siou2 > 0.65:
                 # print("ONE CORRECT")
             # if ans in label:
-                score += 1
+                score2 += 1
         # if score >=50:
         #     input("?")
             # if score2 > score:

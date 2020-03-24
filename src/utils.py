@@ -30,8 +30,8 @@ from constants import (
 csv.field_size_limit(sys.maxsize)
 FIELDNAMES = ["img_id", "img_h", "img_w", "objects_id", "objects_conf",
               "attrs_id", "attrs_conf", "num_boxes", "boxes", "features"]
-FIELDITEMS = ["img_id", "img_h", "img_w", "num_boxes", "boxes",
-              "features","names"]
+FIELDITEMS = ["img_id", "img_h", "img_w","num_boxes","t_num_boxes", "boxes",
+              "features","names","t_boxes","t_names"]
 
 # -122.44, 34.44 etc.
 def haversine(lon1, lat1, lon2, lat2):
@@ -413,15 +413,19 @@ def load_det_obj_tsv(fname, topk=None):
             # print(len(item[0]))
             # input(len(item))
             for i, item in enumerate(it):
-                for key in ['img_h', 'img_w', 'num_boxes']:
+                for key in ['img_h', 'img_w', 'num_boxes','t_num_boxes']:
                     item[key] = int(item[key])
 
                 boxes = item['num_boxes']
+                t_boxes = item['t_num_boxes']
                 decode_config = [
                     ('boxes', (boxes, 4), np.float64),
+                    ('t_boxes', (t_boxes, 4), np.float64),
                     ('features', (boxes, -1), np.float64),
-                    ('names', (boxes, -1), np.dtype('<U100'))
+                    ('names', (boxes, -1), np.dtype('<U100')),
+                    ('t_names', (t_boxes, -1), np.dtype('<U100'))
                 ]
+                # input(decode_config)
                 for key, shape, dtype in decode_config:
                     # print(key)
                     # print(item[key])
@@ -429,8 +433,9 @@ def load_det_obj_tsv(fname, topk=None):
                         item[key] = np.frombuffer(base64.b64decode(ast.literal_eval(item[key])), dtype=dtype)
                         item[key] = item[key].reshape(shape)
                         item[key].setflags(write=False)
-                    except:
+                    except Exception as exc:
                         print(item[key])
+                        print(exc)
                         input(key)
 
                 data.append(item)

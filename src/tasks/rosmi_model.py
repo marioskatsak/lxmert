@@ -23,28 +23,28 @@ class ROSMIModel(nn.Module):
         self.hid_dim = self.lxrt_encoder.dim
         print(self.hid_dim)
         self.distance_start = nn.Sequential(
-            nn.Linear(self.hid_dim, self.hid_dim),
+            nn.Linear(self.hid_dim*2, self.hid_dim),
             # GeLU(),
             GeLU(),
             BertLayerNorm(self.hid_dim, eps=1e-12),
             nn.Linear(self.hid_dim, MAX_VQA_LENGTH)
         )
         self.distance_end = nn.Sequential(
-            nn.Linear(self.hid_dim, self.hid_dim),
+            nn.Linear(self.hid_dim*2, self.hid_dim),
             # GeLU(),
             GeLU(),
             BertLayerNorm(self.hid_dim, eps=1e-12),
             nn.Linear(self.hid_dim, MAX_VQA_LENGTH)
         )
         self.bearing_fc = nn.Sequential(
-            nn.Linear(self.hid_dim, self.hid_dim),
+            nn.Linear(self.hid_dim*2, self.hid_dim),
             # GeLU(),
             GeLU(),
             BertLayerNorm(self.hid_dim, eps=1e-12),
             nn.Linear(self.hid_dim, num_bearings)
         )
         self.land_fc = nn.Sequential(
-            nn.Linear(self.hid_dim, self.hid_dim),
+            nn.Linear(self.hid_dim*2, self.hid_dim),
             # GeLU(),
             GeLU(),
             BertLayerNorm(self.hid_dim, eps=1e-12),
@@ -53,7 +53,7 @@ class ROSMIModel(nn.Module):
         # ROSMI Pred heads
         self.logit_fc = nn.Sequential(
             # nn.Linear(68 * self.hid_dim* 3, self.hid_dim),
-            nn.Linear(self.hid_dim, self.hid_dim*4),
+            nn.Linear(self.hid_dim*2, self.hid_dim*4),
             GeLU(),
             BertLayerNorm(self.hid_dim*4, eps=1e-12),
             nn.Linear(self.hid_dim*4, 4)

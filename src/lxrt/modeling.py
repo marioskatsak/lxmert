@@ -525,8 +525,8 @@ class VisualFeatEncoder(nn.Module):
         except:
             feats, boxes = visn_input
         # input(feats.shape)
-        x = self.visn_fc(feats)
-        x = self.visn_layer_norm(x)
+        # x = self.visn_fc(feats)
+        # x = self.visn_layer_norm(x)
         y = self.box_fc(boxes)
         y = self.box_layer_norm(y)
         if names_input is not None:
@@ -536,7 +536,8 @@ class VisualFeatEncoder(nn.Module):
             z = self.names_layer_norm(z)
             # print(x.shape)
             # print(y.shape)
-            # input(names_input.shape)
+            print(y.shape)
+            input(z.shape)
             output = (y + z) / 2
             # output = (x + y + z) / 3
         else:

@@ -357,38 +357,38 @@ class ROSMITorchDataset(Dataset):
             # names_segment_ids.append(torch.tensor(sentence[0].segment_ids, dtype=torch.long))
             # names_mask.append(torch.tensor(sentence[0].input_mask, dtype=torch.long))
 
-            if (68 - len(names_ids)) > 0 and False:
-                # print("Zerppp")
-                # Zero-pad up to the sequence length.
-                padding = (68 - len(names_ids))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
+            # if (68 - len(names_ids)) > 0:
+            #     # print("Zerppp")
+            #     # Zero-pad up to the sequence length.
+            #     padding = (68 - len(names_ids))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
+            #
+            #     feats_vis_padding = torch.zeros(((68 - feats.shape[0]),feats.shape[1]), dtype=torch.double)
+            #     box_vis_padding = torch.zeros(((68 - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
+            #     feats = torch.cat((feats,feats_vis_padding))
+            #     boxes = torch.cat((boxes,box_vis_padding))
+            #
+            #     names_ids = torch.stack(names_segment_ids + padding)
+            #     names_segment_ids = torch.stack(names_segment_ids + padding)
+            #     names_mask = torch.stack(names_mask + padding)
+            #
+            #         # bert hidden_size = 768
+            #     feat_mask = torch.ones(feats.shape[0], dtype=torch.double)
+            #     feats_padding = torch.zeros((68 - feats.shape[0]), dtype=torch.double)
+            #     feat_mask = torch.cat((feat_mask,feats_padding))
+            # else:
+            #     # print("No mask")
+            #     # feats_vis_padding = torch.zeros(((100 - feats.shape[0]),feats.shape[1]), dtype=torch.double)
+            #     # box_vis_padding = torch.zeros(((100 - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
+            #     # feats = torch.cat((feats,feats_vis_padding))
+            #     # boxes = torch.cat((boxes,box_vis_padding))
+            names_ids = torch.stack(names_ids)
+            names_segment_ids = torch.stack(names_segment_ids)
+            names_mask = torch.stack(names_mask)
 
-                feats_vis_padding = torch.zeros(((68 - feats.shape[0]),feats.shape[1]), dtype=torch.double)
-                box_vis_padding = torch.zeros(((68 - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
-                feats = torch.cat((feats,feats_vis_padding))
-                boxes = torch.cat((boxes,box_vis_padding))
-
-                names_ids = torch.stack(names_segment_ids + padding)
-                names_segment_ids = torch.stack(names_segment_ids + padding)
-                names_mask = torch.stack(names_mask + padding)
-
-                    # bert hidden_size = 768
-                feat_mask = torch.ones(feats.shape[0], dtype=torch.double)
-                feats_padding = torch.zeros((68 - feats.shape[0]), dtype=torch.double)
-                feat_mask = torch.cat((feat_mask,feats_padding))
-            else:
-                # print("No mask")
-                # feats_vis_padding = torch.zeros(((100 - feats.shape[0]),feats.shape[1]), dtype=torch.double)
-                # box_vis_padding = torch.zeros(((100 - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
-                # feats = torch.cat((feats,feats_vis_padding))
-                # boxes = torch.cat((boxes,box_vis_padding))
-                names_ids = torch.stack(names_ids)
-                names_segment_ids = torch.stack(names_segment_ids)
-                names_mask = torch.stack(names_mask)
-
-                feat_mask = torch.ones(feats.shape[0], dtype=torch.double)
-                feats_padding = torch.zeros((68 - feats.shape[0]), dtype=torch.double)
-                # input(feats_padding.shape)
-                feat_mask = torch.cat((feat_mask,feats_padding))
+            feat_mask = torch.ones(feats.shape[0], dtype=torch.double)
+            feats_padding = torch.zeros((68 - feats.shape[0]), dtype=torch.double)
+            # input(feats_padding.shape)
+            feat_mask = torch.cat((feat_mask,feats_padding))
 
             _names = (names_ids, names_segment_ids, names_mask)
         else:

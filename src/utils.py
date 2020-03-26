@@ -4,11 +4,12 @@
 import sys
 import csv
 import base64
-import time, ast, torch
+import time, ast, torch, random
 
 
 
 import numpy as np
+from PIL import ImageFont, ImageDraw, Image
 from tqdm import tqdm
 from math import (
     degrees, radians,
@@ -49,6 +50,39 @@ def haversine(lon1, lat1, lon2, lat2):
     c = 2 * asin(sqrt(a))
     r = 6371 # Radius of earth in kilometers. Use 3956 for miles
     return c * r
+# can draw an item or list of items with names
+def drawItem(name,image_path,points=None,pixels_bb=None):
+
+    font = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf", 18)
+
+    try:
+        img = Image.open(image_path)
+    except Exception as e:
+        print(e)
+        return
+
+    img_dim = [img.getbbox()[2],img.getbbox()[3]]
+
+    if type(name) != list:
+        name = [name]
+        if pixels_bb is not None and type(pixels_bb) != list:
+            pixels_bb = [pixels_bb]
+        if points is not None and type(points) != list:
+            points = [points]
+
+    draw = ImageDraw.Draw(img)
+    for id in range(len(name)):
+        color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+        if points:
+            draw.text(tuple((points[id]['points_x'][0],points[id]['points_y'][0])),name[id],fill=color,font=font)
+            draw.line([tuple((x,y)) for x,y in zip(points[id]['points_x'],points[id]['points_y'])],fill=color)
+        if pixels_bb:
+            # input(static)
+            draw.text(tuple((pixels_bb[id][0],pixels_bb[id][1])),name[id],fill=color,font=font)
+            draw.rectangle(pixels_bb[id],outline=color)
+        else:
+            print("No pixels given. Give points x and y [points] or bounding box [pixels_bb]")
+    img.show()
 
 
 # returns dictionary with the name 'points_x' and 'points_y'

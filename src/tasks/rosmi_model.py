@@ -37,18 +37,17 @@ class ROSMIModel(nn.Module):
             nn.Linear(self.hid_dim, MAX_VQA_LENGTH)
         )
         self.bearing_fc = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim),
+            nn.Linear(self.hid_dim*2, self.hid_dim*2),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim, eps=1e-12),
-            nn.Linear(self.hid_dim, num_bearings)
+            BertLayerNorm(self.hid_dim*2, eps=1e-12),
+            nn.Linear(self.hid_dim*2, num_bearings)
         )
         self.land_fc = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim),
-            # GeLU(),
+            nn.Linear(self.hid_dim*2, self.hid_dim*4),
             GeLU(),
-            BertLayerNorm(self.hid_dim, eps=1e-12),
-            nn.Linear(self.hid_dim, 4)
+            BertLayerNorm(self.hid_dim*4, eps=1e-12),
+            nn.Linear(self.hid_dim*4, 4)
         )
         # ROSMI Pred heads
         self.logit_fc = nn.Sequential(

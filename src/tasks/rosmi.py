@@ -95,12 +95,12 @@ class ROSMI:
         best_valid = 0.
         best_train = 0.
         best_acc2 = 0.
-        loss = 99999
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
             for i, (sent_id, feats, feat_mask, boxes, names, sent, dists, diste, land_, bear_ , target) in iter_wrapper(enumerate(loader)):
 
+                total_loss = 0
                 # input("lol")
                 self.model.train()
                 self.optim.zero_grad()
@@ -123,43 +123,61 @@ class ROSMI:
                 # if i == 0:
                 #     self.writer.add_graph(self.model, (feats.float(), feat_mask.float(), boxes.float(),names,sent ))
                 # assert logit.dim() == target.dim() == 2
-                loss = self.mse_loss(logit, target)
+
+                target_loss = self.mse_loss(logit, target)
+                self.writer.add_scalar('target loss', target_loss, n_iter)
+                total_loss += target_loss*logit.size(1)
                 # print(logit.size(1))
                 # print(target)
-                # loss = iou_loss(logit, target)
+                # total_loss += iou_loss(logit, target)
 
                 iou,loss2 = giou_loss(logit, target)
+                self.writer.add_scalar('giou loss', loss2, n_iter)
+                # total_loss += loss2*10
 
                 p_dist_s, p_dist_e, p_land, p_bear = auxilaries
 
                 assert logit.dim() == target.dim() == 2
                 bear_loss = self.bce_loss(p_bear,bear_.float())
-                loss += bear_loss * p_bear.size(1)
+                self.writer.add_scalar('Bearing loss', bear_loss, n_iter)
+
+                total_loss += bear_loss * p_bear.size(1)
 
                 dists_loss = self.bce_loss(p_dist_s,dists.float())
-                loss += dists_loss * p_dist_s.size(1)
+                self.writer.add_scalar('distance Start loss', dists_loss, n_iter)
+                total_loss += dists_loss * p_dist_s.size(1)
 
                 diste_loss = self.bce_loss(p_dist_e,diste.float())
-                loss += diste_loss * p_dist_e.size(1)
+                self.writer.add_scalar('distance End loss', diste_loss, n_iter)
+                total_loss += diste_loss * p_dist_e.size(1)
 
                 # loss += self.mse_loss(p_dist,dist.float())#*p_dist.size(1)
-                loss += self.mse_loss(p_land,land_.float())#*p_land.size(1)
-                # loss += self.mse_loss(p_bear,bear_.float())#*p_bear.size(1)
+                # print(land_)
+                # input(land_.float())
+                land_loss = self.mse_loss(p_land,land_.float())#*p_land.size(1)
+                self.writer.add_scalar('landmark loss', land_loss, n_iter)
+                total_loss += land_loss*p_land.size(1)
+
+                # total_loss += self.mse_loss(p_bear,bear_.float())#*p_bear.size(1)
 
                 # print(p_dist,torch.Tensor([[int(di)]for di in dist]))
-                # input(loss)
-                # if not loss:
+                # input(total_loss)
+                # if not total_loss:
                 #     print("Not ready yet")
-                #     loss = self.mse_loss(logit, target)
+                #     total_loss = self.mse_loss(logit, target)
                 # print(loss)
                 # print(loss2)
-                # if loss > 100:
-                #     loss = loss + loss2
+                # if land_loss < 50 and diste_loss < 0.01:
+                #
+                #     total_loss += self.mse_loss(logit, target)*logit.size(1)
+                    # total_loss = loss + loss2
                 # else:
-                #     loss = loss2
-                loss = loss + loss2
+                #     total_loss = loss2
+                # total_loss = loss + loss2
+
+                self.writer.add_scalar('total loss', total_loss, n_iter)
                 # print(loss)
-                loss.backward()
+                total_loss.backward()
                 nn.utils.clip_grad_norm_(self.model.parameters(), 5.)
                 self.optim.step()
                 label = logit
@@ -179,13 +197,12 @@ class ROSMI:
                     sentid2ans[sid.item()] = (l, diss,dise, ln, br)
 
 
-                self.writer.add_scalar('Loss/train', loss, n_iter)
 
                 n_iter += 1
                 # writer.add_scalar('Loss/test', np.random.random(), n_iter)
 
             # self.scheduler.step(loss)
-            log_str = f"\nEpoch {epoch}: Loss {loss}\n"
+            log_str = f"\nEpoch {epoch}: Total Loss {total_loss}\n"
             tmp_acc, mDist, acc2 = evaluator.evaluate(sentid2ans)
             log_str += f"\nEpoch {epoch}: Train {tmp_acc * 100.}%\n"
             log_str += f"\nEpoch {epoch}: Training Av. Distance {mDist}m\n"
@@ -333,6 +350,9 @@ if __name__ == "__main__":
                 assert False, "No such test option for %s" % args.test
         else:
             print('Splits in Train data:', rosmi.train_tuple.dataset.splits)
+            # rosmi.oracle_score(rosmi.train_tuple)
+            # rosmi.oracle_score(rosmi.valid_tuple)
+            # input("??")
             if rosmi.valid_tuple is not None:
                 print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
                 print("Valid Oracle: %0.2f" % (rosmi.oracle_score(rosmi.valid_tuple) * 100))

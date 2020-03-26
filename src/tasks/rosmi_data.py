@@ -74,6 +74,7 @@ TINY_IMG_NUM = 512
 FAST_IMG_NUM = 5000
 # Max length including <bos> and <eos>
 MAX_SENT_LENGTH = 25
+MAX_BOXES = 68
 # The path to data and image features.
 # VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
 # IMGFEAT_ROOT = '/scratch/mmk11/data/rosmi/'
@@ -339,8 +340,8 @@ class ROSMITorchDataset(Dataset):
         if self.named_entities:
 
 
-            # names = img_info['names'].copy()
-            names = img_info['t_names'].copy()
+            names = img_info['names'].copy()
+            # names = img_info['t_names'].copy()
             # input(names)
             feats = torch.from_numpy(feats)
             boxes = torch.from_numpy(boxes)
@@ -370,13 +371,13 @@ class ROSMITorchDataset(Dataset):
             # names_segment_ids.append(torch.tensor(sentence[0].segment_ids, dtype=torch.long))
             # names_mask.append(torch.tensor(sentence[0].input_mask, dtype=torch.long))
 
-            if (69 - len(names_ids)) > 0:
+            if (MAX_BOXES - len(names_ids)) > 0:
                 # print("Zerppp")
                 # Zero-pad up to the sequence length.
-                padding = (69 - len(names_ids))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
+                padding = (MAX_BOXES - len(names_ids))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
 
-                feats_vis_padding = torch.zeros(((69 - feats.shape[0]),feats.shape[1]), dtype=torch.double)
-                box_vis_padding = torch.zeros(((69 - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
+                feats_vis_padding = torch.zeros(((MAX_BOXES - feats.shape[0]),feats.shape[1]), dtype=torch.double)
+                box_vis_padding = torch.zeros(((MAX_BOXES - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
                 feats = torch.cat((feats,feats_vis_padding))
                 boxes = torch.cat((boxes,box_vis_padding))
 
@@ -386,7 +387,7 @@ class ROSMITorchDataset(Dataset):
 
                     # bert hidden_size = 768
                 feat_mask = torch.ones(feats.shape[0], dtype=torch.double)
-                feats_padding = torch.zeros((69 - feats.shape[0]), dtype=torch.double)
+                feats_padding = torch.zeros((MAX_BOXES - feats.shape[0]), dtype=torch.double)
                 feat_mask = torch.cat((feat_mask,feats_padding))
             else:
                 # print("No mask")

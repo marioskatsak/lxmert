@@ -126,14 +126,14 @@ class ROSMI:
 
                 target_loss = self.mse_loss(logit, target)
                 self.writer.add_scalar('target loss', target_loss, n_iter)
-                total_loss += target_loss*logit.size(1)
+                total_loss += target_loss#*logit.size(1)
                 # print(logit.size(1))
                 # print(target)
                 # total_loss += iou_loss(logit, target)
 
                 iou,loss2 = giou_loss(logit, target)
                 self.writer.add_scalar('giou loss', loss2, n_iter)
-                # total_loss += loss2*10
+                total_loss += loss2
 
                 p_dist_s, p_dist_e, p_land, p_bear = auxilaries
 
@@ -141,22 +141,22 @@ class ROSMI:
                 bear_loss = self.bce_loss(p_bear,bear_.float())
                 self.writer.add_scalar('Bearing loss', bear_loss, n_iter)
 
-                total_loss += bear_loss * p_bear.size(1)
+                total_loss += bear_loss #* p_bear.size(1)
 
                 dists_loss = self.bce_loss(p_dist_s,dists.float())
                 self.writer.add_scalar('distance Start loss', dists_loss, n_iter)
-                total_loss += dists_loss * p_dist_s.size(1)
+                total_loss += dists_loss #* p_dist_s.size(1)
 
                 diste_loss = self.bce_loss(p_dist_e,diste.float())
                 self.writer.add_scalar('distance End loss', diste_loss, n_iter)
-                total_loss += diste_loss * p_dist_e.size(1)
+                total_loss += diste_loss #* p_dist_e.size(1)
 
                 # loss += self.mse_loss(p_dist,dist.float())#*p_dist.size(1)
                 # print(land_)
                 # input(land_.float())
                 land_loss = self.mse_loss(p_land,land_.float())#*p_land.size(1)
                 self.writer.add_scalar('landmark loss', land_loss, n_iter)
-                total_loss += land_loss*p_land.size(1)
+                total_loss += land_loss#*p_land.size(1)
 
                 # total_loss += self.mse_loss(p_bear,bear_.float())#*p_bear.size(1)
 

@@ -372,7 +372,7 @@ class ROSMITorchDataset(Dataset):
             # names_mask.append(torch.tensor(sentence[0].input_mask, dtype=torch.long))
 
             if (MAX_BOXES - len(names_ids)) > 0:
-                # print("Zerppp")
+                print("Zerppp")
                 # Zero-pad up to the sequence length.
                 padding = (MAX_BOXES - len(names_ids))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
 

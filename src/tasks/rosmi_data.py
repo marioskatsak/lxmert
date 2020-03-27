@@ -398,11 +398,11 @@ class ROSMITorchDataset(Dataset):
                 names_ids = torch.stack(names_ids)
                 names_segment_ids = torch.stack(names_segment_ids)
                 names_mask = torch.stack(names_mask)
-            # input(names_ids.shape)
-            # feat_mask = torch.ones(names_ids.shape[0], dtype=torch.double)
-            # feats_padding = torch.zeros((68 - feats.shape[0]), dtype=torch.double)
-            # # input(feats_padding.shape)
-            # feat_mask = torch.cat((feat_mask,feats_padding))
+                # input(names_ids.shape)
+                feat_mask = torch.ones(names_ids.shape[0], dtype=torch.double)
+                feats_padding = torch.zeros((MAX_BOXES - feats.shape[0]), dtype=torch.double)
+                # # input(feats_padding.shape)
+                feat_mask = torch.cat((feat_mask,feats_padding))
 
             _names = (names_ids, names_segment_ids, names_mask)
         else:

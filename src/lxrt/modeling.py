@@ -538,8 +538,8 @@ class VisualFeatEncoder(nn.Module):
             # print(y.shape)
             # print(y.shape)
             # input(z.shape)
-            output = (y + z) / 2
-            # output = (x + y + z) / 3
+            # output = (y + z) / 2
+            output = (x + y + z) / 3
         else:
             output = (x + y) / 2
             # output = y

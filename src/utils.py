@@ -77,7 +77,7 @@ def drawItem(name,image_path,points=None,pixels_bb=None):
             draw.text(tuple((points[id]['points_x'][0],points[id]['points_y'][0])),name[id],fill=color,font=font)
             draw.line([tuple((x,y)) for x,y in zip(points[id]['points_x'],points[id]['points_y'])],fill=color)
         if pixels_bb:
-            # input(static)
+            input(pixels_bb[id])
             draw.text(tuple((pixels_bb[id][0],pixels_bb[id][1])),name[id],fill=color,font=font)
             draw.rectangle(pixels_bb[id],outline=color)
         else:
@@ -86,7 +86,7 @@ def drawItem(name,image_path,points=None,pixels_bb=None):
 
 
 # returns dictionary with the name 'points_x' and 'points_y'
-def generatePixel(scene_object,centre,zoom,img_dim, size=7):
+def generatePixel(scene_object,centre,zoom,img_dim, size=10):
     pix_pos = {}
     # depending on the geometry type generate pixels from the
     # raw GPS and save them. These are used for prediction and

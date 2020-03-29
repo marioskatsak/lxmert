@@ -10,6 +10,7 @@ from lxrt.modeling import BertLayerNorm, GeLU
 # Max length including <bos> and <eos>
 MAX_VQA_LENGTH = 25
 
+MAX_BOXES = 68 + 1
 
 class ROSMIModel(nn.Module):
     def __init__(self, num_bearings):
@@ -23,18 +24,18 @@ class ROSMIModel(nn.Module):
         self.hid_dim = self.lxrt_encoder.dim
         print(self.hid_dim)
         self.distance_start = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim*3),
+            nn.Linear(self.hid_dim*2, self.hid_dim*4),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim*3, eps=1e-12),
-            nn.Linear(self.hid_dim*3, MAX_VQA_LENGTH)
+            BertLayerNorm(self.hid_dim*4, eps=1e-12),
+            nn.Linear(self.hid_dim*4, MAX_VQA_LENGTH)
         )
         self.distance_end = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim*3),
+            nn.Linear(self.hid_dim*2, self.hid_dim*4),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim*3, eps=1e-12),
-            nn.Linear(self.hid_dim*3, MAX_VQA_LENGTH)
+            BertLayerNorm(self.hid_dim*4, eps=1e-12),
+            nn.Linear(self.hid_dim*4, MAX_VQA_LENGTH)
         )
         self.bearing_fc = nn.Sequential(
             nn.Linear(self.hid_dim*2, self.hid_dim*3),
@@ -42,6 +43,13 @@ class ROSMIModel(nn.Module):
             GeLU(),
             BertLayerNorm(self.hid_dim*3, eps=1e-12),
             nn.Linear(self.hid_dim*3, num_bearings)
+        )
+        self.land_cl = nn.Sequential(
+            nn.Linear(self.hid_dim*2, self.hid_dim*4),
+            # GeLU(),
+            GeLU(),
+            BertLayerNorm(self.hid_dim*4, eps=1e-12),
+            nn.Linear(self.hid_dim*4, MAX_BOXES)
         )
         self.land_fc = nn.Sequential(
             nn.Linear(self.hid_dim*2, self.hid_dim*4),
@@ -74,11 +82,14 @@ class ROSMIModel(nn.Module):
         :param leng: (b,) Type -- int numpy array
         :return: (b, num_answer) The logit of each answers.
         """
-        if args.n_ent:
-            x = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
-        else:
-            x = self.lxrt_encoder(sent, (feat, pos, names))
-        # print(x)
+        # input(feat_mask)
+        x = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
+
+        # if args.n_ent:
+        #     x = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
+        # else:
+        #     x = self.lxrt_encoder(sent, (feat, pos, names))
+        # # print(x)
         # print((x.shape))
         # input(torch.mean(x))
         # x = x.view(-1, 68 * self.hid_dim* 3)
@@ -87,5 +98,6 @@ class ROSMIModel(nn.Module):
         dist_s = self.distance_start(x)
         dist_e = self.distance_end(x)
         landmark_ = self.land_fc(x)
+        cland_ = self.land_cl(x)
         bearing_ = self.bearing_fc(x)
-        return logit, (dist_s,dist_e, landmark_, bearing_)
+        return logit, (dist_s,dist_e, landmark_,cland_, bearing_)

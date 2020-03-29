@@ -914,6 +914,7 @@ class LXRTModel(BertPreTrainedModel):
         # print(extended_attention_mask.shape)
         # input(names_feat)
         if names_feat is not None:
+            input("??NOOOOO")
             # TO DO
             names_output = self.embeddings(names_feat[0], names_feat[1])
             # print(names_output.shape)

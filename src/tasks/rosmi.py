@@ -376,7 +376,7 @@ if __name__ == "__main__":
             # input("??")
             if rosmi.valid_tuple is not None:
                 print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
-                print("Valid Oracle: %0.2f" % (rosmi.oracle_score(rosmi.valid_tuple) * 100))
+                # print("Valid Oracle: %0.2f" % (rosmi.oracle_score(rosmi.valid_tuple) * 100))
             else:
                 print("DO NOT USE VALIDATION")
             acc1, acc2, acc3, tacc = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)

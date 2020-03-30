@@ -337,8 +337,8 @@ if __name__ == "__main__":
     scores2 = []
     scores3 = []
     t_scores = []
-    # for k in range(0,8):
-    for k in range(1):
+    for k in range(0,8):
+    # for k in range(1):
         print(f"{k} on cross")
         args.train = f'{k}_easy_train'
         args.valid = f'{k}_easy_val'

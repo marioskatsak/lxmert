@@ -248,7 +248,7 @@ class ROSMI:
                 f.flush()
 
         self.save("LAST")
-        return best_valid
+        return best_valid, best_acc2, best_acc3, best_tacc
 
     def predict(self, eval_tuple: DataTuple, dump=None):
         """
@@ -319,7 +319,7 @@ class ROSMI:
                 br = dset.label2bearing[br]
                 sentid2ans[qid.item()] = (l, diss,dise, ln,cln, br)
         acc, dist, acc2, acc3, tacc = evaluator.evaluate(sentid2ans)
-        return acc
+        return acc, acc2, acc3, tacc
 
     def save(self, name, k = ''):
         torch.save(self.model.state_dict(),
@@ -334,6 +334,9 @@ class ROSMI:
 if __name__ == "__main__":
 
     scores = []
+    scores2 = []
+    scores3 = []
+    t_scores = []
     # for k in range(0,8):
     for k in range(1):
         print(f"{k} on cross")
@@ -376,8 +379,15 @@ if __name__ == "__main__":
                 print("Valid Oracle: %0.2f" % (rosmi.oracle_score(rosmi.valid_tuple) * 100))
             else:
                 print("DO NOT USE VALIDATION")
+            acc1, acc2, acc3, tacc = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
             scores.append(rosmi.train(rosmi.train_tuple, rosmi.valid_tuple))
-            with open('scores.json', 'w') as scores_out:
-                json.dump(scores, scores_out)
-    print(f"Best scores: {scores}")
-    print(f"Mean 5-fold accuracy {sum(scores) / len(scores)}")
+            scores2.append(rosmi.train(rosmi.train_tuple, rosmi.valid_tuple))
+            scores3.append(rosmi.train(rosmi.train_tuple, rosmi.valid_tuple))
+            t_scores.append(rosmi.train(rosmi.train_tuple, rosmi.valid_tuple))
+            with open('t_scores.json', 'w') as scores_out:
+                json.dump(t_scores, scores_out)
+    print(f"Best scores: {scores, scores2, scores3, t_scores}")
+    print(f"Mean 6-fold accuracy 1 {sum(scores) / len(scores)}")
+    print(f"Mean 6-fold accuracy 2 {sum(scores2) / len(scores2)}")
+    print(f"Mean 6-fold accuracy 3 {sum(scores3) / len(scores3)}")
+    print(f"Mean 6-fold total accuracy {sum(t_scores) / len(t_scores)}")

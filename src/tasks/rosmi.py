@@ -380,10 +380,10 @@ if __name__ == "__main__":
             else:
                 print("DO NOT USE VALIDATION")
             acc1, acc2, acc3, tacc = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
-            scores.append(rosmi.train(rosmi.train_tuple, rosmi.valid_tuple))
-            scores2.append(rosmi.train(rosmi.train_tuple, rosmi.valid_tuple))
-            scores3.append(rosmi.train(rosmi.train_tuple, rosmi.valid_tuple))
-            t_scores.append(rosmi.train(rosmi.train_tuple, rosmi.valid_tuple))
+            scores.append(acc1)
+            scores2.append(acc2)
+            scores3.append(acc3)
+            t_scores.append(tacc)
             with open('t_scores.json', 'w') as scores_out:
                 json.dump(t_scores, scores_out)
     print(f"Best scores: {scores, scores2, scores3, t_scores}")

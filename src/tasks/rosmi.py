@@ -147,11 +147,11 @@ class ROSMI:
 
                 dists_loss = self.bce_loss(p_dist_s,dists.float())
                 self.writer.add_scalar('distance Start loss', dists_loss, n_iter)
-                total_loss += dists_loss* p_dist_s.size(1) * 3
+                total_loss += dists_loss* p_dist_s.size(1) * 2
 
                 diste_loss = self.bce_loss(p_dist_e,diste.float())
                 self.writer.add_scalar('distance End loss', diste_loss, n_iter)
-                total_loss += diste_loss* p_dist_e.size(1) * 3
+                total_loss += diste_loss* p_dist_e.size(1) * 2
 
                 cland_loss = self.bce_loss(p_cland,cland_.float())
                 self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
@@ -337,8 +337,9 @@ if __name__ == "__main__":
     scores2 = []
     scores3 = []
     t_scores = []
-    for k in range(0,8):
-    # for k in range(1):
+    for k in range(1):
+        k = 3
+    # for k in range(0,8):
         print(f"{k} on cross")
         args.train = f'{k}_easy_train'
         args.valid = f'{k}_easy_val'
@@ -376,7 +377,7 @@ if __name__ == "__main__":
             # input("??")
             if rosmi.valid_tuple is not None:
                 print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
-                # print("Valid Oracle: %0.2f" % (rosmi.oracle_score(rosmi.valid_tuple) * 100))
+                print("Valid Oracle: %0.2f" % (rosmi.oracle_score(rosmi.valid_tuple)[0] * 100))
             else:
                 print("DO NOT USE VALIDATION")
             acc1, acc2, acc3, tacc = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)

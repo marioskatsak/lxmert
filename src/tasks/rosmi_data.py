@@ -389,11 +389,12 @@ class ROSMITorchDataset(Dataset):
                 # input("?")
 
         # last is reserved for landmarks that do not appear in the input feat
-        landmark_id_ = torch.zeros(MAX_BOXES+1)
+        landmark_id_ = torch.zeros(MAX_BOXES)
         if landmark_id == None:
             # print(names)
             # print("".join(datum['landmarks'][0]['name'].split(" ")).lower())
-            landmark_id_[-1] = 1
+            landmark_id_[random.randint(0,67)] = 1
+            # landmark_id_[0] = 1
             # input(landmark_id)
         else:
             # print(datum['landmarks'][0]['name'])
@@ -551,7 +552,7 @@ class ROSMIEvaluator:
             # feats = img_info['features'].copy()
             boxes = img_info['boxes'].copy()
             names = img_info['names'].copy()
-            landmark_id_ = 68
+            landmark_id_ = random.randint(0,67)
             for ipd, name_box in enumerate(names):
                 if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
                     landmark_id_ = ipd
@@ -588,18 +589,18 @@ class ROSMIEvaluator:
             centre = calculateTiles(CENTRES[sn_id],ZOOMS[sn_id])
 
 
-            if landmark_id_ < len(boxes) and ln_ < len(boxes):
-                print(landmark_id_)
-                print(ln_)
-                print(len(boxes))
-                print(boxes[landmark_id_],boxes[ln_])
+            # if landmark_id_ < len(boxes) and ln_ < len(boxes):
+            #     print(landmark_id_)
+            #     print(ln_)
+            #     print(len(boxes))
+            print(boxes[landmark_id_],boxes[ln_])
 
-                pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
+            pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
                                     CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
-            else:
-                print("Cant classify landmark")
-
-                pred_cland_coords = None
+            # else:
+            #     print("Cant classify landmark")
+            #
+            #     pred_cland_coords = None
             print(iou, siou)
 
 

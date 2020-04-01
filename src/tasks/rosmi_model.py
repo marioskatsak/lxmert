@@ -10,7 +10,7 @@ from lxrt.modeling import BertLayerNorm, GeLU
 # Max length including <bos> and <eos>
 MAX_VQA_LENGTH = 25
 
-MAX_BOXES = 68 + 1
+MAX_BOXES = 68
 
 class ROSMIModel(nn.Module):
     def __init__(self, num_bearings):
@@ -24,32 +24,32 @@ class ROSMIModel(nn.Module):
         self.hid_dim = self.lxrt_encoder.dim
         print(self.hid_dim)
         self.distance_start = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim*4),
+            nn.Linear(self.hid_dim*2, self.hid_dim*5),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim*4, eps=1e-12),
-            nn.Linear(self.hid_dim*4, MAX_VQA_LENGTH)
+            BertLayerNorm(self.hid_dim*5, eps=1e-12),
+            nn.Linear(self.hid_dim*5, MAX_VQA_LENGTH)
         )
         self.distance_end = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim*4),
+            nn.Linear(self.hid_dim*2, self.hid_dim*5),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim*4, eps=1e-12),
-            nn.Linear(self.hid_dim*4, MAX_VQA_LENGTH)
+            BertLayerNorm(self.hid_dim*5, eps=1e-12),
+            nn.Linear(self.hid_dim*5, MAX_VQA_LENGTH)
         )
         self.bearing_fc = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim*3),
+            nn.Linear(self.hid_dim*2, self.hid_dim*5),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim*3, eps=1e-12),
-            nn.Linear(self.hid_dim*3, num_bearings)
+            BertLayerNorm(self.hid_dim*5, eps=1e-12),
+            nn.Linear(self.hid_dim*5, num_bearings)
         )
         self.land_cl = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim*4),
+            nn.Linear(self.hid_dim*2, self.hid_dim*5),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim*4, eps=1e-12),
-            nn.Linear(self.hid_dim*4, MAX_BOXES)
+            BertLayerNorm(self.hid_dim*5, eps=1e-12),
+            nn.Linear(self.hid_dim*5, MAX_BOXES)
         )
         self.land_fc = nn.Sequential(
             nn.Linear(self.hid_dim*2, self.hid_dim*4),

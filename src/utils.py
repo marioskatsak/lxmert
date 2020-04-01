@@ -469,6 +469,7 @@ def load_det_obj_tsv(fname, topk=None):
                         item[key].setflags(write=False)
                     except Exception as exc:
                         print(item[key])
+                        print(item['names'])
                         print(exc)
                         input(key)
 

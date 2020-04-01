@@ -338,7 +338,6 @@ if __name__ == "__main__":
     scores3 = []
     t_scores = []
     for k in range(1):
-        k = 3
     # for k in range(0,8):
         print(f"{k} on cross")
         args.train = f'{k}_easy_train'

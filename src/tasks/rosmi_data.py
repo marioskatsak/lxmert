@@ -464,7 +464,7 @@ class ROSMITorchDataset(Dataset):
             # names_mask.append(torch.tensor(sentence[0].input_mask, dtype=torch.long))
 
             if (MAX_BOXES - len(names_ids)) > 0:
-                print("Zerppp")
+                # print("Zerppp")
                 feat_mask = torch.ones(feats.shape[0], dtype=torch.double)
                 feats_padding = torch.zeros((MAX_BOXES - feats.shape[0]), dtype=torch.double)
                 feat_mask = torch.cat((feat_mask,feats_padding))

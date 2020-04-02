@@ -432,7 +432,7 @@ class ROSMITorchDataset(Dataset):
         if self.named_entities:
 
 
-            names = img_info['names'].copy()
+            # names = img_info['names'].copy()
             # names = img_info['t_names'].copy()
             # input(names)
             feats = torch.from_numpy(feats)

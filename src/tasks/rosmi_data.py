@@ -339,13 +339,15 @@ class ROSMITorchDataset(Dataset):
         obj_num = img_info['num_boxes']
         # obj_num = img_info['t_num_boxes']
         feats = img_info['features'].copy()
-        boxes = img_info['boxes'].copy()
-        names = img_info['names'].copy()
-        # names = img_info['t_names'].copy()
-        # boxes = img_info['t_boxes'].copy()
+        # boxes = img_info['boxes'].copy()
+        # names = img_info['names'].copy()
+        names = img_info['t_names'].copy()
+        boxes = img_info['t_boxes'].copy()
         # target = torch.tensor(datum['landmarks'][0]['raw_pixels'])
         # target = torch.tensor(boxes[-1]).float()
         # print(boxes)
+        # print(datum['landmarks'][0]['name'])
+        # input(names)
 
 
         sn_id = int(datum['scenario_items'].split('rio')[1].split('.j')[0])
@@ -358,43 +360,53 @@ class ROSMITorchDataset(Dataset):
             # print(datum['landmarks'][0])
             # print(name_box[0])
             # print(type(name_box[0]))
-            if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
-                landmark_id = ipd
-                # if datum['landmarks'][0]['g_type'] == 'Point':
+            if datum['landmarks'][0]['g_type'] == 'Point':
+                if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower() or \
+                        int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
+                    landmark_id = ipd
+                    break
                 # #     # print(type(datum['landmarks'][0]['raw_pixels']))
                 # # #     # print(type(feat_box))
                 # # #     # print(datum['landmarks'][0]['raw_pixels'])
-                #
-                #     tmp_ob = {'g_type':'Point'}
-                #     tmp_ob['coordinates'] = datum['landmarks'][0]['raw_gps']
-                #     tmp_pixs = generatePixel(tmp_ob,centre,ZOOMS[sn_id],[ 700, 500], 10)
-                #
-                #     if tmp_pixs and 'Williams' not in datum['landmarks'][0]['name']:
-                #         px = tmp_pixs["points_x"]
-                #         py = tmp_pixs["points_y"]
-                #         new_bbox = [np.min(px), np.min(py), np.max(px), np.max(py)]
-                #         print(datum['landmarks'][0]['raw_pixels'], boxes[landmark_id], new_bbox)
-                #         print(datum['landmarks'][0]['name'])
-                #         if boxes[landmark_id][0] != datum['landmarks'][0]['raw_pixels'][0]:
-                #             drawItem(['raw_pixels','box_land','new_land'],filename,pixels_bb=[datum['landmarks'][0]['raw_pixels'], list(boxes[landmark_id]), new_bbox])
-                #             input("?")
+
+                    # tmp_ob = {'g_type':'Point'}
+                    # tmp_ob['coordinates'] = datum['landmarks'][0]['raw_gps']
+                    # tmp_pixs = generatePixel(tmp_ob,centre,ZOOMS[sn_id],[ 700, 500], 10)
+                    #
+                    # if tmp_pixs and 'Williams' not in datum['landmarks'][0]['name']:
+                    #     px = tmp_pixs["points_x"]
+                    #     py = tmp_pixs["points_y"]
+                    #     new_bbox = [np.min(px), np.min(py), np.max(px), np.max(py)]
+                    #     print(datum['landmarks'][0]['raw_pixels'], boxes[landmark_id], new_bbox)
+                    #     print(datum['landmarks'][0]['name'])
+                    #     if boxes[landmark_id][0] != datum['landmarks'][0]['raw_pixels'][0]:
+                    #         drawItem(['raw_pixels','box_land','new_land'],filename,pixels_bb=[datum['landmarks'][0]['raw_pixels'], list(boxes[landmark_id]), new_bbox])
+                    #         input("?")
                 #     # input()
                 #     # if int(datum['landmarks'][0]['raw_pixels'][0]) == int(feat_box[0]):
                 #     #     landmark_id = ipd
-                # else:
-                #     print(datum['landmarks'][0]['landmark_pixels'], boxes[landmark_id])
-                    # if int(datum['landmarks'][0]['landmark_pixels'][0]) == int(feat_box[0]):
-                    #     landmark_id = ipd
-
-                # input("?")
+            else:
+                if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower() or \
+                        int(datum['landmarks'][0]['landmark_pixels'][0]) == int(boxes[ipd][0]):
+                    landmark_id = ipd
+                    break
+            #     print(names)
+            #     print(datum['landmarks'][0]['landmark_pixels'], boxes[landmark_id])
+            #     print("".join(datum['landmarks'][0]['name'].split(" ")).lower())
+            #         # if int(datum['landmarks'][0]['landmark_pixels'][0]) == int(feat_box[0]):
+            #         #     landmark_id = ipd
+            #
+            #     input("?")
 
         # last is reserved for landmarks that do not appear in the input feat
         landmark_id_ = torch.zeros(MAX_BOXES)
         if landmark_id == None:
             # print(names)
+            # print(boxes)
             # print("".join(datum['landmarks'][0]['name'].split(" ")).lower())
-            landmark_id_[random.randint(0,67)] = 1
-            # landmark_id_[0] = 1
+            # print(datum['landmarks'][0]['landmark_pixels'])
+            # landmark_id_[random.randint(0,67)] = 1
+            landmark_id_[0] = 1
             # input(landmark_id)
         else:
             # print(datum['landmarks'][0]['name'])
@@ -487,7 +499,7 @@ class ROSMITorchDataset(Dataset):
             _names = (names_ids, names_segment_ids, names_mask)
         else:
             if (MAX_BOXES - len(boxes)) > 0:
-                # print("Zerppp")
+                # print(boxes.shape[0])
                     # bert hidden_size = 768
                 feat_mask = torch.ones(boxes.shape[0], dtype=torch.double)
                 feats_padding = torch.zeros((MAX_BOXES - boxes.shape[0]), dtype=torch.double)
@@ -550,13 +562,24 @@ class ROSMIEvaluator:
             # obj_num = img_info['num_boxes']
             # # obj_num = img_info['t_num_boxes']
             # feats = img_info['features'].copy()
-            boxes = img_info['boxes'].copy()
-            names = img_info['names'].copy()
-            landmark_id_ = random.randint(0,67)
+            boxes = img_info['t_boxes'].copy()
+            names = img_info['t_names'].copy()
+            landmark_id_ = 0
+            # landmark_id_ = random.randint(0,67)
             for ipd, name_box in enumerate(names):
-                if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
-                    landmark_id_ = ipd
+                # if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
+                #     landmark_id_ = ipd
 
+                if datum['landmarks'][0]['g_type'] == 'Point':
+                    if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower() or \
+                            int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
+                        landmark_id_ = ipd
+                        break
+                else:
+                    if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower() or \
+                            int(datum['landmarks'][0]['landmark_pixels'][0]) == int(boxes[ipd][0]):
+                        landmark_id_ = ipd
+                        break
             # # last is reserved for landmarks that do not appear in the input feat
             # landmark_id_ = torch.zeros(MAX_BOXES+1)
             # if landmark_id == None:
@@ -593,10 +616,23 @@ class ROSMIEvaluator:
             #     print(landmark_id_)
             #     print(ln_)
             #     print(len(boxes))
-            print(boxes[landmark_id_],boxes[ln_])
+            try:
+                print(landmark_id_)
+                print(ln_)
+                print(boxes[landmark_id_],boxes[ln_])
+                # if int(ln[0]) != int(boxes[ln_][0]):
+                #     print(ln)
+                #     print(boxes[ln_])
+                #     input("?")
 
-            pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
-                                    CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
+                if landmark_id_ == ln_:
+                    pred_cland_coords = getPointLatLng(ln[0] + (ln[2] - ln[0])/2, ln[1] + (ln[3] - ln[1])/2,  \
+                                        CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
+                else:
+                    pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
+                                        CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
+            except:
+                pred_cland_coords = None
             # else:
             #     print("Cant classify landmark")
             #
@@ -619,6 +655,7 @@ class ROSMIEvaluator:
             #     print(pred_land_coords, datum['landmarks'][0]['raw_gps'])
             # else:
             #     print(pred_land_coords, datum['landmarks'][0]['landmark_gps'])
+            # input("?")
             # # print(pred_land_coords)
             # print(pred_coords, datum['gold_coordinates'])
             bearing = BEAR2NUMS[br]

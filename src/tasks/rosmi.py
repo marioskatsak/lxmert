@@ -126,9 +126,9 @@ class ROSMI:
                 #     self.writer.add_graph(self.model, (feats.float(), feat_mask.float(), boxes.float(),names,sent ))
                 # assert logit.dim() == target.dim() == 2
 
-                target_loss = self.mse_loss(logit, target)
-                self.writer.add_scalar('target loss', target_loss, n_iter)
-                total_loss += target_loss#*logit.size(1)
+                # target_loss = self.mse_loss(logit, target)
+                # self.writer.add_scalar('target loss', target_loss, n_iter)
+                # total_loss += target_loss#*logit.size(1)
                 # print(logit.size(1))
                 # print(target)
                 # total_loss += iou_loss(logit, target)
@@ -160,9 +160,9 @@ class ROSMI:
                 # loss += self.mse_loss(p_dist,dist.float())#*p_dist.size(1)
                 # print(land_)
                 # input(land_.float())
-                land_loss = self.mse_loss(p_land,land_.float())#*p_land.size(1)
-                self.writer.add_scalar('landmark loss', land_loss, n_iter)
-                total_loss += land_loss*p_land.size(1)
+                # land_loss = self.mse_loss(p_land,land_.float())#*p_land.size(1)
+                # self.writer.add_scalar('landmark loss', land_loss, n_iter)
+                # total_loss += land_loss*p_land.size(1)
 
                 # total_loss += self.mse_loss(p_bear,bear_.float())#*p_bear.size(1)
 

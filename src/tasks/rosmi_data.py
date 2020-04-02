@@ -435,8 +435,8 @@ class ROSMITorchDataset(Dataset):
             # names = img_info['names'].copy()
             # names = img_info['t_names'].copy()
             # input(names)
-            feats = torch.from_numpy(feats)
-            boxes = torch.from_numpy(boxes)
+            # feats = torch.from_numpy(feats)
+            # boxes = torch.from_numpy(boxes)
             # if names:
             names_ids = []
             names_segment_ids = []
@@ -601,8 +601,10 @@ class ROSMIEvaluator:
             print(br, datum['landmarks'][0]['bearing'])
 
             if datum['landmarks'][0]['g_type'] == 'Point':
+                ln_correct = datum['landmarks'][0]['raw_pixels']
                 print(ln, datum['landmarks'][0]['raw_pixels'])
             else:
+                ln_correct = datum['landmarks'][0]['landmark_pixels']
                 print(ln, datum['landmarks'][0]['landmark_pixels'])
 
 
@@ -626,7 +628,7 @@ class ROSMIEvaluator:
                 #     input("?")
 
                 if landmark_id_ == ln_:
-                    pred_cland_coords = getPointLatLng(ln[0] + (ln[2] - ln[0])/2, ln[1] + (ln[3] - ln[1])/2,  \
+                    pred_cland_coords = getPointLatLng(ln_correct[0] + (ln_correct[2] - ln_correct[0])/2, ln_correct[1] + (ln_correct[3] - ln_correct[1])/2,  \
                                         CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
                 else:
                     pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \

@@ -10,7 +10,7 @@ from lxrt.modeling import BertLayerNorm, GeLU
 # Max length including <bos> and <eos>
 MAX_VQA_LENGTH = 25
 
-MAX_BOXES = 68
+MAX_BOXES = 73
 
 class ROSMIModel(nn.Module):
     def __init__(self, num_bearings):

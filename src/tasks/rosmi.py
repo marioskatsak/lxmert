@@ -97,6 +97,7 @@ class ROSMI:
         best_acc2 = 0.
         best_tacc = 0
         best_acc3 = 0
+        best_mDist = 99999
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
@@ -211,10 +212,10 @@ class ROSMI:
 
             # self.scheduler.step(loss)
             log_str = f"\nEpoch {epoch}: Total Loss {total_loss}\n"
-            tmp_acc, mDist, acc2, acc3, tAcc = evaluator.evaluate(sentid2ans)
-            log_str += f"\nEpoch {epoch}: Train {tmp_acc * 100.}%\n"
+            tmp_acc, mDist, acc2, acc3, tmpAcc = evaluator.evaluate(sentid2ans)
+            log_str += f"\nEpoch {epoch}: Train {tmpAcc * 100.}%\n"
             log_str += f"\nEpoch {epoch}: Training Av. Distance {mDist}m\n"
-            self.writer.add_scalar('Accuracy/train [IoU=0.5]', tmp_acc * 100., n_iter)
+            self.writer.add_scalar('Accuracy/train [IoU=0.5]', tmpAcc * 100., n_iter)
             # awlf.writer.close()
 
             if self.valid_tuple is not None:  # Do Validation
@@ -222,19 +223,21 @@ class ROSMI:
                 if valid_score > best_valid:
                     best_valid = valid_score
                     self.save("BEST")
-                if tmp_acc > best_train:
-                    best_train = tmp_acc
+                if tmpAcc > best_train:
+                    best_train = tmpAcc
                 if acc2 > best_acc2:
                     best_acc2 = acc2
                 if acc3 > best_acc3:
                     best_acc3 = acc3
                 if tAcc > best_tacc:
                     best_tacc = tAcc
+                if m_dist < best_mDist:
+                    best_mDist = m_dist
 
                 self.writer.add_scalar('Accuracy/valid [IoU=0.5]', valid_score * 100., n_iter)
                 # awlf.writer.close()
                 log_str += f"Epoch {epoch}: Valid {valid_score * 100.}%\n" + \
-                           f"Epoch {epoch}: Valid Av. Distance {m_dist}m\n" + \
+                           f"Epoch {epoch}: Best Valid Av. Distance {best_mDist}m\n" + \
                            f"Epoch {epoch}: Best Train {best_train * 100.}%\n" + \
                            f"Epoch {epoch}: Best Val {best_valid * 100.}%\n" + \
                            f"Epoch {epoch}: Best Val2 {best_acc2 * 100.}%\n" + \

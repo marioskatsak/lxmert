@@ -24,35 +24,35 @@ class ROSMIModel(nn.Module):
         self.hid_dim = self.lxrt_encoder.dim
         print(self.hid_dim)
         self.distance_start = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim*5),
+            nn.Linear(self.hid_dim, self.hid_dim*6),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim*5, eps=1e-12),
-            nn.Linear(self.hid_dim*5, MAX_VQA_LENGTH)
+            BertLayerNorm(self.hid_dim*6, eps=1e-12),
+            nn.Linear(self.hid_dim*6, MAX_VQA_LENGTH)
         )
         self.distance_end = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim*5),
+            nn.Linear(self.hid_dim, self.hid_dim*6),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim*5, eps=1e-12),
-            nn.Linear(self.hid_dim*5, MAX_VQA_LENGTH)
+            BertLayerNorm(self.hid_dim*6, eps=1e-12),
+            nn.Linear(self.hid_dim*6, MAX_VQA_LENGTH)
         )
         self.bearing_fc = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim*5),
+            nn.Linear(self.hid_dim, self.hid_dim*6),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim*5, eps=1e-12),
-            nn.Linear(self.hid_dim*5, num_bearings)
+            BertLayerNorm(self.hid_dim*6, eps=1e-12),
+            nn.Linear(self.hid_dim*6, num_bearings)
         )
         self.land_cl = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim*5),
+            nn.Linear(self.hid_dim, self.hid_dim*5),
             # GeLU(),
             GeLU(),
             BertLayerNorm(self.hid_dim*5, eps=1e-12),
             nn.Linear(self.hid_dim*5, MAX_BOXES)
         )
         self.land_fc = nn.Sequential(
-            nn.Linear(self.hid_dim*2, self.hid_dim*4),
+            nn.Linear(self.hid_dim, self.hid_dim*4),
             GeLU(),
             BertLayerNorm(self.hid_dim*4, eps=1e-12),
             nn.Linear(self.hid_dim*4, 4)
@@ -60,13 +60,14 @@ class ROSMIModel(nn.Module):
         # ROSMI Pred heads
         self.logit_fc = nn.Sequential(
             # nn.Linear(68 * self.hid_dim* 3, self.hid_dim),
-            nn.Linear(self.hid_dim*2, self.hid_dim*4),
+            nn.Linear(self.hid_dim, self.hid_dim*4),
             GeLU(),
             BertLayerNorm(self.hid_dim*4, eps=1e-12),
             nn.Linear(self.hid_dim*4, 4)
         )
-        self.logit_fc.apply(self.lxrt_encoder.model.init_bert_weights)
-        self.land_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        # self.logit_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        # self.land_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        self.land_cl.apply(self.lxrt_encoder.model.init_bert_weights)
         self.bearing_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         self.distance_end.apply(self.lxrt_encoder.model.init_bert_weights)
         self.distance_start.apply(self.lxrt_encoder.model.init_bert_weights)
@@ -83,8 +84,13 @@ class ROSMIModel(nn.Module):
         :return: (b, num_answer) The logit of each answers.
         """
         # input(feat_mask)
-        x = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
+        if args.qa:
+            x, lang, out = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
+        else:
+            x, lang = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
 
+        # print(x.shape)
+        # input(lang.shape)
         # if args.n_ent:
         #     x = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
         # else:
@@ -95,9 +101,12 @@ class ROSMIModel(nn.Module):
         # x = x.view(-1, 68 * self.hid_dim* 3)
         # print(x.shape)
         logit = self.logit_fc(x)
-        dist_s = self.distance_start(x)
-        dist_e = self.distance_end(x)
+        dist_s = self.distance_start(lang)
+        dist_e = self.distance_end(lang)
         landmark_ = self.land_fc(x)
-        cland_ = self.land_cl(x)
-        bearing_ = self.bearing_fc(x)
+        if args.qa:
+            cland_ = out
+        else:
+            cland_ = self.land_cl(x)
+        bearing_ = self.bearing_fc(lang)
         return logit, (dist_s,dist_e, landmark_,cland_, bearing_)

@@ -15,11 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+import os, time
 
 import torch
 import torch.nn as nn
 
+from torch.utils.tensorboard import SummaryWriter
 from lxrt.tokenization import BertTokenizer
 from lxrt.modeling import LXRTFeatureExtraction as VisualBertForLXRFeature, VISUAL_CONFIG
 
@@ -39,6 +40,9 @@ def convert_sents_to_features(sents, max_seq_length, tokenizer):
     features = []
     for (i, sent) in enumerate(sents):
 
+        # print(type(sent))
+        # print(sent)
+        # if type(sent) != torch.FloatTensor and type(sent) != torch.Tensor:
         tokens_a = tokenizer.tokenize(sent.strip())
 
         # Account for [CLS] and [SEP] with "- 2"
@@ -50,6 +54,19 @@ def convert_sents_to_features(sents, max_seq_length, tokenizer):
         segment_ids = [0] * len(tokens)
 
         input_ids = tokenizer.convert_tokens_to_ids(tokens)
+        # else:
+        #     print("lol tensor")
+        #     tokens = sent
+        #     print(tokens)
+        #     # # Account for [CLS] and [SEP] with "- 2"
+        #     # if len(tokens_a) > max_seq_length - 2:
+        #     #     tokens_a = tokens_a[:(max_seq_length - 2)]
+        #
+        #     # Keep segment id which allows loading BERT-weights.
+        #     # tokens = [0] + tokens_a + [0]
+        #     segment_ids = [0] * len(tokens)
+        #
+        #     input_ids = tokens
 
 
         # The mask has 1 for real tokens and 0 for padding tokens. Only real
@@ -99,6 +116,8 @@ class LXRTEncoder(nn.Module):
             "bert-base-uncased",
             mode=mode
         )
+        self.write_ = True
+        self.writer = SummaryWriter(f'snap/rosmi/graph/{os.uname()[1]}.{time.time()}')
 
         if args.from_scratch:
             print("initializing all the weights")
@@ -123,6 +142,8 @@ class LXRTEncoder(nn.Module):
             names_features = None
 
 
+        # print(names_features.shape)
+        # input(sents)
 
 
             # b = torch.Tensor(len(names_features[0]), self.max_seq_length)
@@ -139,6 +160,13 @@ class LXRTEncoder(nn.Module):
         segment_ids = torch.tensor([f.segment_ids for f in train_features], dtype=torch.long).cuda()
         input_mask = torch.tensor([f.input_mask for f in train_features], dtype=torch.long).cuda()
 
+        # if self.write_:
+        #     self.writer.add_graph(self.model, (input_ids, segment_ids, input_mask,
+        #                         feats,
+        #                         visual_attention_mask,
+        #                         names_features))
+        #     self.writer.close()
+        #     self.write_ = False
         output = self.model(input_ids, segment_ids, input_mask,
                             visual_feats=feats,
                             visual_attention_mask=visual_attention_mask,

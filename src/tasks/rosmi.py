@@ -5,8 +5,10 @@ import os, time
 import collections
 
 import torch, json
+
 import torch.nn as nn
 import numpy as np
+from torch.autograd import Variable
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
@@ -19,7 +21,7 @@ from utils import iou_loss, giou_loss
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 DataTuple = collections.namedtuple("DataTuple", 'dataset loader evaluator')
 
-
+MAX_VQA_LENGTH = 25
 def get_data_tuple(splits: str, bs:int, shuffle=False, drop_last=False) -> DataTuple:
     dset = ROSMIDataset(splits)
     tset = ROSMITorchDataset(dset)
@@ -47,11 +49,18 @@ class ROSMI:
             )
         else:
             self.valid_tuple = None
-
+        if args.test:
+            self.test_tuple = get_data_tuple(
+                args.test, bs=args.batch_size,
+                shuffle=False, drop_last=False
+            )
+        else:
+            self.test_tuple = None
 
         self.writer = SummaryWriter(f'snap/rosmi/logging_rosmi_{args.n_ent}_names/{os.uname()[1]}.{time.time()}')
         # Model
         self.model = ROSMIModel(self.train_tuple.dataset.num_bearings)
+
 
         # Load pre-trained weights
         if args.load_lxmert is not None:
@@ -67,11 +76,17 @@ class ROSMI:
 
         # Loss and Optimizer
         self.bce_loss = nn.BCEWithLogitsLoss()
+        self.cross_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.SmoothL1Loss()
 
         if 'bert' in args.optim:
+            # input("bert")
             batch_per_epoch = len(self.train_tuple.loader)
             t_total = int(batch_per_epoch * args.epochs)
+            # t_total = -1
+            # batch 24 when 20 and epochs 3000 = 72000
+            # input(int(batch_per_epoch * args.epochs))
+            t_total = 72000
             print("BertAdam Total Iters: %d" % t_total)
             from lxrt.optimization import BertAdam
             self.optim = BertAdam(list(self.model.parameters()),
@@ -80,6 +95,8 @@ class ROSMI:
                                   t_total=t_total)
         else:
             self.optim = args.optimizer(self.model.parameters(), args.lr)
+            # input("AdamW")
+            # self.optim = torch.optim.AdamW(self.model.parameters(), args.lr, weight_decay=0.1,amsgrad=True)
 
         # self.scheduler = ReduceLROnPlateau(self.optim, 'min')
         # Output Directory
@@ -97,7 +114,8 @@ class ROSMI:
         best_acc2 = 0.
         best_tacc = 0
         best_acc3 = 0
-        best_mDist = 99999
+        best_test_acc = 0
+        best_mDist = [99999,99999,99999]
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
@@ -116,6 +134,10 @@ class ROSMI:
                     names = (names[0].squeeze(2).cuda(), \
                                   names[1].squeeze(2).cuda(), \
                                   names[2].squeeze(2).cuda())
+                elif args.qa:
+                    names = (names[0].cuda(), \
+                                  names[1].cuda(), \
+                                  names[2].cuda())
                 else:
                     names = None
 
@@ -123,8 +145,18 @@ class ROSMI:
                 logit, auxilaries = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
                 # print(names.shape)
                 # input(sent.shape)
+                # print(type(sent))
                 # if i == 0:
-                #     self.writer.add_graph(self.model, (feats.float(), feat_mask.float(), boxes.float(),names,sent ))
+                #
+                #     # input(sent)
+                #     # input(len(sent))
+                #     tmpInd = torch.ones(len(sent),MAX_VQA_LENGTH)
+                #     tmpNames = torch.ones(len(sent),MAX_VQA_LENGTH)
+                #     # print(type(tmpInd))
+                #     # print(type(tmpNames))
+                #     # input(sent)
+                #     # input(type(names))
+                #     self.writer.add_graph(self.model, (feats.float(), feat_mask.float(), boxes.float(),names,tmpInd ))
                 # assert logit.dim() == target.dim() == 2
 
                 # target_loss = self.mse_loss(logit, target)
@@ -154,10 +186,16 @@ class ROSMI:
                 self.writer.add_scalar('distance End loss', diste_loss, n_iter)
                 total_loss += diste_loss* p_dist_e.size(1) * 2
 
-                cland_loss = self.bce_loss(p_cland,cland_.float())
+                # print(p_cland)
+                # print(cland_)
+                # print(p_cland.shape)
+                # input(cland_.shape)
+                cland_loss = self.bce_loss(p_cland,cland_.squeeze(-1))
+
                 self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
                 total_loss += cland_loss* p_cland.size(1) * 2
 
+                total_loss /=4
                 # loss += self.mse_loss(p_dist,dist.float())#*p_dist.size(1)
                 # print(land_)
                 # input(land_.float())
@@ -231,19 +269,26 @@ class ROSMI:
                     best_acc3 = acc3
                 if tAcc > best_tacc:
                     best_tacc = tAcc
-                if m_dist < best_mDist:
+                if m_dist[0] < best_mDist[0]:
                     best_mDist = m_dist
 
                 self.writer.add_scalar('Accuracy/valid [IoU=0.5]', valid_score * 100., n_iter)
                 # awlf.writer.close()
-                log_str += f"Epoch {epoch}: Valid {valid_score * 100.}%\n" + \
-                           f"Epoch {epoch}: Best Valid Av. Distance {best_mDist}m\n" + \
+                log_str += f"Epoch {epoch}: Best Valid dist [var/std] {best_mDist[0]}[{best_mDist[1]}/{best_mDist[2]}]m\n" + \
                            f"Epoch {epoch}: Best Train {best_train * 100.}%\n" + \
                            f"Epoch {epoch}: Best Val {best_valid * 100.}%\n" + \
                            f"Epoch {epoch}: Best Val2 {best_acc2 * 100.}%\n" + \
                            f"Epoch {epoch}: Best Val3 {best_acc3 * 100.}%\n" + \
                            f"Epoch {epoch}: T-Best Val {best_tacc * 100.}%\n"
 
+            if self.test_tuple is not None:  # Do Validation
+                _, _, _, _, test_acc = self.evaluate(self.test_tuple)
+                print("test")
+
+                if test_acc > best_test_acc:
+                    best_test_acc = test_acc
+                log_str += f"Epoch {epoch}: Test {test_acc * 100.}%\n" + \
+                            f"Epoch {epoch}: Best Test {best_test_acc * 100.}%\n"
             print(log_str, end='')
 
             with open(self.output + "/log.log", 'a') as f:
@@ -340,11 +385,13 @@ if __name__ == "__main__":
     scores2 = []
     scores3 = []
     t_scores = []
-    for k in range(1):
-    # for k in range(0,8):
-        print(f"{k} on cross")
+    # for k in range(10):
+    for k in range(0,1):
+    #     print(f"{k} on cross")
         args.train = f'{k}_easy_train'
         args.valid = f'{k}_easy_val'
+        # args.train = '440_train'
+        # args.valid = '55_val'
         # Build Class
         rosmi = ROSMI()
         # Load ROSMI model weights
@@ -353,7 +400,7 @@ if __name__ == "__main__":
             rosmi.load(args.load)
 
         # Test or Train
-        if args.test is not None:
+        if args.test is not None and False:
             args.fast = args.tiny = False       # Always loading all data in test
             if 'test' in args.test:
                 rosmi.predict(
@@ -389,6 +436,7 @@ if __name__ == "__main__":
             t_scores.append(tacc)
             with open('t_scores.json', 'w') as scores_out:
                 json.dump(t_scores, scores_out)
+        # input("???")
     print(f"Best scores: {scores, scores2, scores3, t_scores}")
     print(f"Mean 6-fold accuracy 1 {sum(scores) / len(scores)}")
     print(f"Mean 6-fold accuracy 2 {sum(scores2) / len(scores2)}")

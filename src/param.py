@@ -16,6 +16,9 @@ def get_optimizer(optim):
     elif optim == 'adam':
         print("Optimizer: Using Adam")
         optimizer = torch.optim.Adam
+    elif optim == 'adamw':
+        print("Optimizer: Using AdamW")
+        optimizer = torch.optim.AdamW
     elif optim == 'adamax':
         print("Optimizer: Using Adamax")
         optimizer = torch.optim.Adamax
@@ -53,6 +56,7 @@ def parse_args():
     parser.add_argument("--tiny", action='store_const', default=False, const=True)
     parser.add_argument("--tqdm", action='store_const', default=False, const=True)
     parser.add_argument("--n_ent", action='store_const', default=False, const=True)
+    parser.add_argument("--qa", action='store_const', default=False, const=True)
 
     # Model Loading
     parser.add_argument('--load', type=str, default=None,
@@ -93,6 +97,8 @@ def parse_args():
     # Parse the arguments.
     args = parser.parse_args()
 
+    print(args.epochs)
+    input(args.optim)
     # Bind optimizer class.
     args.optimizer = get_optimizer(args.optim)
 

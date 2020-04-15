@@ -790,11 +790,11 @@ class VisualFeatEncoder(nn.Module):
             # print(y.shape)
             # print(y.shape)
             # input(z.shape)
-            output = y*z
-            # output = (x + y + z) / 3
+            # output = y*z
+            output = (x + y)*z / 2
         else:
-            # output = (x + y) / 2
-            output = y
+            output = (x + y) / 2
+            # output = y
         # input(output.shape)
         output = self.dropout(output)
         return output
@@ -1548,7 +1548,7 @@ class LXRTModel(BertPreTrainedModel):
         # pooled_output = pooled + pooled_output2
         # pooled_output = torch.cat((tmp_vsn,tmp_lng), 1)
         # pooled_output = torch.cat((pooled,pooled_output2), 1)
-        # input(pooled_output.shape)
+        # input(lang_feats.shape)
 
         return (lang_feats, visn_feats),visn_feats[:,0], lang_feats[:,0]
 
@@ -1668,7 +1668,7 @@ class LXRTFeatureExtraction(BertPreTrainedModel):
         """
         super().__init__(config)
         self.bert = LXRTModel(config)
-        # self.qa = BertForQuestionAnswering.from_pretrained('bert-large-uncased-whole-word-masking-finetuned-squad')
+        self.qa = BertForQuestionAnswering.from_pretrained('bert-large-uncased-whole-word-masking-finetuned-squad')
 
         self.mode = mode
         self.apply(self.init_bert_weights)
@@ -1700,8 +1700,8 @@ class LXRTFeatureExtraction(BertPreTrainedModel):
             if args.qa:
                 return feat_seq[1][:,0], feat_seq[0][:,0],output
             else:
-                return feat_seq[1][:,0], feat_seq[0][:,0]
-            # return feat_seq
+                return feat_seq
+                # return feat_seq[1][:,0], feat_seq[0][:,0]
         elif 'x' in self.mode and ('l' in self.mode or 'r' in self.mode):
             # print("2")
             return feat_seq, pooled_output

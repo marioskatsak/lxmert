@@ -107,13 +107,15 @@ class ROSMIModel(nn.Module):
 
 
         dist_s, dist_e = dist.split(1, dim=-1)
+        # print(dist_s.shape)
         dist_s = dist_s.squeeze(-1)
         dist_e = dist_e.squeeze(-1)
 
 
         landmark_ = self.land_fc(feat_seq[1][:,0])
         if args.qa:
-            cland_ = out
+            # input(out.shape)
+            cland_ = out.squeeze(-1)
         else:
             cland_ = self.land_cl(feat_seq[1])
             cland_ = cland_.squeeze(-1)

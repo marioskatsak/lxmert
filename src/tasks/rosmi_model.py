@@ -23,19 +23,19 @@ class ROSMIModel(nn.Module):
         )
         self.hid_dim = self.lxrt_encoder.dim
         print(self.hid_dim)
-        self.distance_start = nn.Sequential(
+        # self.distance_start = nn.Sequential(
+        #     nn.Linear(self.hid_dim, self.hid_dim*6),
+        #     # GeLU(),
+        #     GeLU(),
+        #     BertLayerNorm(self.hid_dim*6, eps=1e-12),
+        #     nn.Linear(self.hid_dim*6, MAX_VQA_LENGTH)
+        # )
+        self.distance_fc = nn.Sequential(
             nn.Linear(self.hid_dim, self.hid_dim*6),
             # GeLU(),
             GeLU(),
             BertLayerNorm(self.hid_dim*6, eps=1e-12),
-            nn.Linear(self.hid_dim*6, MAX_VQA_LENGTH)
-        )
-        self.distance_end = nn.Sequential(
-            nn.Linear(self.hid_dim, self.hid_dim*6),
-            # GeLU(),
-            GeLU(),
-            BertLayerNorm(self.hid_dim*6, eps=1e-12),
-            nn.Linear(self.hid_dim*6, MAX_VQA_LENGTH)
+            nn.Linear(self.hid_dim*6, 2)
         )
         self.bearing_fc = nn.Sequential(
             nn.Linear(self.hid_dim, self.hid_dim*6),
@@ -49,7 +49,7 @@ class ROSMIModel(nn.Module):
             # GeLU(),
             GeLU(),
             BertLayerNorm(self.hid_dim*5, eps=1e-12),
-            nn.Linear(self.hid_dim*5, MAX_BOXES)
+            nn.Linear(self.hid_dim*5, 1)
         )
         self.land_fc = nn.Sequential(
             nn.Linear(self.hid_dim, self.hid_dim*4),
@@ -69,8 +69,8 @@ class ROSMIModel(nn.Module):
         # self.land_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         self.land_cl.apply(self.lxrt_encoder.model.init_bert_weights)
         self.bearing_fc.apply(self.lxrt_encoder.model.init_bert_weights)
-        self.distance_end.apply(self.lxrt_encoder.model.init_bert_weights)
-        self.distance_start.apply(self.lxrt_encoder.model.init_bert_weights)
+        self.distance_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        # self.distance_start.apply(self.lxrt_encoder.model.init_bert_weights)
 
     def forward(self, feat, feat_mask, pos, names, sent):
         """
@@ -87,10 +87,11 @@ class ROSMIModel(nn.Module):
         if args.qa:
             x, lang, out = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
         else:
-            x, lang = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
+            feat_seq = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
 
-        # print(x.shape)
-        # input(lang.shape)
+        # 0 = language 1 = vision
+        # print(feat_seq[0].shape)
+        # input(feat_seq[1].shape)
         # if args.n_ent:
         #     x = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
         # else:
@@ -100,13 +101,21 @@ class ROSMIModel(nn.Module):
         # input(torch.mean(x))
         # x = x.view(-1, 68 * self.hid_dim* 3)
         # print(x.shape)
-        logit = self.logit_fc(x)
-        dist_s = self.distance_start(lang)
-        dist_e = self.distance_end(lang)
-        landmark_ = self.land_fc(x)
+        logit = self.logit_fc(feat_seq[1][:,0])
+        dist = self.distance_fc(feat_seq[0])
+        # dist_e = self.distance_fc(feat_seq[0])
+
+
+        dist_s, dist_e = dist.split(1, dim=-1)
+        dist_s = dist_s.squeeze(-1)
+        dist_e = dist_e.squeeze(-1)
+
+
+        landmark_ = self.land_fc(feat_seq[1][:,0])
         if args.qa:
             cland_ = out
         else:
-            cland_ = self.land_cl(x)
-        bearing_ = self.bearing_fc(lang)
+            cland_ = self.land_cl(feat_seq[1])
+            cland_ = cland_.squeeze(-1)
+        bearing_ = self.bearing_fc(feat_seq[0][:,0])
         return logit, (dist_s,dist_e, landmark_,cland_, bearing_)

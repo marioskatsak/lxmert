@@ -65,7 +65,7 @@ class ROSMIModel(nn.Module):
             BertLayerNorm(self.hid_dim*4, eps=1e-12),
             nn.Linear(self.hid_dim*4, 4)
         )
-        # self.logit_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        self.logit_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         # self.land_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         self.land_cl.apply(self.lxrt_encoder.model.init_bert_weights)
         self.bearing_fc.apply(self.lxrt_encoder.model.init_bert_weights)
@@ -85,7 +85,7 @@ class ROSMIModel(nn.Module):
         """
         # input(feat_mask)
         if args.qa:
-            x, lang, out = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
+            feat_seq, out = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
         else:
             feat_seq = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
 

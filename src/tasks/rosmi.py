@@ -159,9 +159,9 @@ class ROSMI:
                 #     self.writer.add_graph(self.model, (feats.float(), feat_mask.float(), boxes.float(),names,tmpInd ))
                 # assert logit.dim() == target.dim() == 2
 
-                # target_loss = self.mse_loss(logit, target)
-                # self.writer.add_scalar('target loss', target_loss, n_iter)
-                # total_loss += target_loss#*logit.size(1)
+                target_loss = self.mse_loss(logit, target)
+                self.writer.add_scalar('target loss', target_loss, n_iter)
+                total_loss += target_loss*logit.size(1)*4
                 # print(logit.size(1))
                 # print(target)
                 # total_loss += iou_loss(logit, target)
@@ -387,7 +387,7 @@ if __name__ == "__main__":
     t_scores = []
     # for k in range(10):
     for k in range(0,1):
-    #     print(f"{k} on cross")
+        print(f"{k} on cross")
         args.train = f'{k}_easy_train'
         args.valid = f'{k}_easy_val'
         # args.train = '440_train'

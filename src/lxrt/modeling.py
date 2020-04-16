@@ -790,11 +790,11 @@ class VisualFeatEncoder(nn.Module):
             # print(y.shape)
             # print(y.shape)
             # input(z.shape)
-            # output = y*z
-            output = (x + y)*z / 2
+            output = y*z
+            # output = (x + y)*z / 2
         else:
-            output = (x + y) / 2
-            # output = y
+            # output = (x + y) / 2
+            output = y
         # input(output.shape)
         output = self.dropout(output)
         return output
@@ -869,7 +869,7 @@ class NamesPooler(nn.Module):
     def __init__(self, config):
         super(NamesPooler, self).__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-        self.activation = nn.Softmax()
+        self.activation = nn.Tanh()
 
     def forward(self, hidden_states):
         # We "pool" the model by simply taking the hidden state corresponding

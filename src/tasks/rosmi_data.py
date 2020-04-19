@@ -965,7 +965,7 @@ class ROSMIEvaluator:
             std_ = 99999999
         print(len(sentid2ans))
         print(variance)
-        input(lands/len(sentid2ans))
+        print(lands/len(sentid2ans))
         return score / len(sentid2ans), (meanD,variance,std_), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
 
     def dump_result(self, sentid2ans: dict, path):

@@ -1344,8 +1344,8 @@ class BertForQuestionAnswering(BPreTrainedModel):
         self.num_labels = config.num_labels
 
         self.bert = BertModel(config)
-        # self.qa_outputs = nn.Linear(config.hidden_size, config.num_labels)
-        self.gps_outputs = nn.Linear(config.hidden_size, 1)
+        self.qa_outputs = nn.Linear(config.hidden_size, config.num_labels)
+        # self.gps_outputs = nn.Linear(config.hidden_size, 1)
         # input(self.qa_outputs)
         self.init_weights()
 

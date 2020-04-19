@@ -119,7 +119,7 @@ class ROSMI:
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
-            for i, (sent_id, feats, feat_mask, boxes, names, sent, dists, diste, land_, cland_, bear_ , target) in iter_wrapper(enumerate(loader)):
+            for i, (sent_id, feats, feat_mask, boxes, names, sent, dists, diste, land_, cland_, bear_ ,l_start,l_end, target) in iter_wrapper(enumerate(loader)):
 
                 total_loss = 0
                 # input("lol")
@@ -141,7 +141,8 @@ class ROSMI:
                 else:
                     names = None
 
-                feats, feat_mask, boxes, target, dists, diste, land_, cland_, bear_ = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda(), dists.cuda(), diste.cuda(), land_.cuda(), cland_.cuda(), bear_.cuda()
+                feats, feat_mask, boxes, target, dists, diste, land_, cland_, bear_, l_start, l_end = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda(), dists.cuda(), diste.cuda(), \
+                                                                                land_.cuda(), cland_.cuda(), bear_.cuda(), l_start.cuda(), l_end.cuda()
                 logit, auxilaries = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
                 # print(names.shape)
                 # input(sent.shape)
@@ -159,9 +160,9 @@ class ROSMI:
                 #     self.writer.add_graph(self.model, (feats.float(), feat_mask.float(), boxes.float(),names,tmpInd ))
                 # assert logit.dim() == target.dim() == 2
 
-                target_loss = self.mse_loss(logit, target)
-                self.writer.add_scalar('target loss', target_loss, n_iter)
-                total_loss += target_loss*logit.size(1)*4
+                # target_loss = self.mse_loss(logit, target)
+                # self.writer.add_scalar('target loss', target_loss, n_iter)
+                # total_loss += target_loss*logit.size(1)*4
                 # print(logit.size(1))
                 # print(target)
                 # total_loss += iou_loss(logit, target)
@@ -170,7 +171,7 @@ class ROSMI:
                 self.writer.add_scalar('giou loss', loss2, n_iter)
                 # total_loss += loss2
 
-                p_dist_s, p_dist_e, p_land, p_cland, p_bear = auxilaries
+                p_dist_s, p_dist_e, p_land, p_cland, p_bear, p_start, p_end = auxilaries
 
                 assert logit.dim() == target.dim() == 2
                 bear_loss = self.bce_loss(p_bear,bear_.float())
@@ -190,7 +191,10 @@ class ROSMI:
                 # print(cland_)
                 # print(p_cland.shape)
                 # input(cland_.shape)
-                cland_loss = self.bce_loss(p_cland,cland_.squeeze(-1))
+                if args.qa:
+                    cland_loss = (self.bce_loss(p_start,l_start) + self.bce_loss(p_end,l_end)) / 2
+                elif args.n_ent:
+                    cland_loss = self.bce_loss(p_cland,cland_.squeeze(-1))
 
                 self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
                 total_loss += cland_loss* p_cland.size(1) * 4
@@ -228,20 +232,25 @@ class ROSMI:
                 label = logit
                 # input(logit)
                 bear_score, bear_label = p_bear.max(1)
+                # if args.qa:
+                _, p_start = p_start.max(1)
+                _, p_end = p_end.max(1)
                 _, p_cland = p_cland.max(1)
                 _, dist_e = p_dist_e.max(1)
                 _, dist_s = p_dist_s.max(1)
                 # score, label = logit.max(1)
-                for sid,diss,dise,ln,ln_,br, l in zip(sent_id, dist_s.cpu().detach().numpy(), \
+                for sid,diss,dise,ln,ln_,br,l_s,l_e, l in zip(sent_id, dist_s.cpu().detach().numpy(), \
                                                 dist_e.cpu().detach().numpy(), \
                                                 p_land.cpu().detach().numpy(), \
                                                 p_cland.cpu().detach().numpy(), \
                                                 bear_label.cpu().detach().numpy(), \
+                                                p_start.cpu().detach().numpy(), \
+                                                p_end.cpu().detach().numpy(), \
                                                     label.cpu().detach().numpy()):
 
                     br = dset.label2bearing[br]
                     # print(ans)
-                    sentid2ans[sid.item()] = (l, diss,dise, ln,ln_, br)
+                    sentid2ans[sid.item()] = (l, diss,dise, ln,ln_, br,l_s,l_e)
 
 
 
@@ -320,22 +329,26 @@ class ROSMI:
                     names = None
                 feats, feat_mask, boxes = feats.cuda(),feat_mask.cuda(), boxes.cuda()
                 label, aux  = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
-                dist_s, dist_e, lnd,clnd, brng = aux
+                dist_s, dist_e, lnd,clnd, brng, land_start, land_end = aux
 
                 bear_score, bear_label = brng.max(1)
-                _, clnd = clnd.max(1)
                 _, dist_e = dist_e.max(1)
                 _, dist_s = dist_s.max(1)
-                for qid,diss,dise, ln,cln, br, l in zip(ques_id,dist_s.cpu().detach().numpy(), \
+                _, land_start = land_start.max(1)
+                _, land_end = land_end.max(1)
+                _, clnd = clnd.max(1)
+                for qid,diss,dise, ln,cln, br,l_s,l_e, l in zip(ques_id,dist_s.cpu().detach().numpy(), \
                                                 dist_e.cpu().detach().numpy(), \
                                                 lnd.cpu().detach().numpy(), \
                                                 clnd.cpu().detach().numpy(), \
                                                 bear_label.cpu().detach().numpy(), \
+                                                land_start.cpu().detach().numpy(), \
+                                                land_end.cpu().detach().numpy(), \
                                                     label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
                     # input(br)
                     br = dset.label2bearing[br]
-                    sentid2ans[qid.item()] = (l, diss, dise, ln,cln, br)
+                    sentid2ans[qid.item()] = (l, diss, dise, ln,cln, br, l_s, l_e)
         if dump is not None:
             evaluator.dump_result(sentid2ans, dump)
         return sentid2ans
@@ -350,22 +363,26 @@ class ROSMI:
         dset, loader, evaluator = data_tuple
         sentid2ans = {}
 
-        for i, (ques_id, feats, feat_mask, boxes, names, sent,dists,diste,land_,cland_, bear_, target) in enumerate(loader):
+        for i, (ques_id, feats, feat_mask, boxes, names, sent,dists,diste,land_,cland_, bear_,land_s,land_e, target) in enumerate(loader):
             # input(target)
             label = target
-            for qid,diss,dise, ln,cln, br, l in zip(ques_id,dists.cpu().detach().numpy(), \
+            for qid,diss,dise, ln,cln, br,l_s,l_e, l in zip(ques_id,dists.cpu().detach().numpy(), \
                                                 diste.cpu().detach().numpy(), \
                                                 land_.cpu().detach().numpy(), \
-                                                cland_.cpu().detach().numpy(), \
+                                                cland_.cpu().detach(), \
                                                 bear_.cpu().detach().numpy(), \
+                                                land_s.cpu().detach().numpy(), \
+                                                land_e.cpu().detach().numpy(), \
                                                     label.cpu().detach().numpy()):
 
                 br = np.argmax(br)
                 diss = np.argmax(diss)
                 dise = np.argmax(dise)
+                l_s = np.argmax(l_s)
+                l_e = np.argmax(l_e)
                 cln = np.argmax(cln)
                 br = dset.label2bearing[br]
-                sentid2ans[qid.item()] = (l, diss,dise, ln,cln, br)
+                sentid2ans[qid.item()] = (l, diss,dise, ln,cln, br,l_s,l_e)
         acc, dist, acc2, acc3, tacc = evaluator.evaluate(sentid2ans)
         return acc, acc2, acc3, tacc
 

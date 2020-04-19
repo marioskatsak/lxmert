@@ -114,10 +114,13 @@ class ROSMIModel(nn.Module):
 
         landmark_ = self.land_fc(feat_seq[1][:,0])
         if args.qa:
-            # input(out.shape)
-            cland_ = out.squeeze(-1)
+            start_logits, end_logits = out.split(1, dim=-1)
+            start_logits = start_logits.squeeze(-1)
+            end_logits = end_logits.squeeze(-1)
         else:
-            cland_ = self.land_cl(feat_seq[1])
-            cland_ = cland_.squeeze(-1)
+            start_logits = dist_s
+            end_logits = dist_s
+        cland_ = self.land_cl(feat_seq[1])
+        cland_ = cland_.squeeze(-1)
         bearing_ = self.bearing_fc(feat_seq[0][:,0])
-        return logit, (dist_s,dist_e, landmark_,cland_, bearing_)
+        return logit, (dist_s,dist_e, landmark_,cland_, bearing_,start_logits,end_logits)

@@ -174,6 +174,10 @@ class ROSMIDataset:
             "bert-base-uncased",
             do_lower_case=True
         )
+        self.htokenizer = hBertToken.from_pretrained(
+            "bert-base-uncased",
+            do_lower_case=True
+        )
         # Loading datasets
         self.data = []
         for split in self.splits:
@@ -467,9 +471,30 @@ class ROSMITorchDataset(Dataset):
                     map += ", "
             # input(map)
             input_ids = self.htokenizer.encode(sent, map)
+            # all_tokens = tokenizer.convert_ids_to_tokens(input_ids)
+            # print(names[landmark_id])
+            land_tokens = self.htokenizer.encode(names[landmark_id][0])
+            land_tokens.pop(0)
+            land_tokens.pop(len(land_tokens)-1)
+            # print(land_tokens)
+            tmp_lands = input_ids[input_ids.index(102):]
+            # print(tmp_lands)
+
+            indices = [i for i, x in enumerate(tmp_lands) if x == land_tokens[0]]
+            for ind in indices:
+                try:
+                    if tmp_lands[ind:ind+len(land_tokens)] == land_tokens:
+                        start_index = len(input_ids[:input_ids.index(102)])+ind
+                        end_index = start_index + len(land_tokens)
+                        break
+                except:
+                    print("out of list index")
+            # print(input_ids[start_index:end_index])
+
+            # input(input_ids)
             token_type_ids = [0 if i <= input_ids.index(102) else 1 for i in range(len(input_ids))]
             # print(token_type_ids)
-            if len(input_ids) > 500:
+            if len(input_ids) > 420:
                 input(len(input_ids))
 
             # The mask has 1 for real tokens and 0 for padding tokens. Only real
@@ -477,12 +502,23 @@ class ROSMITorchDataset(Dataset):
             input_mask = [1] * len(input_ids)
 
             # Zero-pad up to the sequence length.
-            padding = [0] * (500 - len(input_ids))
+            padding = [0] * (420 - len(input_ids))
             input_ids += padding
             input_mask += padding
             token_type_ids += padding
 
+            landmark_start = torch.zeros(420)
+            landmark_end = torch.zeros(420)
+            # land_end = torch.zeros(420)
+            landmark_start[start_index] = 1
+            landmark_end[end_index] = 1
+
+
+
             _names = (torch.tensor(input_ids),torch.tensor(token_type_ids),torch.tensor(input_mask))
+        else:
+            landmark_start = 0
+            landmark_end = 0
         # print(input_ids)
         # input(_names[0])
 
@@ -593,7 +629,7 @@ class ROSMITorchDataset(Dataset):
         # print(np.mean(feats))
 
 
-        return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, landmark_id_, bearing, target#bearing
+        return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, landmark_id_, bearing,landmark_start,landmark_end, target#bearing
         # return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, torch.tensor([landmark_id]), bearing, target#bearing
             # else:
             #     return ques_id, feats, boxes, ques
@@ -612,7 +648,7 @@ class ROSMIEvaluator:
         mDist = 0.
         lands = 0
         counterDist = 0
-        for sentid, (pred_box, diss,dise, ln, ln_, br) in sentid2ans.items():
+        for sentid, (pred_box, diss,dise, ln, ln_, br, l_s,l_e) in sentid2ans.items():
 
 
 
@@ -630,10 +666,11 @@ class ROSMIEvaluator:
             img_info = self.dataset.imgid2img[datum['img_id']]
             # obj_num = img_info['num_boxes']
             # # obj_num = img_info['t_num_boxes']
-            # feats = img_info['features'].copy()
+            feats = img_info['features'].copy()
             # boxes = img_info['boxes'].copy()
             boxes = img_info['t_boxes'].copy()
             names = img_info['t_names'].copy()
+            sent = datum['sentence']['raw']
             # names = img_info['names'].copy()
             landmark_id_ = 0
             # landmark_id_ = random.randint(0,67)
@@ -711,10 +748,43 @@ class ROSMIEvaluator:
             centre = calculateTiles(CENTRES[sn_id],ZOOMS[sn_id])
 
 
-            # if landmark_id_ < len(boxes) and ln_ < len(boxes):
-            #     print(landmark_id_)
-            #     print(ln_)
-            #     print(len(boxes))
+            if args.qa:
+
+                map = ""
+                for obj_n,obj in enumerate(names):
+                    map += obj[0]
+                    if obj_n < len(names) - 1:
+                        map += ", "
+                # input(map)
+                input_ids = self.dataset.htokenizer.encode(sent, map)
+                # all_tokens = tokenizer.convert_ids_to_tokens(input_ids)
+                # print(names[landmark_id])
+                land_tokens = self.dataset.htokenizer.encode(names[landmark_id_][0])
+                land_tokens.pop(0)
+                land_tokens.pop(len(land_tokens)-1)
+                # print(land_tokens)
+                tmp_lands = input_ids[input_ids.index(102):]
+                # print(tmp_lands)
+
+                indices = [i for i, x in enumerate(tmp_lands) if x == land_tokens[0]]
+                for ind in indices:
+                    try:
+                        if tmp_lands[ind:ind+len(land_tokens)] == land_tokens:
+                            start_index = len(input_ids[:input_ids.index(102)])+ind
+                            end_index = start_index + len(land_tokens)
+                            break
+                    except:
+                        print("out of list index")
+
+                print(start_index, l_s)
+                print(end_index, l_e)
+                if start_index == l_s and end_index == l_e:
+                    # pass
+                    ln_ = landmark_id_
+                else:
+                    ln_ = 0
+
+
             if landmark_id_ == ln_:
                 lands += 1
             try:
@@ -895,7 +965,7 @@ class ROSMIEvaluator:
             std_ = 99999999
         print(len(sentid2ans))
         print(variance)
-        print(lands/len(sentid2ans))
+        input(lands/len(sentid2ans))
         return score / len(sentid2ans), (meanD,variance,std_), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
 
     def dump_result(self, sentid2ans: dict, path):

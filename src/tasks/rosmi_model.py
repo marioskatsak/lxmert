@@ -45,11 +45,11 @@ class ROSMIModel(nn.Module):
             nn.Linear(self.hid_dim*6, num_bearings)
         )
         self.land_cl = nn.Sequential(
-            nn.Linear(self.hid_dim, self.hid_dim*5),
+            nn.Linear(self.hid_dim, self.hid_dim*6),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim*5, eps=1e-12),
-            nn.Linear(self.hid_dim*5, 1)
+            BertLayerNorm(self.hid_dim*6, eps=1e-12),
+            nn.Linear(self.hid_dim*6, 1)
         )
         self.land_fc = nn.Sequential(
             nn.Linear(self.hid_dim, self.hid_dim*4),

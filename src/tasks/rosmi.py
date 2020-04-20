@@ -192,12 +192,13 @@ class ROSMI:
                 # print(p_cland.shape)
                 # input(cland_.shape)
                 if args.qa:
-                    cland_loss = (self.bce_loss(p_start,l_start) + self.bce_loss(p_end,l_end)) / 2
+                    cland_loss = self.bce_loss(p_start,l_start) + self.bce_loss(p_end,l_end)
+                    total_loss += cland_loss* p_start.size(1) * 2
                 elif args.n_ent:
-                    cland_loss = self.bce_loss(p_cland,cland_.squeeze(-1))
+                    cland_loss = self.bce_loss(p_cland,cland_)
 
-                self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
-                total_loss += cland_loss* p_cland.size(1) * 4
+                    self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
+                    total_loss += cland_loss* p_cland.size(1) * 4
 
                 # total_loss /=4
                 # loss += self.mse_loss(p_dist,dist.float())#*p_dist.size(1)

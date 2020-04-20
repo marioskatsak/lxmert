@@ -1663,6 +1663,8 @@ class LXRTFeatureExtraction(BertPreTrainedModel):
         start_positions=None,
         end_positions=None,
         r'''
+        print(names_feat)
+        input(names_feat.shape)
         if args.qa:
             output = self.qa(input_ids=names_feat[0],attention_mask=names_feat[2],token_type_ids=names_feat[1])
             # input(output)

@@ -325,6 +325,10 @@ class ROSMI:
                     names = (names[0].squeeze(2).cuda(), \
                                   names[1].squeeze(2).cuda(), \
                                   names[2].squeeze(2).cuda())
+                elif args.qa:
+                    names = (names[0].cuda(), \
+                                  names[1].cuda(), \
+                                  names[2].cuda())
                 else:
                     names = None
                 feats, feat_mask, boxes = feats.cuda(),feat_mask.cuda(), boxes.cuda()

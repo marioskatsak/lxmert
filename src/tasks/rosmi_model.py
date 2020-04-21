@@ -45,11 +45,11 @@ class ROSMIModel(nn.Module):
             nn.Linear(self.hid_dim*6, num_bearings)
         )
         self.land_cl = nn.Sequential(
-            nn.Linear(self.hid_dim, self.hid_dim*6),
+            nn.Linear(self.hid_dim, self.hid_dim*5),
             # GeLU(),
             GeLU(),
-            BertLayerNorm(self.hid_dim*6, eps=1e-12),
-            nn.Linear(self.hid_dim*6, 1)
+            BertLayerNorm(self.hid_dim*5, eps=1e-12),
+            nn.Linear(self.hid_dim*5, 1)
         )
         self.land_fc = nn.Sequential(
             nn.Linear(self.hid_dim, self.hid_dim*4),
@@ -65,9 +65,9 @@ class ROSMIModel(nn.Module):
             BertLayerNorm(self.hid_dim*4, eps=1e-12),
             nn.Linear(self.hid_dim*4, 4)
         )
-        self.logit_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        # self.logit_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         # self.land_fc.apply(self.lxrt_encoder.model.init_bert_weights)
-        self.land_cl.apply(self.lxrt_encoder.model.init_bert_weights)
+        # self.land_cl.apply(self.lxrt_encoder.model.init_bert_weights)
         self.bearing_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         self.distance_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         # self.distance_start.apply(self.lxrt_encoder.model.init_bert_weights)

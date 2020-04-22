@@ -648,6 +648,7 @@ class ROSMIEvaluator:
         mDist = 0.
         lands = 0
         counterDist = 0
+        thres = 0.5
         for sentid, (pred_box, diss,dise, ln, ln_, br, l_s,l_e) in sentid2ans.items():
 
 
@@ -900,7 +901,7 @@ class ROSMIEvaluator:
                 iou = calc_iou_individual(new_bbox2, datum['gold_pixels'])
                 _scale = 25/SCALES[datum['scenario_items'].split('rio')[1].split('.json')[0]]
                 siou3 = iou*_scale
-                if siou3 > 0.65:
+                if siou3 > thres:
                     # print("ONE CORRECT")
                 # if ans in label:
                     score3 += 1
@@ -916,7 +917,7 @@ class ROSMIEvaluator:
                 siou2 = iou*_scale
                 print(iou, siou2)
                 # input("checking...")
-            if siou > 0.65:
+            if siou > thres:
                 # print("ONE CORRECT")
             # if ans in label:
                 score += 1
@@ -939,11 +940,11 @@ class ROSMIEvaluator:
                 #     input("??")
             else:
                 counterDist +=1
-            if siou2 > 0.65:
+            if siou2 > thres:
                 # print("ONE CORRECT")
             # if ans in label:
                 score2 += 1
-            if siou2 > 0.65 or siou > 0.65 or siou3 > 0.65:
+            if siou2 > thres or siou > thres or siou3 > thres:
                 # print("ONE CORRECT")
             # if ans in label:
                 tScore += 1

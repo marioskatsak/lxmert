@@ -356,10 +356,10 @@ class ROSMITorchDataset(Dataset):
         obj_num = img_info['num_boxes']
         # obj_num = img_info['t_num_boxes']
         feats = img_info['features'].copy()
-        # boxes = img_info['boxes'].copy()
-        # names = img_info['names'].copy()
-        names = img_info['t_names'].copy()
-        boxes = img_info['t_boxes'].copy()
+        boxes = img_info['boxes'].copy()
+        names = img_info['names'].copy()
+        # names = img_info['t_names'].copy()
+        # boxes = img_info['t_boxes'].copy()
         # target = torch.tensor(datum['landmarks'][0]['raw_pixels'])
         # target = torch.tensor(boxes[-1]).float()
         # print(boxes)
@@ -648,7 +648,7 @@ class ROSMIEvaluator:
         mDist = 0.
         lands = 0
         counterDist = 0
-        thres = 0.5
+        thres = 0.65
         for sentid, (pred_box, diss,dise, ln, ln_, br, l_s,l_e) in sentid2ans.items():
 
 
@@ -668,11 +668,11 @@ class ROSMIEvaluator:
             # obj_num = img_info['num_boxes']
             # # obj_num = img_info['t_num_boxes']
             feats = img_info['features'].copy()
-            # boxes = img_info['boxes'].copy()
-            boxes = img_info['t_boxes'].copy()
-            names = img_info['t_names'].copy()
+            boxes = img_info['boxes'].copy()
+            names = img_info['names'].copy()
+            # boxes = img_info['t_boxes'].copy()
+            # names = img_info['t_names'].copy()
             sent = datum['sentence']['raw']
-            # names = img_info['names'].copy()
             landmark_id_ = 0
             # landmark_id_ = random.randint(0,67)
             for ipd, name_box in enumerate(names):

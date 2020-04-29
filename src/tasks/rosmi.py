@@ -116,6 +116,7 @@ class ROSMI:
         best_acc3 = 0
         best_test_acc = 0
         best_mDist = [99999,99999,99999]
+        best_testDist = [99999,99999,99999]
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
@@ -263,7 +264,7 @@ class ROSMI:
             log_str = f"\nEpoch {epoch}: Total Loss {total_loss}\n"
             tmp_acc, mDist, acc2, acc3, tmpAcc = evaluator.evaluate(sentid2ans)
             log_str += f"\nEpoch {epoch}: Train {tmpAcc * 100.}%\n"
-            log_str += f"\nEpoch {epoch}: Training Av. Distance {mDist}m\n"
+            # log_str += f"\nEpoch {epoch}: Training Av. Distance {mDist}m\n"
             self.writer.add_scalar('Accuracy/train [IoU=0.5]', tmpAcc * 100., n_iter)
             # awlf.writer.close()
 
@@ -287,18 +288,19 @@ class ROSMI:
                 # awlf.writer.close()
                 log_str += f"Epoch {epoch}: Best Valid dist [var/std] {best_mDist[0]}[{best_mDist[1]}/{best_mDist[2]}]m\n" + \
                            f"Epoch {epoch}: Best Train {best_train * 100.}%\n" + \
-                           f"Epoch {epoch}: Best Val {best_valid * 100.}%\n" + \
-                           f"Epoch {epoch}: Best Val2 {best_acc2 * 100.}%\n" + \
                            f"Epoch {epoch}: Best Val3 {best_acc3 * 100.}%\n" + \
                            f"Epoch {epoch}: T-Best Val {best_tacc * 100.}%\n"
 
             if self.test_tuple is not None:  # Do Validation
-                _, _, _, _, test_acc = self.evaluate(self.test_tuple)
+                _, test_dist, _, _, test_acc = self.evaluate(self.test_tuple)
                 print("test")
 
                 if test_acc > best_test_acc:
                     best_test_acc = test_acc
+                if test_dist[0] < best_testDist[0]:
+                    best_testDist = test_dist
                 log_str += f"Epoch {epoch}: Test {test_acc * 100.}%\n" + \
+                        f"Epoch {epoch}: Best Test dist [var/std] {best_testDist[0]}[{best_testDist[1]}/{best_testDist[2]}]m\n" + \
                             f"Epoch {epoch}: Best Test {best_test_acc * 100.}%\n"
             print(log_str, end='')
 

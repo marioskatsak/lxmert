@@ -411,10 +411,10 @@ if __name__ == "__main__":
     # for k in range(10):
     for k in range(0,1):
         print(f"{k} on cross")
-        args.train = f'{k}_easy_train'
-        args.valid = f'{k}_easy_val'
-        # args.train = '440_train'
-        # args.valid = '55_val'
+        # args.train = f'{k}_easy_train'
+        # args.valid = f'{k}_easy_val'
+        args.train = '440_train'
+        args.valid = '55_val'
         # Build Class
         rosmi = ROSMI()
         # Load ROSMI model weights
@@ -452,6 +452,11 @@ if __name__ == "__main__":
                 print("Valid Oracle: %0.2f" % (rosmi.oracle_score(rosmi.valid_tuple)[0] * 100))
             else:
                 print("DO NOT USE VALIDATION")
+            input()
+            if rosmi.test_tuple is not None:
+                print('Splits in Valid data:', rosmi.test_tuple.dataset.splits)
+                print("Test Oracle: %0.2f" % (rosmi.oracle_score(rosmi.test_tuple)[0] * 100))
+            input()
             acc1, acc2, acc3, tacc = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
             scores.append(acc1)
             scores2.append(acc2)

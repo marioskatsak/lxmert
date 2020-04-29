@@ -10,7 +10,7 @@ cp $0 $output/run.bash
 # See Readme.md for option details.
 CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
-    --train train --valid valid \
+    --train train --valid valid --test 55_test \
     --llayers 1 --xlayers 1 --rlayers 1 \
     --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 250 \
     --tqdm --output $output ${@:3}

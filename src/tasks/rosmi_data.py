@@ -298,7 +298,7 @@ class ROSMITorchDataset(Dataset):
         sent = datum['sentence']['raw']
         # dist = torch.tensor([int(datum['landmarks'][0]['distance'])])
         # bearing = torch.tensor([int(datum['landmarks'][0]['bearing'])])
-        if datum['landmarks'][0]['g_type'] == 'Point':
+        if datum['landmarks'][0]['g_type'] != 'LineString':
             landmark = torch.tensor(datum['landmarks'][0]['raw_pixels'])
         else:
             landmark = torch.tensor(datum['landmarks'][0]['landmark_pixels'])
@@ -356,10 +356,10 @@ class ROSMITorchDataset(Dataset):
         obj_num = img_info['num_boxes']
         # obj_num = img_info['t_num_boxes']
         feats = img_info['features'].copy()
-        boxes = img_info['boxes'].copy()
-        names = img_info['names'].copy()
-        # names = img_info['t_names'].copy()
-        # boxes = img_info['t_boxes'].copy()
+        # boxes = img_info['boxes'].copy()
+        # names = img_info['names'].copy()
+        names = img_info['t_names'].copy()
+        boxes = img_info['t_boxes'].copy()
         # target = torch.tensor(datum['landmarks'][0]['raw_pixels'])
         # target = torch.tensor(boxes[-1]).float()
         # print(boxes)
@@ -385,6 +385,7 @@ class ROSMITorchDataset(Dataset):
                     int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
                 landmark_id = ipd
                 break
+
             # #     # print(type(datum['landmarks'][0]['raw_pixels']))
             # # #     # print(type(feat_box))
             # # #     # print(datum['landmarks'][0]['raw_pixels'])
@@ -648,7 +649,7 @@ class ROSMIEvaluator:
         mDist = 0.
         lands = 0
         counterDist = 0
-        thres = 0.65
+        thres = 0.50
         for sentid, (pred_box, diss,dise, ln, ln_, br, l_s,l_e) in sentid2ans.items():
 
 
@@ -668,10 +669,10 @@ class ROSMIEvaluator:
             # obj_num = img_info['num_boxes']
             # # obj_num = img_info['t_num_boxes']
             feats = img_info['features'].copy()
-            boxes = img_info['boxes'].copy()
-            names = img_info['names'].copy()
-            # boxes = img_info['t_boxes'].copy()
-            # names = img_info['t_names'].copy()
+            # boxes = img_info['boxes'].copy()
+            # names = img_info['names'].copy()
+            boxes = img_info['t_boxes'].copy()
+            names = img_info['t_names'].copy()
             sent = datum['sentence']['raw']
             landmark_id_ = 0
             # landmark_id_ = random.randint(0,67)
@@ -965,9 +966,8 @@ class ROSMIEvaluator:
             variance = 99999999
             std_ = 99999999
         print(len(sentid2ans))
-        print(variance)
         print(lands/len(sentid2ans))
-        print(meanD)
+        print(f"Mean distance / variance: {meanD} / [{variance}]")
         return score / len(sentid2ans), (meanD,variance,std_), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
 
     def dump_result(self, sentid2ans: dict, path):

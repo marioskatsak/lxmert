@@ -40,7 +40,7 @@ class ROSMI:
 
         # Datasets
         self.train_tuple = get_data_tuple(
-            args.train, bs=args.batch_size, shuffle=True, drop_last=True
+            args.train, bs=args.batch_size, shuffle=False, drop_last=True
         )
         if args.valid != "":
             self.valid_tuple = get_data_tuple(

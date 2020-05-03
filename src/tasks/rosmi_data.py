@@ -79,8 +79,8 @@ MAX_BOXES = 73
 # VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
 # IMGFEAT_ROOT = '/scratch/mmk11/data/rosmi/'
 SPLIT2NAME = {
-    'train': 'easy_train',
-    'valid': 'easy_val',
+    'train': 'train',
+    'valid': 'val',
     'test': 'test',
     'mini_train': 'mini_train',
     'mini_valid': 'mini_val',
@@ -381,8 +381,9 @@ class ROSMITorchDataset(Dataset):
             # print(boxes[ipd])
             # print(type(name_box[0]))
             # if datum['landmarks'][0]['g_type'] == 'Point':
-            if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower() or \
-                    int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
+            if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
+             # or \
+             #        int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
                 landmark_id = ipd
                 break
 
@@ -541,7 +542,6 @@ class ROSMITorchDataset(Dataset):
                 names_features = convert_sents_to_features(
                     obj, self.max_seq_length, self.tokenizer)
 
-                # input(names_features[0].input_ids)
                 # for f in names_features
                 names_ids.append(torch.tensor(names_features[0].input_ids, dtype=torch.long))
                 names_segment_ids.append(torch.tensor(names_features[0].segment_ids, dtype=torch.long))
@@ -549,20 +549,9 @@ class ROSMITorchDataset(Dataset):
 
 
 
-            # names_ids = torch.stack(names_ids)
-            # input(len(names_ids))
-
-            # sentence = convert_sents_to_features(
-            #     [sent], self.max_seq_length, self.tokenizer)
-            #
-            # names_ids.append(torch.tensor(sentence[0].input_ids, dtype=torch.long))
-            # names_segment_ids.append(torch.tensor(sentence[0].segment_ids, dtype=torch.long))
-            # names_mask.append(torch.tensor(sentence[0].input_mask, dtype=torch.long))
-
-            if (MAX_BOXES - len(names_ids)) > 0:
-                # print("Zerppp")
-                feat_mask = torch.ones(feats.shape[0], dtype=torch.double)
-                feats_padding = torch.zeros((MAX_BOXES - feats.shape[0]), dtype=torch.double)
+            if (MAX_BOXES - boxes.shape[0]) > 0:
+                feat_mask = torch.ones(boxes.shape[0], dtype=torch.double)
+                feats_padding = torch.zeros((MAX_BOXES - boxes.shape[0]), dtype=torch.double)
                 feat_mask = torch.cat((feat_mask,feats_padding))
                 # Zero-pad up to the sequence length.
                 padding = (MAX_BOXES - len(names_ids))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
@@ -578,11 +567,7 @@ class ROSMITorchDataset(Dataset):
 
                     # bert hidden_size = 768
             else:
-                # print("No mask")
-                # feats_vis_padding = torch.zeros(((100 - feats.shape[0]),feats.shape[1]), dtype=torch.double)
-                # box_vis_padding = torch.zeros(((100 - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
-                # feats = torch.cat((feats,feats_vis_padding))
-                # boxes = torch.cat((boxes,box_vis_padding))
+
                 names_ids = torch.stack(names_ids)
                 names_segment_ids = torch.stack(names_segment_ids)
                 names_mask = torch.stack(names_mask)
@@ -594,14 +579,12 @@ class ROSMITorchDataset(Dataset):
 
             _names = (names_ids, names_segment_ids, names_mask)
         else:
-            if (MAX_BOXES - len(boxes)) > 0:
-                # print(boxes.shape[0])
-                    # bert hidden_size = 768
+            if (MAX_BOXES - boxes.shape[0]) > 0:
                 feat_mask = torch.ones(boxes.shape[0], dtype=torch.double)
                 feats_padding = torch.zeros((MAX_BOXES - boxes.shape[0]), dtype=torch.double)
                 feat_mask = torch.cat((feat_mask,feats_padding))
                 # Zero-pad up to the sequence length.
-                padding = (MAX_BOXES - len(boxes))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
+                # padding = (MAX_BOXES - len(boxes))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
 
                 feats_vis_padding = torch.zeros(((MAX_BOXES - feats.shape[0]),feats.shape[1]), dtype=torch.double)
                 box_vis_padding = torch.zeros(((MAX_BOXES - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
@@ -616,18 +599,6 @@ class ROSMITorchDataset(Dataset):
                 feat_mask = torch.cat((feat_mask,feats_padding))
             # _names = 0
 
-            # assert obj_num == len(boxes) == len(feats)
-
-
-
-        # x = np.random.randn(N, D_in)
-
-
-
-        # boxes = np.random.rand(boxes.shape[0],boxes.shape[1])
-        # feats = np.random.rand(feats.shape[0],feats.shape[1])
-
-        # print(np.mean(feats))
 
 
         return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, landmark_id_, bearing,landmark_start,landmark_end, target#bearing
@@ -681,8 +652,9 @@ class ROSMIEvaluator:
                 #     landmark_id_ = ipd
 
                 # if datum['landmarks'][0]['g_type'] == 'Point':
-                if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower() or \
-                        int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
+                if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
+                # or \
+                #         int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
                     landmark_id_ = ipd
                     break
                 # else:
@@ -955,7 +927,7 @@ class ROSMIEvaluator:
             #     print("Better!!")
             #     score = score2
 
-        print(f"Score1: {score / len(sentid2ans)}, Score2: {score2 / len(sentid2ans)}, Score3: {score3 / len(sentid2ans)}")
+        print(f"Total Score: {tScore / len(sentid2ans)}, Score1: {score / len(sentid2ans)}, Score2: {score2 / len(sentid2ans)}, Score3: {score3 / len(sentid2ans)}")
         if counterDist < len(sentid2ans) and (len(sentid2ans) - counterDist) > 0.2*len(sentid2ans):
             meanD =  mDist / (len(sentid2ans) - counterDist)
             meanD = np.mean(meanDist)

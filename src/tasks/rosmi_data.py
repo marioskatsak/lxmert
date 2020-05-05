@@ -554,7 +554,7 @@ class ROSMITorchDataset(Dataset):
                 feats_padding = torch.zeros((MAX_BOXES - boxes.shape[0]), dtype=torch.double)
                 feat_mask = torch.cat((feat_mask,feats_padding))
                 # Zero-pad up to the sequence length.
-                padding = (MAX_BOXES - len(names_ids))*[torch.zeros(self.max_seq_length, dtype=torch.long)]
+                padding = (MAX_BOXES - boxes.shape[0])*[torch.zeros(self.max_seq_length, dtype=torch.long)]
 
                 feats_vis_padding = torch.zeros(((MAX_BOXES - feats.shape[0]),feats.shape[1]), dtype=torch.double)
                 box_vis_padding = torch.zeros(((MAX_BOXES - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)

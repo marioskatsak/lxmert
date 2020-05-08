@@ -25,7 +25,15 @@ SCALES = {
             '5':4,
             '6':4
         }
-
+SCALES2 = {
+            '0':1,
+            '1':1,
+            '2':0.12486,
+            '3':0.49958,
+            '4':0.12486,
+            '5':0.12486,
+            '6':0.12486
+        }
 ZOOMS = {
             0:18,
             1:18,
@@ -617,6 +625,7 @@ class ROSMIEvaluator:
         score3 = 0.
         tScore = 0.
         meanDist = []
+        pixDiff = []
         mDist = 0.
         lands = 0
         counterDist = 0
@@ -870,10 +879,18 @@ class ROSMIEvaluator:
                 #     print(e)
                 #     continue
 
+                prd_center = [new_bbox2[0] + (new_bbox2[2] - new_bbox2[0])/2, new_bbox2[1] + (new_bbox2[3] - new_bbox2[1])/2]
+                gold_center = [datum['gold_pixels'][0] + (datum['gold_pixels'][2] - datum['gold_pixels'][0])/2, datum['gold_pixels'][1] + (datum['gold_pixels'][3] - datum['gold_pixels'][1])/2]
+
+
+                pixDiff.append(sqrt((int(prd_center[1]-gold_center[1]))**2 + (int(prd_center[0]-gold_center[0]))**2))
 
                 iou = calc_iou_individual(new_bbox2, datum['gold_pixels'])
                 _scale = 25/SCALES[datum['scenario_items'].split('rio')[1].split('.json')[0]]
-                siou3 = iou*_scale
+                # siou3 = iou*_scale
+                siou3 = iou/SCALES2[datum['scenario_items'].split('rio')[1].split('.json')[0]]
+                # print(siou3)
+                # input(iou/SCALES2[datum['scenario_items'].split('rio')[1].split('.json')[0]])
                 if siou3 > thres:
                     # print("ONE CORRECT")
                 # if ans in label:
@@ -903,7 +920,7 @@ class ROSMIEvaluator:
             print(f"Distance is {distance2}m")
             if distance2:
                 mDist += distance2
-                meanDist.append(distance2)
+                meanDist.append(distance2*SCALES2[datum['scenario_items'].split('rio')[1].split('.json')[0]])
                 # if distance2 > 5:
                 #     print(datum['sentence']['raw'])
                 #     print(datum['scenario_items'])
@@ -928,19 +945,23 @@ class ROSMIEvaluator:
             #     score = score2
 
         print(f"Total Score: {tScore / len(sentid2ans)}, Score1: {score / len(sentid2ans)}, Score2: {score2 / len(sentid2ans)}, Score3: {score3 / len(sentid2ans)}")
-        if counterDist < len(sentid2ans) and (len(sentid2ans) - counterDist) > 0.2*len(sentid2ans):
-            meanD =  mDist / (len(sentid2ans) - counterDist)
-            meanD = np.mean(meanDist)
-            variance = np.var(meanDist)
-            std_ = np.std(meanDist)
+        if len(pixDiff) > 0.2*len(sentid2ans):
+            # meanD =  mDist / (len(sentid2ans) - counterDist)
+            pixMean = int(np.mean(pixDiff))
+            # variance = int(np.var(pixDiff))
+            pixsd_ = int(np.std(pixDiff))
+            distMean = int(np.mean(meanDist))
+            # variance = int(np.var(pixDiff))
+            distsd_ = int(np.std(meanDist))
         else:
-            meanD = 99999999
-            variance = 99999999
-            std_ = 99999999
+            pixMean = 99999999
+            distMean = 99999999
+            distsd_ = 99999999
+            pixsd_ = 99999999
         print(len(sentid2ans))
         print(lands/len(sentid2ans))
-        print(f"Mean distance / variance: {meanD} / [{variance}]")
-        return score / len(sentid2ans), (meanD,variance,std_), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
+        print(f"Mean distance , Mean pix : {distMean} [{distsd_}] , {pixMean} [{pixsd_}]")
+        return score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
 
     def dump_result(self, sentid2ans: dict, path):
         """

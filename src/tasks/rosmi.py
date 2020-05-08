@@ -115,8 +115,8 @@ class ROSMI:
         best_tacc = 0
         best_acc3 = 0
         best_test_acc = 0
-        best_mDist = [99999,99999,99999]
-        best_testDist = [99999,99999,99999]
+        best_mDist = [99999,99999,99999,99999]
+        best_testDist = [99999,99999,99999,99999]
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
@@ -286,7 +286,7 @@ class ROSMI:
 
                 self.writer.add_scalar('Accuracy/valid [IoU=0.5]', valid_score * 100., n_iter)
                 # awlf.writer.close()
-                log_str += f"Epoch {epoch}: Best Valid dist [var/std] {best_mDist[0]}[{best_mDist[1]}/{best_mDist[2]}]m\n" + \
+                log_str += f"Epoch {epoch}: Best Valid dist/pixel [SD] {best_mDist[0]} [{best_mDist[1]}] / {best_mDist[2]} [{best_mDist[1]}] \n" + \
                            f"Epoch {epoch}: Best Train {best_train * 100.}%\n" + \
                            f"Epoch {epoch}: Best Val3 {best_acc3 * 100.}%\n" + \
                            f"Epoch {epoch}: T-Best Val {best_tacc * 100.}%\n"
@@ -300,7 +300,7 @@ class ROSMI:
                 if test_dist[0] < best_testDist[0]:
                     best_testDist = test_dist
                 log_str += f"Epoch {epoch}: Test {test_acc * 100.}%\n" + \
-                        f"Epoch {epoch}: Best Test dist [var/std] {best_testDist[0]}[{best_testDist[1]}/{best_testDist[2]}]m\n" + \
+                        f"Epoch {epoch}: Best Test dist/pixel [SD] {best_testDist[0]} [{best_testDist[1]}] / {best_testDist[2]} [{best_testDist[1]}]\n" + \
                             f"Epoch {epoch}: Best Test {best_test_acc * 100.}%\n"
             print(log_str, end='')
 
@@ -309,7 +309,7 @@ class ROSMI:
                 f.flush()
 
         self.save("LAST")
-        return best_valid, best_acc2, best_acc3, best_tacc
+        return best_tacc, best_mDist
 
     def predict(self, eval_tuple: DataTuple, dump=None):
         """
@@ -391,8 +391,8 @@ class ROSMI:
                 cln = np.argmax(cln)
                 br = dset.label2bearing[br]
                 sentid2ans[qid.item()] = (l, diss,dise, ln,cln, br,l_s,l_e)
-        acc, dist, acc2, acc3, tacc = evaluator.evaluate(sentid2ans)
-        return acc, acc2, acc3, tacc
+        best_tacc, best_mDist = evaluator.evaluate(sentid2ans)
+        return best_tacc, best_mDist
 
     def save(self, name, k = ''):
         torch.save(self.model.state_dict(),
@@ -408,15 +408,15 @@ if __name__ == "__main__":
 
     scores = []
     scores2 = []
-    scores3 = []
+    distances = []
     t_scores = []
-    # for k in range(10):
-    for k in range(0,1):
+    for k in range(10):
+    # for k in range(0,1):
         print(f"{k} on cross")
-        # args.train = f'{k}_easy_train'
-        # args.valid = f'{k}_easy_val'
-        args.train = '440_train'
-        args.valid = '55_val'
+        args.train = f'{k}_easy_train'
+        args.valid = f'{k}_easy_val'
+        # args.train = '440_train'
+        # args.valid = '55_val'
         # Build Class
         rosmi = ROSMI()
         # Load ROSMI model weights
@@ -459,16 +459,18 @@ if __name__ == "__main__":
                 print('Splits in Valid data:', rosmi.test_tuple.dataset.splits)
                 print("Test Oracle: %0.2f" % (rosmi.oracle_score(rosmi.test_tuple)[0] * 100))
             input()
-            acc1, acc2, acc3, tacc = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
-            scores.append(acc1)
-            scores2.append(acc2)
-            scores3.append(acc3)
-            t_scores.append(tacc)
+            best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
+
+            distances.append(best_mDist)
+            t_scores.append(best_tacc)
             with open('t_scores.json', 'w') as scores_out:
                 json.dump(t_scores, scores_out)
+
+            with open('distances.json', 'w') as scores_out:
+                json.dump(distances, scores_out)
         # input("???")
-    print(f"Best scores: {scores, scores2, scores3, t_scores}")
-    print(f"Mean 6-fold accuracy 1 {sum(scores) / len(scores)}")
-    print(f"Mean 6-fold accuracy 2 {sum(scores2) / len(scores2)}")
-    print(f"Mean 6-fold accuracy 3 {sum(scores3) / len(scores3)}")
-    print(f"Mean 6-fold total accuracy {sum(t_scores) / len(t_scores)}")
+    # print(f"Best scores: {scores, scores2, scores3, t_scores}")
+    # print(f"Mean 6-fold accuracy 1 {sum(scores) / len(scores)}")
+    # print(f"Mean 6-fold accuracy 2 {sum(scores2) / len(scores2)}")
+    # print(f"Mean 6-fold accuracy 3 {sum(scores3) / len(scores3)}")
+    # print(f"Mean 6-fold total accuracy {sum(t_scores) / len(t_scores)}")

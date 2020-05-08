@@ -391,8 +391,8 @@ class ROSMI:
                 cln = np.argmax(cln)
                 br = dset.label2bearing[br]
                 sentid2ans[qid.item()] = (l, diss,dise, ln,cln, br,l_s,l_e)
-        best_tacc, best_mDist = evaluator.evaluate(sentid2ans)
-        return best_tacc, best_mDist
+        valid_score, m_dist, acc2, acc3, tAcc = evaluator.evaluate(sentid2ans)
+        return tAcc, m_dist
 
     def save(self, name, k = ''):
         torch.save(self.model.state_dict(),

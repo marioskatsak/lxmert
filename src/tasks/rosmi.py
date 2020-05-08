@@ -454,11 +454,11 @@ if __name__ == "__main__":
                 print("Valid Oracle: %0.2f" % (rosmi.oracle_score(rosmi.valid_tuple)[0] * 100))
             else:
                 print("DO NOT USE VALIDATION")
-            input()
+            # input()
             if rosmi.test_tuple is not None:
                 print('Splits in Valid data:', rosmi.test_tuple.dataset.splits)
                 print("Test Oracle: %0.2f" % (rosmi.oracle_score(rosmi.test_tuple)[0] * 100))
-            input()
+            # input()
             best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
 
             distances.append(best_mDist)

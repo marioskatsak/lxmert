@@ -451,7 +451,16 @@ if __name__ == "__main__":
             # input("??")
             if rosmi.valid_tuple is not None:
                 print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
-                print("Valid Oracle: %0.2f" % (rosmi.oracle_score(rosmi.valid_tuple)[0] * 100))
+                tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
+
+                distances.append(dis)
+                t_scores.append(tmpA)
+                with open('t_scores.json', 'w') as scores_out:
+                    json.dump(t_scores, scores_out)
+
+                with open('distances.json', 'w') as scores_out:
+                    json.dump(distances, scores_out)
+                print("Valid Oracle: %0.2f" % (tmpA * 100))
             else:
                 print("DO NOT USE VALIDATION")
             # input()

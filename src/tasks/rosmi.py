@@ -309,7 +309,7 @@ class ROSMI:
                 f.flush()
 
         self.save("LAST")
-        return best_tacc, best_mDist
+        return best_acc3, best_mDist
 
     def predict(self, eval_tuple: DataTuple, dump=None):
         """
@@ -392,7 +392,7 @@ class ROSMI:
                 br = dset.label2bearing[br]
                 sentid2ans[qid.item()] = (l, diss,dise, ln,cln, br,l_s,l_e)
         valid_score, m_dist, acc2, acc3, tAcc = evaluator.evaluate(sentid2ans)
-        return tAcc, m_dist
+        return acc3, m_dist
 
     def save(self, name, k = ''):
         torch.save(self.model.state_dict(),
@@ -408,8 +408,10 @@ if __name__ == "__main__":
 
     scores = []
     scores2 = []
-    distances = []
+    distances = [[],[],[],[]]
+    oracle_distances = [[],[],[],[]]
     t_scores = []
+    oracle_scores = []
     for k in range(10):
     # for k in range(0,1):
         print(f"{k} on cross")
@@ -453,8 +455,11 @@ if __name__ == "__main__":
                 print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
                 tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
 
-                distances.append(dis)
-                t_scores.append(tmpA)
+                oracle_distances[0].append(dis[0])
+                oracle_distances[1].append(dis[1])
+                oracle_distances[2].append(dis[2])
+                oracle_distances[3].append(dis[3])
+                oracle_scores.append(tmpA)
                 with open('t_scores.json', 'w') as scores_out:
                     json.dump(t_scores, scores_out)
 
@@ -470,7 +475,10 @@ if __name__ == "__main__":
             # input()
             best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
 
-            distances.append(best_mDist)
+            distances[0].append(best_mDist[0])
+            distances[1].append(best_mDist[1])
+            distances[2].append(best_mDist[2])
+            distances[3].append(best_mDist[3])
             t_scores.append(best_tacc)
             with open('t_scores.json', 'w') as scores_out:
                 json.dump(t_scores, scores_out)

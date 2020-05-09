@@ -460,11 +460,11 @@ if __name__ == "__main__":
                 oracle_distances[2].append(dis[2])
                 oracle_distances[3].append(dis[3])
                 oracle_scores.append(tmpA)
-                with open('t_scores.json', 'w') as scores_out:
-                    json.dump(t_scores, scores_out)
+                with open(f'{args.abla}_oracle_scores.json', 'w') as scores_out:
+                    json.dump(oracle_scores, scores_out)
 
-                with open('distances.json', 'w') as scores_out:
-                    json.dump(distances, scores_out)
+                with open(f'{args.abla}_oracle_distances.json', 'w') as scores_out:
+                    json.dump(oracle_distances, scores_out)
                 print("Valid Oracle: %0.2f" % (tmpA * 100))
             else:
                 print("DO NOT USE VALIDATION")
@@ -480,10 +480,10 @@ if __name__ == "__main__":
             distances[2].append(best_mDist[2])
             distances[3].append(best_mDist[3])
             t_scores.append(best_tacc)
-            with open('t_scores.json', 'w') as scores_out:
+            with open(f'{args.abla}_t_scores.json', 'w') as scores_out:
                 json.dump(t_scores, scores_out)
 
-            with open('distances.json', 'w') as scores_out:
+            with open(f'{args.abla}_distances.json', 'w') as scores_out:
                 json.dump(distances, scores_out)
         # input("???")
     # print(f"Best scores: {scores, scores2, scores3, t_scores}")

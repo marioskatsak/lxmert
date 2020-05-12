@@ -471,8 +471,22 @@ if __name__ == "__main__":
             # input()
             if rosmi.test_tuple is not None:
                 print('Splits in Valid data:', rosmi.test_tuple.dataset.splits)
-                print("Test Oracle: %0.2f" % (rosmi.oracle_score(rosmi.test_tuple)[0] * 100))
-            # input()
+
+                tmpA, dis = rosmi.oracle_score(rosmi.test_tuple)
+                oracle_distances = [[],[],[],[]]
+
+                oracle_distances[0].append(dis[0])
+                oracle_distances[1].append(dis[1])
+                oracle_distances[2].append(dis[2])
+                oracle_distances[3].append(dis[3])
+                oracle_scores.append(tmpA)
+                with open(f'{args.abla}_t_oracle_scores.json', 'w') as scores_out:
+                    json.dump(oracle_scores, scores_out)
+
+                with open(f'{args.abla}_t_oracle_distances.json', 'w') as scores_out:
+                    json.dump(oracle_distances, scores_out)
+                print("Test Oracle: %0.2f" % (tmpA * 100))
+            input()
             best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
 
             distances[0].append(best_mDist[0])

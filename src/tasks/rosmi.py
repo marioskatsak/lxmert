@@ -412,13 +412,13 @@ if __name__ == "__main__":
     oracle_distances = [[],[],[],[]]
     t_scores = []
     oracle_scores = []
-    for k in range(10):
-    # for k in range(0,1):
+    # for k in range(10):
+    for k in range(0,1):
         print(f"{k} on cross")
-        args.train = f'{k}_easy_train'
-        args.valid = f'{k}_easy_val'
-        # args.train = '440_train'
-        # args.valid = '55_val'
+        # args.train = f'{k}_easy_train'
+        # args.valid = f'{k}_easy_val'
+        args.train = '440_train'
+        args.valid = '55_val'
         # Build Class
         rosmi = ROSMI()
         # Load ROSMI model weights

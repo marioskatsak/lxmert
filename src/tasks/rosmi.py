@@ -468,12 +468,13 @@ if __name__ == "__main__":
                 print("Valid Oracle: %0.2f" % (tmpA * 100))
             else:
                 print("DO NOT USE VALIDATION")
-            # input()
+            input()
             if rosmi.test_tuple is not None:
                 print('Splits in Valid data:', rosmi.test_tuple.dataset.splits)
 
                 tmpA, dis = rosmi.oracle_score(rosmi.test_tuple)
                 oracle_distances = [[],[],[],[]]
+                oracle_scores = []
 
                 oracle_distances[0].append(dis[0])
                 oracle_distances[1].append(dis[1])

@@ -415,10 +415,10 @@ if __name__ == "__main__":
     # for k in range(10):
     for k in range(0,1):
         print(f"{k} on cross")
-        # args.train = f'{k}_easy_train'
-        # args.valid = f'{k}_easy_val'
-        args.train = '440_train'
-        args.valid = '55_val'
+        args.train = f'{k}_easy_train'
+        args.valid = f'{k}_easy_val'
+        # args.train = '440_train'
+        # args.valid = '55_val'
         # Build Class
         rosmi = ROSMI()
         # Load ROSMI model weights
@@ -468,7 +468,7 @@ if __name__ == "__main__":
                 print("Valid Oracle: %0.2f" % (tmpA * 100))
             else:
                 print("DO NOT USE VALIDATION")
-            input()
+            # input()
             if rosmi.test_tuple is not None:
                 print('Splits in Valid data:', rosmi.test_tuple.dataset.splits)
 
@@ -487,7 +487,7 @@ if __name__ == "__main__":
                 with open(f'{args.abla}_t_oracle_distances.json', 'w') as scores_out:
                     json.dump(oracle_distances, scores_out)
                 print("Test Oracle: %0.2f" % (tmpA * 100))
-            input()
+            # input()
             best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
 
             distances[0].append(best_mDist[0])

@@ -93,6 +93,20 @@ SPLIT2NAME = {
     'mini_train': 'mini_train',
     'mini_valid': 'mini_val',
     'mini_test': 'mini_test',
+    '0_train':'0_train',
+    '0_val':'0_val',
+    '1_train':'1_train',
+    '1_val':'1_val',
+    '2_train':'2_train',
+    '2_val':'2_val',
+    '3_train':'3_train',
+    '3_val':'3_val',
+    '4_train':'4_train',
+    '4_val':'4_val',
+    '5_train':'5_train',
+    '5_val':'5_val',
+    '6_train':'6_train',
+    '6_val':'6_val',
     '0_easy_train':'0_easy_train',
     '0_easy_val':'0_easy_val',
     '1_easy_train':'1_easy_train',
@@ -869,7 +883,7 @@ class ROSMIEvaluator:
             #             tmp_pixs2 = generatePixel(tmp_ob,centre,ZOOMS[sn_id],[ 700, 500], GOLD_SIZES[sn_id])
             if final_coord2:
                 distance2 = haversine(final_coord2[0],final_coord2[1],datum['gold_coordinates'][0],datum['gold_coordinates'][1])*1000
-                if distance2 > 1:
+                if distance2 < 1:
                     scenarios[datum['scenario_items']][0] += 1
             if tmp_pixs2:
                 px = tmp_pixs2["points_x"]

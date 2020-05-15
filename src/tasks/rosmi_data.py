@@ -630,6 +630,7 @@ class ROSMIEvaluator:
         lands = 0
         counterDist = 0
         thres = 0.50
+        scenarios = {'scenario0.json':[0,0],'scenario1.json':[0,0],'scenario2.json':[0,0],'scenario3.json':[0,0],'scenario4.json':[0,0],'scenario5.json':[0,0],'scenario6.json':[0,0]}
         for sentid, (pred_box, diss,dise, ln, ln_, br, l_s,l_e) in sentid2ans.items():
 
 
@@ -641,11 +642,11 @@ class ROSMIEvaluator:
             # ln_ = ln_[0]
 
 
-
             # datum = self.dataset.id2datum[sentid]
             # gold = torch.tensor(self.dataset.imgid2img[datum['img_id']]['boxes'][-1])
             datum = self.dataset.id2datum[sentid]
             img_info = self.dataset.imgid2img[datum['img_id']]
+            scenarios[datum['scenario_items']][1] += 1
             # obj_num = img_info['num_boxes']
             # # obj_num = img_info['t_num_boxes']
             feats = img_info['features'].copy()
@@ -868,6 +869,8 @@ class ROSMIEvaluator:
             #             tmp_pixs2 = generatePixel(tmp_ob,centre,ZOOMS[sn_id],[ 700, 500], GOLD_SIZES[sn_id])
             if final_coord2:
                 distance2 = haversine(final_coord2[0],final_coord2[1],datum['gold_coordinates'][0],datum['gold_coordinates'][1])*1000
+                if distance2 > 1:
+                    scenarios[datum['scenario_items']][0] += 1
             if tmp_pixs2:
                 px = tmp_pixs2["points_x"]
                 py = tmp_pixs2["points_y"]
@@ -961,7 +964,7 @@ class ROSMIEvaluator:
         print(len(sentid2ans))
         print(lands/len(sentid2ans))
         print(f"Mean distance , Mean pix : {distMean} [{distsd_}] , {pixMean} [{pixsd_}]")
-        return score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
+        return score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
 
     def dump_result(self, sentid2ans: dict, path):
         """

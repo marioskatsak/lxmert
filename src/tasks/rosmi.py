@@ -410,10 +410,11 @@ if __name__ == "__main__":
     scores2 = []
     distances = [[],[],[],[]]
     oracle_distances = [[],[],[],[]]
+    scenarios = []
     t_scores = []
     oracle_scores = []
-    # for k in range(10):
-    for k in range(0,1):
+    for k in range(10):
+    # for k in range(0,1):
         print(f"{k} on cross")
         args.train = f'{k}_easy_train'
         args.valid = f'{k}_easy_val'
@@ -494,6 +495,7 @@ if __name__ == "__main__":
             distances[1].append(best_mDist[1])
             distances[2].append(best_mDist[2])
             distances[3].append(best_mDist[3])
+            scenarios.append(best_mDist[4])
             t_scores.append(best_tacc)
             with open(f'{args.abla}_t_scores.json', 'w') as scores_out:
                 json.dump(t_scores, scores_out)

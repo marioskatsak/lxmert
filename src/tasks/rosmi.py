@@ -502,6 +502,9 @@ if __name__ == "__main__":
 
             with open(f'{args.abla}_distances.json', 'w') as scores_out:
                 json.dump(distances, scores_out)
+
+            with open(f'{args.abla}_scenarios.json', 'w') as scores_out:
+                json.dump(scenarios, scores_out)
         # input("???")
     # print(f"Best scores: {scores, scores2, scores3, t_scores}")
     # print(f"Mean 6-fold accuracy 1 {sum(scores) / len(scores)}")

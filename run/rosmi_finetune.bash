@@ -9,11 +9,11 @@ cp $0 $output/run.bash
 
 # See Readme.md for option details.
 #--loadLXMERT snap/pretrained/model \
-#--fromScratch \
 CUDA_VISIBLE_DEVICES=3 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
     --train train --valid valid \
-    --llayers 0 --xlayers 0 --rlayers 0 \
+    --llayers 1 --xlayers 1 --rlayers 1 \
     --dataPath /scratch/mmk11/data/rosmi/ \
-    --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 250 --abla trans_Feat_Names \
+    --fromScratch \
+    --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 250 --abla scr_Names_Boxes \
     --tqdm --output $output ${@:3}

@@ -356,6 +356,8 @@ class ROSMI:
                     # ans = dset.label2ans[l]
                     # input(br)
                     br = dset.label2bearing[br]
+                    print(qid.item())
+                    if
                     sentid2ans[qid.item()] = (l, diss, dise, ln,cln, br, l_s, l_e)
         if dump is not None:
             evaluator.dump_result(sentid2ans, dump)
@@ -413,14 +415,14 @@ if __name__ == "__main__":
     scenarios = []
     t_scores = []
     oracle_scores = []
-    for k in range(3,7):
-    # for k in range(10):
+    # for k in range(7):
+    for k in range(10):
     # for k in range(0,1):
         print(f"{k} on cross")
-        # args.train = f'{k}_easy_train'
-        # args.valid = f'{k}_easy_val'
-        args.train = f'{k}_train'
-        args.valid = f'{k}_val'
+        args.train = f'{k}_easy_train'
+        args.valid = f'{k}_easy_val'
+        # args.train = f'{k}_train'
+        # args.valid = f'{k}_val'
         # args.train = '440_train'
         # args.valid = '55_val'
         # Build Class
@@ -464,7 +466,7 @@ if __name__ == "__main__":
                 oracle_distances[2].append(dis[2])
                 oracle_distances[3].append(dis[3])
                 oracle_scores.append(tmpA)
-                input(dis[4])
+                # input(dis[4])
                 with open(f'{args.abla}_oracle_scores.json', 'w') as scores_out:
                     json.dump(oracle_scores, scores_out)
 

@@ -356,8 +356,6 @@ class ROSMI:
                     # ans = dset.label2ans[l]
                     # input(br)
                     br = dset.label2bearing[br]
-                    print(qid.item())
-                    if
                     sentid2ans[qid.item()] = (l, diss, dise, ln,cln, br, l_s, l_e)
         if dump is not None:
             evaluator.dump_result(sentid2ans, dump)

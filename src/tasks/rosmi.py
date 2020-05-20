@@ -464,6 +464,7 @@ if __name__ == "__main__":
                 oracle_distances[2].append(dis[2])
                 oracle_distances[3].append(dis[3])
                 oracle_scores.append(tmpA)
+                input(dis[4])
                 with open(f'{args.abla}_oracle_scores.json', 'w') as scores_out:
                     json.dump(oracle_scores, scores_out)
 
@@ -485,7 +486,6 @@ if __name__ == "__main__":
                 oracle_distances[2].append(dis[2])
                 oracle_distances[3].append(dis[3])
                 oracle_scores.append(tmpA)
-                input(dis[4])
                 with open(f'{args.abla}_t_oracle_scores.json', 'w') as scores_out:
                     json.dump(oracle_scores, scores_out)
 

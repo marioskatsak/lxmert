@@ -792,8 +792,8 @@ class VisualFeatEncoder(nn.Module):
             # input(z.shape)
             # output = (x+y)*z
             # output = x*z
-            # output = y*z
-            output = z
+            output = y*z
+            # output = z
             # output = (x + y + z) / 3
         else:
             # output = (x + y) / 2

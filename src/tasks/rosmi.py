@@ -492,8 +492,8 @@ if __name__ == "__main__":
                 with open(f'{args.abla}_t_oracle_distances.json', 'w') as scores_out:
                     json.dump(oracle_distances, scores_out)
 
-                # with open(f'{args.abla}_t_oracle_examples.json', 'w') as scores_out:
-                #     json.dump(dis[5], scores_out)
+                with open(f'{args.abla}_t_oracle_examples.json', 'w') as scores_out:
+                    json.dump(dis[5], scores_out)
                 print("Test Oracle: %0.2f" % (tmpA * 100))
             input()
             best_tacc, best_mDist, bestTest = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)

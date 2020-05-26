@@ -644,6 +644,8 @@ class ROSMIEvaluator:
         lands = 0
         counterDist = 0
         thres = 0.50
+        # {id:'', sentence:'',gold:[a,b,c],pred:[a,b,c],outcome:True }
+        examples = []
         scenarios = {'scenario0.json':[0,0],'scenario1.json':[0,0],'scenario2.json':[0,0],'scenario3.json':[0,0],'scenario4.json':[0,0],'scenario5.json':[0,0],'scenario6.json':[0,0]}
         for sentid, (pred_box, diss,dise, ln, ln_, br, l_s,l_e) in sentid2ans.items():
 
@@ -978,6 +980,14 @@ class ROSMIEvaluator:
         print(len(sentid2ans))
         print(lands/len(sentid2ans))
         print(f"Mean distance , Mean pix : {distMean} [{distsd_}] , {pixMean} [{pixsd_}]")
+
+
+        print(diss,dise, datum['landmarks'][0]['distance'], dists, diste)
+        print(br, datum['landmarks'][0]['bearing'])
+
+
+        examples.append({ id:sentid, img_id:datum['img_id'], sentence:sent, gold:[names[landmark_id_],str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),datum['landmarks'][0]['bearing']], pred:[names[ln_],str(diss)+ ' '+str(dise),br], outcome:siou3 > thres })
+        input(examples)
         return score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
 
     def dump_result(self, sentid2ans: dict, path):

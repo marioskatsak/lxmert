@@ -939,7 +939,8 @@ class ROSMIEvaluator:
             print(f"Distance is {distance2}m")
             if distance2:
                 mDist += distance2
-                meanDist.append(distance2*SCALES2[datum['scenario_items'].split('rio')[1].split('.json')[0]])
+                distance2 = distance2*SCALES2[datum['scenario_items'].split('rio')[1].split('.json')[0]]
+                meanDist.append(distance2)
                 # if distance2 > 5:
                 #     print(datum['sentence']['raw'])
                 #     print(datum['scenario_items'])
@@ -959,7 +960,7 @@ class ROSMIEvaluator:
                 tScore += 1
 
 
-            examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[landmark_id_,str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),str(datum['landmarks'][0]['bearing'])], 'pred':[str(ln_),str(diss)+ ' '+str(dise),str(br)], 'outcome': str(siou3 > thres), 'distance':str(meanDist[-1]) })
+            examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[landmark_id_,str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),str(datum['landmarks'][0]['bearing'])], 'pred':[str(ln_),str(diss)+ ' '+str(dise),str(br)], 'outcome': str(siou3 > thres), 'distance':distance2 })
 
         # if score >=50:
         #     input("?")

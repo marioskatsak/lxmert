@@ -309,7 +309,7 @@ class ROSMI:
                 f.flush()
 
         self.save("LAST")
-        return best_acc3, best_mDist
+        return best_acc3, best_mDist, best_testDist
 
     def predict(self, eval_tuple: DataTuple, dump=None):
         """
@@ -473,7 +473,7 @@ if __name__ == "__main__":
                 print("Valid Oracle: %0.2f" % (tmpA * 100))
             else:
                 print("DO NOT USE VALIDATION")
-            # input()
+            input()
             if rosmi.test_tuple is not None:
                 print('Splits in Valid data:', rosmi.test_tuple.dataset.splits)
 
@@ -492,8 +492,8 @@ if __name__ == "__main__":
                 with open(f'{args.abla}_t_oracle_distances.json', 'w') as scores_out:
                     json.dump(oracle_distances, scores_out)
                 print("Test Oracle: %0.2f" % (tmpA * 100))
-            # input()
-            best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
+            input()
+            best_tacc, best_mDist, bestTest = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
 
             distances[0].append(best_mDist[0])
             distances[1].append(best_mDist[1])
@@ -501,6 +501,10 @@ if __name__ == "__main__":
             distances[3].append(best_mDist[3])
             scenarios.append(best_mDist[4])
             t_scores.append(best_tacc)
+
+            with open(f'{args.abla}_examples.json', 'w') as scores_out:
+                json.dump(bestTest[5], scores_out)
+
             with open(f'{args.abla}_t_scores.json', 'w') as scores_out:
                 json.dump(t_scores, scores_out)
 

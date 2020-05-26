@@ -985,12 +985,8 @@ class ROSMIEvaluator:
         print(lands/len(sentid2ans))
         print(f"Mean distance , Mean pix : {distMean} [{distsd_}] , {pixMean} [{pixsd_}]")
 
-
-        print(diss,dise, datum['landmarks'][0]['distance'], dists, diste)
-        print(br, datum['landmarks'][0]['bearing'])
-
-        input(examples)
-        return score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
+        # input(examples)
+        return score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios,examples), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
 
     def dump_result(self, sentid2ans: dict, path):
         """

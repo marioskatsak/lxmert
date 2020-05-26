@@ -957,6 +957,10 @@ class ROSMIEvaluator:
                 # print("ONE CORRECT")
             # if ans in label:
                 tScore += 1
+
+
+            examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[names[landmark_id_],str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),datum['landmarks'][0]['bearing']], 'pred':[names[ln_],str(diss)+ ' '+str(dise),br], 'outcome':siou3 > thres })
+
         # if score >=50:
         #     input("?")
             # if score2 > score:
@@ -985,8 +989,6 @@ class ROSMIEvaluator:
         print(diss,dise, datum['landmarks'][0]['distance'], dists, diste)
         print(br, datum['landmarks'][0]['bearing'])
 
-
-        examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[names[landmark_id_],str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),datum['landmarks'][0]['bearing']], 'pred':[names[ln_],str(diss)+ ' '+str(dise),br], 'outcome':siou3 > thres })
         input(examples)
         return score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
 

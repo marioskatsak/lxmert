@@ -959,8 +959,11 @@ class ROSMIEvaluator:
             # if ans in label:
                 tScore += 1
 
-
-            examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[landmark_id_,str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),str(datum['landmarks'][0]['bearing'])], 'pred':[str(ln_),str(diss)+ ' '+str(dise),str(br)], 'outcome': str(siou3 > thres), 'distance':distance2 })
+            if pred_cland_coords:
+                save_land = str(names[ln_])
+            else:
+                save_land = None
+            examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[names[landmark_id_],str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),str(datum['landmarks'][0]['bearing'])], 'pred':[save_land,str(diss)+ ' '+str(dise),str(br)], 'outcome': str(siou3 > thres), 'distance':distance2 })
 
         # if score >=50:
         #     input("?")

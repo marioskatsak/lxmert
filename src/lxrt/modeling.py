@@ -785,16 +785,16 @@ class VisualFeatEncoder(nn.Module):
             z = names_input
 
             # z = self.names_fc(names_input)
-            # z = self.names_layer_norm(z)
+            z = self.names_layer_norm(z)
             # print(x.shape)
             # print(y.shape)
             # print(y.shape)
             # input(z.shape)
             # output = (x+y)*z
             # output = x*z
-            output = y*z
+            # output = y*z
             # output = z
-            # output = (x + y + z) / 3
+            output = (x + y + z) / 3
         else:
             # output = (x + y) / 2
             output = y

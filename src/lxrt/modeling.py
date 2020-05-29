@@ -785,7 +785,7 @@ class VisualFeatEncoder(nn.Module):
             z = names_input
 
             # z = self.names_fc(names_input)
-            z = self.names_layer_norm(z)
+            # z = self.names_layer_norm(z)
             # print(x.shape)
             # print(y.shape)
             # print(y.shape)

@@ -22,14 +22,7 @@ class ROSMIModel(nn.Module):
             max_seq_length=MAX_VQA_LENGTH
         )
         self.hid_dim = self.lxrt_encoder.dim
-        print(self.hid_dim)
-        # self.distance_start = nn.Sequential(
-        #     nn.Linear(self.hid_dim, self.hid_dim*6),
-        #     # GeLU(),
-        #     GeLU(),
-        #     BertLayerNorm(self.hid_dim*6, eps=1e-12),
-        #     nn.Linear(self.hid_dim*6, MAX_VQA_LENGTH)
-        # )
+
         self.distance_fc = nn.Sequential(
             nn.Linear(self.hid_dim, self.hid_dim*6),
             # GeLU(),
@@ -51,13 +44,14 @@ class ROSMIModel(nn.Module):
             BertLayerNorm(self.hid_dim*5, eps=1e-12),
             nn.Linear(self.hid_dim*5, 1)
         )
+        # OLD
         self.land_fc = nn.Sequential(
             nn.Linear(self.hid_dim, self.hid_dim*4),
             GeLU(),
             BertLayerNorm(self.hid_dim*4, eps=1e-12),
             nn.Linear(self.hid_dim*4, 4)
         )
-        # ROSMI Pred heads
+        # OLD
         self.logit_fc = nn.Sequential(
             # nn.Linear(68 * self.hid_dim* 3, self.hid_dim),
             nn.Linear(self.hid_dim, self.hid_dim*4),
@@ -70,7 +64,7 @@ class ROSMIModel(nn.Module):
         self.land_cl.apply(self.lxrt_encoder.model.init_bert_weights)
         self.bearing_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         self.distance_fc.apply(self.lxrt_encoder.model.init_bert_weights)
-        # self.distance_start.apply(self.lxrt_encoder.model.init_bert_weights)
+        
 
     def forward(self, feat, feat_mask, pos, names, sent):
         """

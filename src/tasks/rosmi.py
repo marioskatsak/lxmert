@@ -505,8 +505,8 @@ if __name__ == "__main__":
             scenarios.append(best_mDist[4])
             t_scores.append(best_tacc)
 
-            # with open(f'{args.abla}_examples.json', 'w') as scores_out:
-            #     json.dump(bestTest[5], scores_out)
+            with open(f'{args.abla}_examples.json', 'w') as scores_out:
+                json.dump(best_mDist[5], scores_out)
 
             with open(f'{args.abla}_t_scores{k}.json', 'w') as scores_out:
                 json.dump(t_scores, scores_out)

@@ -378,11 +378,10 @@ class ROSMITorchDataset(Dataset):
         obj_num = img_info['num_boxes']
         # obj_num = img_info['t_num_boxes']
         feats = img_info['features'].copy()
-        # boxes = img_info['boxes'].copy()
-        # names = img_info['names'].copy()
-        detectron_names = img_info['names'].copy()
-        names = img_info['t_names'].copy()
-        boxes = img_info['t_boxes'].copy()
+        boxes = img_info['boxes'].copy()
+        names = img_info['names'].copy()
+        # names = img_info['t_names'].copy()
+        # boxes = img_info['t_boxes'].copy()
         # target = torch.tensor(datum['landmarks'][0]['raw_pixels'])
         # target = torch.tensor(boxes[-1]).float()
         # print(boxes)
@@ -397,7 +396,7 @@ class ROSMITorchDataset(Dataset):
 
         filename = os.path.join('/home/marios/experiments/gps_prediction/ROSMI/ROSMI_dataset','images', datum["image_filename"])
         landmark_id = 0
-        for ipd, name_box in enumerate(detectron_names):
+        for ipd, name_box in enumerate(names):
             # print(datum['landmarks'][0])
             # print(name_box[0])
             # print(datum['landmarks'][0]['raw_pixels'][0])
@@ -669,13 +668,12 @@ class ROSMIEvaluator:
             feats = img_info['features'].copy()
             boxes = img_info['boxes'].copy()
             names = img_info['names'].copy()
-            detectron_names = img_info['names'].copy()
             # boxes = img_info['t_boxes'].copy()
             # names = img_info['t_names'].copy()
             sent = datum['sentence']['raw']
             landmark_id_ = 0
             # landmark_id_ = random.randint(0,67)
-            for ipd, name_box in enumerate(detectron_names):
+            for ipd, name_box in enumerate(names):
                 # if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
                 #     landmark_id_ = ipd
 

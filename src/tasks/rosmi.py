@@ -413,9 +413,10 @@ if __name__ == "__main__":
     scenarios = []
     t_scores = []
     oracle_scores = []
+    examples = []
     # for k in range(7):
-    # for k in range(10):
-    for k in range(0,1):
+    for k in range(10):
+    # for k in range(0,1):
         print(f"{k} on cross")
         args.train = f'{k}_easy_train'
         args.valid = f'{k}_easy_val'
@@ -504,9 +505,10 @@ if __name__ == "__main__":
             distances[3].append(best_mDist[3])
             scenarios.append(best_mDist[4])
             t_scores.append(best_tacc)
+            examples.append(best_mDist[5])
 
             with open(f'{args.abla}_examples.json', 'w') as scores_out:
-                json.dump(best_mDist[5], scores_out)
+                json.dump(examples, scores_out)
 
             with open(f'{args.abla}_t_scores{k}.json', 'w') as scores_out:
                 json.dump(t_scores, scores_out)

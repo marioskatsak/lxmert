@@ -415,7 +415,7 @@ if __name__ == "__main__":
     oracle_scores = []
     # for k in range(7):
     # for k in range(10):
-    for k in range(2,4):
+    for k in range(4,6):
         print(f"{k} on cross")
         args.train = f'{k}_easy_train'
         args.valid = f'{k}_easy_val'

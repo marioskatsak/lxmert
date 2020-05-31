@@ -14,5 +14,5 @@ CUDA_VISIBLE_DEVICES=3 PYTHONPATH=$PYTHONPATH:./src \
     --train train --valid valid --test 55_test \
     --llayers 1 --xlayers 0 --rlayers 1 \
     --dataPath /scratch/mmk11/data/rosmi/ \
-    --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 100 --abla 7_t_trans_Names_Boxes \
+    --batchSize 20 --optim bert --lr 1e-3 --epochs 100 --abla 7_t_trans_Boxes \
     --tqdm --output $output ${@:3}

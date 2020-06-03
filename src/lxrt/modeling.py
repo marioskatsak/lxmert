@@ -764,7 +764,7 @@ class VisualFeatEncoder(nn.Module):
         self.box_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
 
         # # Named Entities encoding
-        # self.names_fc = nn.Linear(config.hidden_size, config.hidden_size)
+        self.names_fc = nn.Linear(config.hidden_size*2, config.hidden_size)
         self.names_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
 
 
@@ -790,11 +790,14 @@ class VisualFeatEncoder(nn.Module):
             # print(y.shape)
             # print(y.shape)
             # input(z.shape)
-            output = (x+y)*z
+            # output = (x+y)*z
+            output = (x + y) / 2
+            output = torch.cat((output,z))
+            input(output.shape)
+            output = self.names_fc(output)
             # output = x*z
             # output = y*z
             # output = z
-            # output = (y + z) / 2
             # output = (x + y + z) / 3
         else:
             output = (x + y) / 2

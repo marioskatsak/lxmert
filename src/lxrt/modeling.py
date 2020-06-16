@@ -792,12 +792,12 @@ class VisualFeatEncoder(nn.Module):
             # input(z.shape)
             # output = (x+y)*z
             # output = (x + y) / 2
-            output = torch.cat((y,z),dim=-1)
+            # output = torch.cat((y,z),dim=-1)
             # input(output.shape)
-            output = self.names_fc(output)
+            # output = self.names_fc(output)
             # output = x*z
             # output = y*z
-            # output = z
+            output = z
             # output = (x + y + z) / 3
         else:
             output = (x + y) / 2

@@ -272,7 +272,7 @@ class ROSMI:
                 valid_score, m_dist, acc2, acc3, tAcc = self.evaluate(eval_tuple)
                 if valid_score > best_valid:
                     best_valid = valid_score
-                    self.save("BEST")
+                    self.save(f"BEST_{args.abla}")
                 if tmpAcc > best_train:
                     best_train = tmpAcc
                 if acc2 > best_acc2:
@@ -308,7 +308,7 @@ class ROSMI:
                 f.write(log_str)
                 f.flush()
 
-        self.save("LAST")
+        self.save(f"LAST_{args.abla}")
         return best_acc3, best_mDist, best_testDist
 
     def predict(self, eval_tuple: DataTuple, dump=None):
@@ -404,6 +404,45 @@ class ROSMI:
         self.model.load_state_dict(state_dict)
 
 
+    def single_predict(self, map, sent):
+        """
+        Predict the answers to questions in a data split.
+
+        :param eval_tuple: The data tuple to be evaluated.
+        :param dump: The path of saved file to dump results.
+        :return: A dict of question_id to answer.
+        """
+        self.model.eval()
+        # dset, loader, evaluator = eval_tuple
+        # sentid2ans = {}
+        # for i, datum_tuple in enumerate(loader):
+        # ques_id, feats, feat_mask, boxes, names, sent, g_ds, g_de, land_,cland_, bear_ = datum_tuple[:11]   # Avoid seeing ground truth
+        # with torch.no_grad():
+        #     if args.n_ent:
+        #         names = (names[0].squeeze(2).cuda(), \
+        #                       names[1].squeeze(2).cuda(), \
+        #                       names[2].squeeze(2).cuda())
+        #     elif args.qa:
+        #         names = (names[0].cuda(), \
+        #                       names[1].cuda(), \
+        #                       names[2].cuda())
+        #     else:
+        #         names = None
+        #     feats, feat_mask, boxes = feats.cuda(),feat_mask.cuda(), boxes.cuda()
+        #     label, aux  = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
+        #     dist_s, dist_e, lnd,clnd, brng, land_start, land_end = aux
+        #
+        #     bear_score, bear_label = brng.max(1)
+        #     _, dist_e = dist_e.max(1)
+        #     _, dist_s = dist_s.max(1)
+        #     _, land_start = land_start.max(1)
+        #     _, land_end = land_end.max(1)
+        #     _, clnd = clnd.max(1)
+        # return (clnd, dist_s, dist_e, bear_label)
+        return None
+
+
+
 if __name__ == "__main__":
 
     scores = []
@@ -414,9 +453,9 @@ if __name__ == "__main__":
     t_scores = []
     oracle_scores = []
     examples = []
-    for k in range(7):
+    # for k in range(7):
     # for k in range(10):
-    # for k in range(0,1):
+    for k in range(0,1):
         print(f"{k} on cross")
         # args.train = f'{k}_easy_train'
         # args.valid = f'{k}_easy_val'
@@ -451,6 +490,14 @@ if __name__ == "__main__":
                 print(result)
             else:
                 assert False, "No such test option for %s" % args.test
+        elif args.single:
+            # testing on enc 10 scenario - read maps {names, GPS}
+            with open('enc_chart.json', 'r') as enc:
+                map = lson.load(enc)
+            # map = []
+            sent = input("Type instruction: ")
+            results = rosmi.single_predict(map, sent)
+            input(results)
         else:
             print('Splits in Train data:', rosmi.train_tuple.dataset.splits)
             # rosmi.oracle_score(rosmi.train_tuple)

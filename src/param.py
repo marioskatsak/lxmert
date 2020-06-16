@@ -54,6 +54,7 @@ def parse_args():
     parser.add_argument("--dataPath", dest='data_path', default='data/rosmi', type=str)
     parser.add_argument("--abla", dest='abla', default='', type=str)
     parser.add_argument("--fast", action='store_const', default=False, const=True)
+    parser.add_argument("--single", action='store_const', default=False, const=True)
     parser.add_argument("--tiny", action='store_const', default=False, const=True)
     parser.add_argument("--tqdm", action='store_const', default=False, const=True)
     parser.add_argument("--n_ent", action='store_const', default=False, const=True)

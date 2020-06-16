@@ -279,6 +279,7 @@ class ROSMI:
                     best_acc2 = acc2
                 if acc3 > best_acc3:
                     best_acc3 = acc3
+                    self.save(f"BEST_{args.abla}")
                 if tAcc > best_tacc:
                     best_tacc = tAcc
                 if m_dist[0] < best_mDist[0]:

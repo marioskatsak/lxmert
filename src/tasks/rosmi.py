@@ -421,11 +421,12 @@ class ROSMI:
         # sentid2ans = {}
         # for i, datum_tuple in enumerate(loader):
         # ques_id, feats, feat_mask, boxes, names, sent, g_ds, g_de, land_,cland_, bear_ = datum_tuple[:11]   # Avoid seeing ground truth
+        input(names[0].shape)
         with torch.no_grad():
             if args.n_ent:
-                names = (names[0].squeeze(2).cuda(), \
-                              names[1].squeeze(2).cuda(), \
-                              names[2].squeeze(2).cuda())
+                names = (names[0].cuda(), \
+                              names[1].cuda(), \
+                              names[2].cuda())
             elif args.qa:
                 names = (names[0].cuda(), \
                               names[1].cuda(), \

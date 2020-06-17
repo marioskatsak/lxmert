@@ -433,8 +433,8 @@ class ROSMI:
                               names[2].cuda())
             else:
                 names = None
-        feats, feat_mask, boxes = feats.cuda(),feat_mask.cuda(), boxes.cuda()
-        label, aux  = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
+        feats, boxes = feats.cuda(), boxes.cuda()
+        label, aux  = self.model(feats.float(), feat_mask, boxes.float(), names, sent)
         dist_s, dist_e, lnd,clnd, brng, land_start, land_end = aux
 
         bear_score, bear_label = brng.max(1)

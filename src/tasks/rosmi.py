@@ -408,7 +408,7 @@ class ROSMI:
         self.model.load_state_dict(state_dict)
 
 
-    def single_predict(self, feats, feat_mask, boxes, _names, sent):
+    def single_predict(self, feats, feat_mask, boxes, names, sent):
         """
         Predict the answers to questions in a data split.
 
@@ -420,7 +420,7 @@ class ROSMI:
         # dset, loader, evaluator = eval_tuple
         # sentid2ans = {}
         # for i, datum_tuple in enumerate(loader):
-        ques_id, feats, feat_mask, boxes, names, sent, g_ds, g_de, land_,cland_, bear_ = datum_tuple[:11]   # Avoid seeing ground truth
+        # ques_id, feats, feat_mask, boxes, names, sent, g_ds, g_de, land_,cland_, bear_ = datum_tuple[:11]   # Avoid seeing ground truth
         with torch.no_grad():
             if args.n_ent:
                 names = (names[0].squeeze(2).cuda(), \
@@ -435,7 +435,7 @@ class ROSMI:
         feats, feat_mask, boxes = feats.cuda(),feat_mask.cuda(), boxes.cuda()
         label, aux  = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
         dist_s, dist_e, lnd,clnd, brng, land_start, land_end = aux
-        
+
         bear_score, bear_label = brng.max(1)
         _, dist_e = dist_e.max(1)
         _, dist_s = dist_s.max(1)

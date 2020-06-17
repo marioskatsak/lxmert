@@ -519,9 +519,9 @@ if __name__ == "__main__":
                 names_segment_ids.append(torch.tensor(names_features[0].segment_ids, dtype=torch.long))
                 names_mask.append(torch.tensor(names_features[0].input_mask, dtype=torch.long))
 
-            names_ids = torch.stack(names_ids)
-            names_segment_ids = torch.stack(names_segment_ids)
-            names_mask = torch.stack(names_mask)
+            names_ids = torch.stack(names_ids).unsqueeze(0)
+            names_segment_ids = torch.stack(names_segment_ids).unsqueeze(0)
+            names_mask = torch.stack(names_mask).unsqueeze(0)
             input(names_ids.shape)
 
             _names = (names_ids, names_segment_ids, names_mask)
@@ -532,8 +532,8 @@ if __name__ == "__main__":
             # # # input(feats_padding.shape)
             # feat_mask = torch.cat((feat_mask,feats_padding))
 
-            feat = torch.zeros(73,2048)
-            pos = torch.zeros(73,4)
+            feat = torch.zeros(73,2048).unsqueeze(0)
+            pos = torch.zeros(73,4).unsqueeze(0)
             sent = input("Type instruction: ")
             results = rosmi.single_predict( feat, None, pos, _names, sent)
             input(results)

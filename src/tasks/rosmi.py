@@ -502,7 +502,7 @@ if __name__ == "__main__":
             )
             # testing on enc 10 scenario - read maps {names, GPS}
             with open('enc_chart.json', 'r') as enc:
-                map = lson.load(enc)
+                map = json.load(enc)
             # map = []
             names = [nm['name'] for nm in map]
             input(names)

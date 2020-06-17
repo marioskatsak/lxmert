@@ -64,7 +64,7 @@ class ROSMIModel(nn.Module):
         self.land_cl.apply(self.lxrt_encoder.model.init_bert_weights)
         self.bearing_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         self.distance_fc.apply(self.lxrt_encoder.model.init_bert_weights)
-        
+
 
     def forward(self, feat, feat_mask, pos, names, sent):
         """

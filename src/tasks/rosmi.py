@@ -19,9 +19,12 @@ from tasks.rosmi_data import ROSMIDataset, ROSMITorchDataset, ROSMIEvaluator
 from torch.utils.tensorboard import SummaryWriter
 from utils import iou_loss, giou_loss
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from lxrt.entry import convert_sents_to_features
+
+from lxrt.tokenization import BertTokenizer
 DataTuple = collections.namedtuple("DataTuple", 'dataset loader evaluator')
 
-MAX_VQA_LENGTH = 25
+MAX_SENT_LENGTH = 25
 def get_data_tuple(splits: str, bs:int, shuffle=False, drop_last=False) -> DataTuple:
     dset = ROSMIDataset(splits)
     tset = ROSMITorchDataset(dset)
@@ -492,12 +495,46 @@ if __name__ == "__main__":
             else:
                 assert False, "No such test option for %s" % args.test
         elif args.single:
+
+            my_tokenizer = BertTokenizer.from_pretrained(
+                "bert-base-uncased",
+                do_lower_case=True
+            )
             # testing on enc 10 scenario - read maps {names, GPS}
             with open('enc_chart.json', 'r') as enc:
                 map = lson.load(enc)
             # map = []
+            names = [nm['name'] for nm in map]
+            input(names)
+            names_ids = []
+            names_segment_ids = []
+            names_mask = []
+            for obj in names:
+                names_features = convert_sents_to_features(
+                    obj, MAX_SENT_LENGTH, my_tokenizer)
+
+                # for f in names_features
+                names_ids.append(torch.tensor(names_features[0].input_ids, dtype=torch.long))
+                names_segment_ids.append(torch.tensor(names_features[0].segment_ids, dtype=torch.long))
+                names_mask.append(torch.tensor(names_features[0].input_mask, dtype=torch.long))
+
+            names_ids = torch.stack(names_ids)
+            names_segment_ids = torch.stack(names_segment_ids)
+            names_mask = torch.stack(names_mask)
+            input(names_ids.shape)
+
+            _names = (names_ids, names_segment_ids, names_mask)
+
+
+            # feat_mask = torch.ones(boxes.shape[0], dtype=torch.double)
+            # feats_padding = torch.zeros((MAX_BOXES - boxes.shape[0]), dtype=torch.double)
+            # # # input(feats_padding.shape)
+            # feat_mask = torch.cat((feat_mask,feats_padding))
+
+            feat = torch.zeros(73,2048)
+            pos = torch.zeros(73,4)
             sent = input("Type instruction: ")
-            results = rosmi.single_predict(map, sent)
+            results = rosmi.single_predict( feat, None, pos, _names, sent)
             input(results)
         else:
             print('Splits in Train data:', rosmi.train_tuple.dataset.splits)

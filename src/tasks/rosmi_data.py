@@ -65,7 +65,7 @@ BEAR2NUMS = {
     "South East": 135
 
 }
-#  centers in lat , lon
+#  centers in lat, lon
 CENTRES = {
             0:[37.73755663692416, -122.19795016945281],
             1:[32.58577585559755, -117.09164085240766],

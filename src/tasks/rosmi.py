@@ -506,7 +506,9 @@ if __name__ == "__main__":
                 map = json.load(enc)
             # map = []
             names = [nm['name'] for nm in map]
-            input(names)
+            print(len(names))
+            names = names[-30:]
+            input(len(names))
             names_ids = []
             names_segment_ids = []
             names_mask = []
@@ -536,7 +538,12 @@ if __name__ == "__main__":
             pos = torch.zeros(73,4).unsqueeze(0)
             sent = input("Type instruction: ")
             results = rosmi.single_predict( feat, None, pos, _names, sent)
-            input(results)
+            (clnd, dist_s, dist_e, bear_label) = results
+            print(clnd)
+            print(dist_s)
+            print(dist_e)
+            print(bear_label)
+            input()
         else:
             print('Splits in Train data:', rosmi.train_tuple.dataset.splits)
             # rosmi.oracle_score(rosmi.train_tuple)

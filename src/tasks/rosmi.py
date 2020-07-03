@@ -514,7 +514,7 @@ if __name__ == "__main__":
                 if maps == 'enc':
                     names = [nm['name'] for nm in map]
                 else:
-                    names = [ 'Chevron','gamestop', 'Starbucks','Bayside Park','drone9', 'auv2', 'husky1']
+                    names = ["Air Park Plaza", "Unicol 76_0", "Unicol 76_1", "Unicol 76_2", "East Bay SPCA Spay and Neuter Center", "Pendleton Way", "Hegenberger Road_0", "Edgewater Drive_0", "Edgewater Drive_1", "Edgewater Drive_2", "Edgewater Drive_3", "Edgewater Drive_4", "Edgewater Drive_5", "Edgewater Drive_6", "Edgewater Drive_7", "Edgewater Drive_8", "Edgewater Drive_9", "Edgewater Drive_10", "Hegenberger Road_1", "Hegenberger Road_2", "Hegenberger Road_3", "Hegenberger Road_4", "Hegenberger Road_5", "Starbucks", "T-Mobile", "Jamba Juice", "Chipotle Mexican Grill", "Chevron", "Del Taco", "Wells Fargo", "The Raider Image", "Hanger Clinic", "Union Dental", "Wingstop", "GameStop", "Edgewater Dr:Hegenberger Rd", "Edgewater Dr:Pendleton Way", "Hegenberger Lp:Hegenberger Rd", "Hegenberger Rd:Edgewater Dr"]
                 print(len(names))
                 names = names[-lands:]
                 input(len(names))

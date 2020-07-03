@@ -540,7 +540,8 @@ if __name__ == "__main__":
             feat = torch.zeros(73,2048).unsqueeze(0)
             feat_mask = torch.ones(73, dtype=torch.double).unsqueeze(0)
             pos = torch.zeros(73,4).unsqueeze(0)
-            sent = input("Type instruction: ")
+            sent = [input("Type instruction: ")]
+            input(sent)
             results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
             (clnd, dist_s, dist_e, bear_label) = results
             print(clnd)

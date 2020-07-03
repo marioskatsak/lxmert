@@ -510,7 +510,11 @@ if __name__ == "__main__":
             exper = 't'
             while exper == 't':
                 lands = int(input("landmarks: "))
-                names = [nm['name'] for nm in map]
+                maps = input("osm/enc")
+                if maps == 'enc':
+                    names = [nm['name'] for nm in map]
+                else:
+                    names = [ 'Chevron','gamestop', 'Starbucks','Bayside Park','drone9', 'auv2', 'husky1']
                 print(len(names))
                 names = names[-lands:]
                 input(len(names))

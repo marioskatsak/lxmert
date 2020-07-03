@@ -515,6 +515,7 @@ if __name__ == "__main__":
             names_segment_ids = []
             names_mask = []
             for obj in names:
+                input(obj)
                 names_features = convert_sents_to_features(
                     obj, MAX_SENT_LENGTH, my_tokenizer)
 

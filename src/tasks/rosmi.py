@@ -509,7 +509,7 @@ if __name__ == "__main__":
             # map = []
             names = [nm['name'] for nm in map]
             print(len(names))
-            names = names[-30:]
+            names = names[-73:]
             input(len(names))
             names_ids = []
             names_segment_ids = []

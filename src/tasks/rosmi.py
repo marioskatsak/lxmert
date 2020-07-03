@@ -433,8 +433,8 @@ class ROSMI:
                               names[2].cuda())
             else:
                 names = None
-        feats, boxes = feats.cuda(), boxes.cuda()
-        label, aux  = self.model(feats.float(), feat_mask, boxes.float(), names, sent)
+        feats, feat_mask, boxes = feats.cuda(), feat_mask.cuda(), boxes.cuda()
+        label, aux  = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
         dist_s, dist_e, lnd,clnd, brng, land_start, land_end = aux
 
         bear_score, bear_label = brng.max(1)
@@ -537,9 +537,10 @@ if __name__ == "__main__":
             # feat_mask = torch.cat((feat_mask,feats_padding))
 
             feat = torch.zeros(73,2048).unsqueeze(0)
+            feat_mask = torch.ones(73, dtype=torch.double).unsqueeze(0)
             pos = torch.zeros(73,4).unsqueeze(0)
             sent = input("Type instruction: ")
-            results = rosmi.single_predict( feat, None, pos, _names, sent)
+            results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
             (clnd, dist_s, dist_e, bear_label) = results
             print(clnd)
             print(dist_s)

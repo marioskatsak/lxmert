@@ -442,6 +442,8 @@ class ROSMI:
         _, dist_s = dist_s.max(1)
         _, land_start = land_start.max(1)
         _, land_end = land_end.max(1)
+        print(clnd)
+        print(clnd.shape)
         _, clnd = clnd.max(1)
         return (clnd, dist_s, dist_e, bear_label)
         # return None

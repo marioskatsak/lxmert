@@ -507,47 +507,52 @@ if __name__ == "__main__":
             with open('enc_chart.json', 'r') as enc:
                 map = json.load(enc)
             # map = []
-            names = [nm['name'] for nm in map]
-            print(len(names))
-            names = names[-73:]
-            input(len(names))
-            names_ids = []
-            names_segment_ids = []
-            names_mask = []
-            for obj in names:
-                names_features = convert_sents_to_features(
-                    obj, MAX_SENT_LENGTH, my_tokenizer)
+            exper = 't'
+            while exper == 't':
+                lands = int(input("landmarks: "))
+                names = [nm['name'] for nm in map]
+                print(len(names))
+                names = names[-lands:]
+                input(len(names))
+                names_ids = []
+                names_segment_ids = []
+                names_mask = []
+                for obj in names:
+                    names_features = convert_sents_to_features(
+                        obj, MAX_SENT_LENGTH, my_tokenizer)
 
-                # for f in names_features
-                names_ids.append(torch.tensor(names_features[0].input_ids, dtype=torch.long))
-                names_segment_ids.append(torch.tensor(names_features[0].segment_ids, dtype=torch.long))
-                names_mask.append(torch.tensor(names_features[0].input_mask, dtype=torch.long))
+                    # for f in names_features
+                    names_ids.append(torch.tensor(names_features[0].input_ids, dtype=torch.long))
+                    names_segment_ids.append(torch.tensor(names_features[0].segment_ids, dtype=torch.long))
+                    names_mask.append(torch.tensor(names_features[0].input_mask, dtype=torch.long))
 
-            names_ids = torch.stack(names_ids).unsqueeze(0)
-            names_segment_ids = torch.stack(names_segment_ids).unsqueeze(0)
-            names_mask = torch.stack(names_mask).unsqueeze(0)
-            input(names_ids.shape)
+                names_ids = torch.stack(names_ids).unsqueeze(0)
+                names_segment_ids = torch.stack(names_segment_ids).unsqueeze(0)
+                names_mask = torch.stack(names_mask).unsqueeze(0)
+                input(names_ids.shape)
 
-            _names = (names_ids, names_segment_ids, names_mask)
+                _names = (names_ids, names_segment_ids, names_mask)
 
 
-            # feat_mask = torch.ones(boxes.shape[0], dtype=torch.double)
-            # feats_padding = torch.zeros((MAX_BOXES - boxes.shape[0]), dtype=torch.double)
-            # # # input(feats_padding.shape)
-            # feat_mask = torch.cat((feat_mask,feats_padding))
+                # feat_mask = torch.ones(boxes.shape[0], dtype=torch.double)
+                # feats_padding = torch.zeros((MAX_BOXES - boxes.shape[0]), dtype=torch.double)
+                # # # input(feats_padding.shape)
+                # feat_mask = torch.cat((feat_mask,feats_padding))
 
-            feat = torch.zeros(73,2048).unsqueeze(0)
-            feat_mask = torch.ones(73, dtype=torch.double).unsqueeze(0)
-            pos = torch.zeros(73,4).unsqueeze(0)
-            sent = [input("Type instruction: ")]
-            input(sent)
-            results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
-            (clnd, dist_s, dist_e, bear_label) = results
-            print(clnd)
-            print(dist_s)
-            print(dist_e)
-            print(bear_label)
-            input()
+                feat = torch.zeros(lands,2048).unsqueeze(0)
+                feat_mask = torch.ones(lands, dtype=torch.double)
+                feats_padding = torch.zeros((73 - lands), dtype=torch.double)
+                feat_mask = torch.cat((feat_mask,feats_padding)).unsqueeze(0)
+                pos = torch.zeros(lands,4).unsqueeze(0)
+                sent = [input("Type instruction: ")]
+                input(sent)
+                results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
+                (clnd, dist_s, dist_e, bear_label) = results
+                print(clnd)
+                print(dist_s)
+                print(dist_e)
+                print(bear_label)
+                exper = input('t / f')
         else:
             print('Splits in Train data:', rosmi.train_tuple.dataset.splits)
             # rosmi.oracle_score(rosmi.train_tuple)

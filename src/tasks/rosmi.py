@@ -275,7 +275,7 @@ class ROSMI:
                 valid_score, m_dist, acc2, acc3, tAcc = self.evaluate(eval_tuple)
                 if valid_score > best_valid:
                     best_valid = valid_score
-                    self.save(f"BEST_{args.abla}")
+                    # self.save(f"BEST_{args.abla}")
                 if tmpAcc > best_train:
                     best_train = tmpAcc
                 if acc2 > best_acc2:

@@ -460,9 +460,9 @@ if __name__ == "__main__":
     t_scores = []
     oracle_scores = []
     examples = []
-    for k in range(7):
+    # for k in range(7):
     # for k in range(10):
-    # for k in range(0,1):
+    for k in range(2,3):
         print(f"{k} on cross")
         # args.train = f'{k}_easy_train'
         # args.valid = f'{k}_easy_val'

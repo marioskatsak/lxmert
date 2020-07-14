@@ -479,7 +479,7 @@ if __name__ == "__main__":
         # args.valid = f'{k}_easy_val'
         # args.train = f'{k}_train'
         # args.valid = f'{k}_val'
-        args.valid = f'{k}_train_enc'
+        args.train = f'{k}_train_enc'
         args.valid = f'{k}_val_enc'
         # args.train = '440_train'
         # args.valid = '55_val'

@@ -37,9 +37,21 @@ def get_data_tuple(splits: str, bs:int, shuffle=False, drop_last=False) -> DataT
 
     return DataTuple(dataset=dset, loader=data_loader, evaluator=evaluator)
 
+def get_renci_data_tuple(splits: str, bs:int, shuffle=False, drop_last=False) -> DataTuple:
+    dset = RENCIDataset(splits)
+    tset = RENCITorchDataset(dset)
+    evaluator = RENCIEvaluator(dset)
+    data_loader = DataLoader(
+        tset, batch_size=bs,
+        shuffle=shuffle, num_workers=args.num_workers,
+        drop_last=drop_last, pin_memory=True
+    )
+
+    return DataTuple(dataset=dset, loader=data_loader, evaluator=evaluator)
+
 
 class ROSMI:
-    def __init__(self):
+    def __init__(self,get_data_tuple):
 
         # Datasets
         self.train_tuple = get_data_tuple(
@@ -361,8 +373,6 @@ class ROSMI:
                     # input(br)
                     br = dset.label2bearing[br]
                     sentid2ans[qid.item()] = (l, diss, dise, ln,cln, br, l_s, l_e)
-        if dump is not None:
-            evaluator.dump_result(sentid2ans, dump)
         return sentid2ans
 
     def evaluate(self, eval_tuple: DataTuple, dump=None):
@@ -462,16 +472,19 @@ if __name__ == "__main__":
     examples = []
     # for k in range(7):
     # for k in range(10):
-    for k in range(2,3):
+    enc_scen = [1,3,4,5,7,9,10]
+    for k in enc_scen:
         print(f"{k} on cross")
         # args.train = f'{k}_easy_train'
         # args.valid = f'{k}_easy_val'
-        args.train = f'{k}_train'
-        args.valid = f'{k}_val'
+        # args.train = f'{k}_train'
+        # args.valid = f'{k}_val'
+        args.valid = f'{k}_train_enc'
+        args.valid = f'{k}_val_enc'
         # args.train = '440_train'
         # args.valid = '55_val'
         # Build Class
-        rosmi = ROSMI()
+        rosmi = ROSMI(get_renci_data_tuple)
         # Load ROSMI model weights
         # Note: It is different from loading LXMERT pre-trained weights.
         if args.load is not None:
@@ -482,7 +495,7 @@ if __name__ == "__main__":
             args.fast = args.tiny = False       # Always loading all data in test
             if 'test' in args.test:
                 rosmi.predict(
-                    get_data_tuple(args.test, bs=args.batch_size,
+                    get_renci_data_tuple(args.test, bs=args.batch_size,
                                    shuffle=False, drop_last=False),
                     dump=os.path.join(args.output, 'test_predict.json')
                 )
@@ -490,7 +503,7 @@ if __name__ == "__main__":
                 # Since part of valididation data are used in pre-training/fine-tuning,
                 # only validate on the minival set.
                 result = rosmi.evaluate(
-                    get_data_tuple('val', bs=args.batch_size,
+                    get_renci_data_tuple('val', bs=args.batch_size,
                                    shuffle=False, drop_last=False),
                     dump=os.path.join(args.output, 'val_predict.json')
                 )

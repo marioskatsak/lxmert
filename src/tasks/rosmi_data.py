@@ -279,24 +279,9 @@ class ROSMITorchDataset(Dataset):
             "bert-base-uncased",
             do_lower_case=True
         )
-        # IMGFEAT_ROOT = args.data_path
-        # # Loading detection features to img_data
-        # img_data = []
-        # for split in dataset.splits:
-        #     # Minival is 5K images in MS COCO, which is used in evaluating VQA/LXMERT-pre-training.
-        #     # It is saved as the top 5K features in val2014_***.tsv
-        #     load_topk = 5000 if (split == 'minival' and topk is None) else topk
-        #     img_data.extend(load_det_obj_tsv(
-        #         os.path.join(IMGFEAT_ROOT, '%s_obj36.tsv' % (SPLIT2NAME[split])),
-        #         topk=load_topk))
-        #     # img_data.extend(load_obj_tsv(
-        #     #     os.path.join(IMGFEAT_ROOT, 'train_obj36.tsv'),
-        #     #     topk=load_topk))
-        #
+
         # # Convert img list to dict
         self.imgid2img = self.raw_dataset.imgid2img
-        # for img_datum in img_data:
-        #     self.imgid2img[img_datum['img_id']] = img_datum
 
         # Only kept the data with loaded image features
         self.data = []
@@ -318,17 +303,13 @@ class ROSMITorchDataset(Dataset):
         img_id = datum['img_id']
         sent_id = datum['sentid']
         sent = datum['sentence']['raw']
-        # dist = torch.tensor([int(datum['landmarks'][0]['distance'])])
-        # bearing = torch.tensor([int(datum['landmarks'][0]['bearing'])])
+
         if datum['landmarks'][0]['g_type'] != 'LineString':
             landmark = torch.tensor(datum['landmarks'][0]['raw_pixels'])
         else:
             landmark = torch.tensor(datum['landmarks'][0]['landmark_pixels'])
 
 
-        # print(datum['landmarks'][0]['raw_pixels'])
-        # print(torch.tensor(datum['landmarks'][0]['raw_pixels']))
-        # input(landmark)
         target = torch.tensor(datum['gold_pixels'])
 
 
@@ -338,41 +319,18 @@ class ROSMITorchDataset(Dataset):
 
         # start and end id of distance
         tokens = ["[CLS]"] + self.tokenizer.tokenize(sent.strip()) + ["[SEP]"]
-        # print(tokens)
-        # for tks in tokens:
-        #     if tks in train_dict.keys():
-        #         train_dict[tks] += 1
-        #     else:
-        #         train_dict[tks] = 1
-        #
-        # with open('val_vocab.json', 'w') as trv:
-        #     json.dump(train_dict, trv)
+
         dists = torch.zeros(MAX_SENT_LENGTH)
         diste = torch.zeros(MAX_SENT_LENGTH)
         if datum['landmarks'][0]['distance'] != '0':
             t_distance = self.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
-            # print(len(t_distance))
-
-            # dist = torch.tensor([0,0],dtype=torch.int)
-            # dist[0] = int(tokens.index(t_distance[0]))
-            # dist[1] = int(tokens.index(t_distance[-1]))
-
             dists[int(tokens.index(t_distance[0]))]  = 1
             diste[int(tokens.index(t_distance[-1]))]  = 1
         else:
-            # dist = torch.tensor([-1,-1], dtype=torch.int)
-
-            # dist = torch.zeros(2,MAX_SENT_LENGTH)
             dists[-1]  = 1
             diste[-1]  = 1
 
-        # input(tokens)
-        # print(dist)
-        # input(bearing)
-        # dist = torch.tensor([int(datum['landmarks'][0]['distance'])])
-        # bearing = torch.tensor([int(datum['landmarks'][0]['bearing'])])
-        # print(target)
-        # print(dist)
+
         # Get image info
         img_info = self.imgid2img[img_id]
         obj_num = img_info['num_boxes']
@@ -382,12 +340,7 @@ class ROSMITorchDataset(Dataset):
         # names = img_info['names'].copy()
         names = img_info['t_names'].copy()
         boxes = img_info['t_boxes'].copy()
-        # target = torch.tensor(datum['landmarks'][0]['raw_pixels'])
-        # target = torch.tensor(boxes[-1]).float()
-        # print(boxes)
-        # print(datum['landmarks'][0]['name'])
-        # print(names)
-        # input(sent)
+
 
 
         sn_id = int(datum['scenario_items'].split('rio')[1].split('.j')[0])
@@ -397,11 +350,6 @@ class ROSMITorchDataset(Dataset):
         filename = os.path.join('/home/marios/experiments/gps_prediction/ROSMI/ROSMI_dataset','images', datum["image_filename"])
         landmark_id = 0
         for ipd, name_box in enumerate(names):
-            # print(datum['landmarks'][0])
-            # print(name_box[0])
-            # print(datum['landmarks'][0]['raw_pixels'][0])
-            # print(boxes[ipd])
-            # print(type(name_box[0]))
             # if datum['landmarks'][0]['g_type'] == 'Point':
             if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
              # or \
@@ -457,21 +405,10 @@ class ROSMITorchDataset(Dataset):
         # last is reserved for landmarks that do not appear in the input feat
         landmark_id_ = torch.zeros(MAX_BOXES)
         if landmark_id == 0:
-            # print(names)
-            # print(boxes)
-            # print("".join(datum['landmarks'][0]['name'].split(" ")).lower())
-            # print(datum['landmarks'][0]['landmark_pixels'])
-            # landmark_id_[random.randint(0,67)] = 1
             landmark_id_[0] = 1
-            # input(landmark_id)
         else:
-            # print(datum['landmarks'][0]['name'])
-            # print("YYYYYYYYYYYY")
-            # print(names[landmark_id])
-            # print(boxes[landmark_id])
             landmark_id_[landmark_id] = 1
 
-        # print(landmark_id_)
         feat_mask = 0
 
         # Normalize the boxes (to 0 ~ 1)
@@ -502,7 +439,7 @@ class ROSMITorchDataset(Dataset):
             land_tokens.pop(len(land_tokens)-1)
             # print(land_tokens)
             tmp_lands = input_ids[input_ids.index(102):]
-            # print(tmp_lands)
+
 
             indices = [i for i, x in enumerate(tmp_lands) if x == land_tokens[0]]
             for ind in indices:
@@ -549,13 +486,6 @@ class ROSMITorchDataset(Dataset):
 
         if self.named_entities:
 
-
-            # names = img_info['names'].copy()
-            # names = img_info['t_names'].copy()
-            # input(names)
-            # feats = torch.from_numpy(feats)
-            # boxes = torch.from_numpy(boxes)
-            # if names:
 
             names_ids = []
             names_segment_ids = []
@@ -633,6 +563,8 @@ class ROSMIEvaluator:
     def __init__(self, dataset: ROSMIDataset):
         self.dataset = dataset
 
+
+
     def evaluate(self, sentid2ans: dict):
         score = 0.
         score2 = 0.
@@ -658,8 +590,7 @@ class ROSMIEvaluator:
             # ln_ = ln_[0]
 
 
-            # datum = self.dataset.id2datum[sentid]
-            # gold = torch.tensor(self.dataset.imgid2img[datum['img_id']]['boxes'][-1])
+
             datum = self.dataset.id2datum[sentid]
             img_info = self.dataset.imgid2img[datum['img_id']]
             scenarios[datum['scenario_items']][1] += 1
@@ -674,26 +605,10 @@ class ROSMIEvaluator:
             landmark_id_ = 0
             # landmark_id_ = random.randint(0,67)
             for ipd, name_box in enumerate(names):
-                # if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
-                #     landmark_id_ = ipd
-
-                # if datum['landmarks'][0]['g_type'] == 'Point':
                 if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
-                # or \
-                #         int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
                     landmark_id_ = ipd
                     break
-                # else:
-                #     if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower() or \
-                #             int(datum['landmarks'][0]['landmark_pixels'][0]) == int(boxes[ipd][0]):
-                #         landmark_id_ = ipd
-                #         break
-            # # last is reserved for landmarks that do not appear in the input feat
-            # landmark_id_ = torch.zeros(MAX_BOXES+1)
-            # if landmark_id == None:
-            #     landmark_id_[-1] = 1
-            # else:
-            #     landmark_id_[landmark_id] = 1
+
 
 
             filename = os.path.join('/home/marios/experiments/gps_prediction/ROSMI/ROSMI_dataset','images', datum["image_filename"])
@@ -788,27 +703,14 @@ class ROSMIEvaluator:
             if landmark_id_ == ln_:
                 lands += 1
             try:
-                print(landmark_id_)
-                print(ln_)
-                # input("??")
-                print(boxes[landmark_id_],boxes[ln_])
-                # if int(ln[0]) != int(boxes[ln_][0]):
-                #     print(ln)
-                #     print(boxes[ln_])
-                #     input("?")
 
-                # if landmark_id_ == ln_:
-                #     pred_cland_coords = getPointLatLng(ln_correct[0] + (ln_correct[2] - ln_correct[0])/2, ln_correct[1] + (ln_correct[3] - ln_correct[1])/2,  \
-                #                         CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
-                # else:
+                print(boxes[landmark_id_],boxes[ln_])
+
                 pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
                                         CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
             except:
                 pred_cland_coords = None
-            # else:
-            #     print("Cant classify landmark")
-            #
-            #     pred_cland_coords = None
+
             print(iou, siou)
 
 
@@ -816,22 +718,10 @@ class ROSMIEvaluator:
                             CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
 
 
-            # print(GOLD_SIZES[sn_id], (ln[2] - ln[0])/2)
-            # input()
-
             pred_land_coords = getPointLatLng(ln[0] + (ln[2] - ln[0])/2, ln[1] + (ln[3] - ln[1])/2,  \
                             CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
 
-
-            # if datum['landmarks'][0]['g_type'] == 'Point':
-            #     print(pred_land_coords, datum['landmarks'][0]['raw_gps'])
-            # else:
-            #     print(pred_land_coords, datum['landmarks'][0]['landmark_gps'])
-            # input("?")
-            # # print(pred_land_coords)
-            # print(pred_coords, datum['gold_coordinates'])
             bearing = BEAR2NUMS[br]
-            # print(tokens)
             tmp_pixs = None
             tmp_pixs2 = None
             final_coord2 = None
@@ -941,22 +831,14 @@ class ROSMIEvaluator:
                 mDist += distance2
                 distance2 = distance2*SCALES2[datum['scenario_items'].split('rio')[1].split('.json')[0]]
                 meanDist.append(distance2)
-                # if distance2 > 5:
-                #     print(datum['sentence']['raw'])
-                #     print(datum['scenario_items'])
-                #     print(datum['landmarks'][0]['g_type'])
-                #     print(datum['landmarks'][0]['name'])
-                #     print(datum['landmarks'][0]['confidence'])
-                #     input("??")
+
             else:
                 counterDist +=1
             if siou2 > thres:
-                # print("ONE CORRECT")
-            # if ans in label:
+
                 score2 += 1
             if siou2 > thres or siou > thres or siou3 > thres:
-                # print("ONE CORRECT")
-            # if ans in label:
+
                 tScore += 1
 
             if pred_cland_coords:
@@ -965,11 +847,6 @@ class ROSMIEvaluator:
                 save_land = str(None)
             examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[str(names[landmark_id_]),str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),str(datum['landmarks'][0]['bearing'])], 'pred':[save_land,str(diss)+ ' '+str(dise),str(br)], 'outcome': str(siou3 > thres), 'distance':distance2 })
 
-        # if score >=50:
-        #     input("?")
-            # if score2 > score:
-            #     print("Better!!")
-            #     score = score2
 
         print(f"Total Score: {tScore / len(sentid2ans)}, Score1: {score / len(sentid2ans)}, Score2: {score2 / len(sentid2ans)}, Score3: {score3 / len(sentid2ans)}")
         if len(pixDiff) > 0.2*len(sentid2ans):
@@ -992,24 +869,410 @@ class ROSMIEvaluator:
         # input(examples)
         return score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios,examples), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
 
-    def dump_result(self, sentid2ans: dict, path):
-        """
-        Dump results to a json file, which could be submitted to the VQA online evaluation.
-        VQA json file submission requirement:
-            results = [result]
-            result = {
-                "question_id": int,
-                "answer": str
-            }
 
-        :param sentid2ans: dict of quesid --> ans
-        :param path: The desired path of saved file.
-        """
-        with open(path, 'w') as f:
-            result = []
-            for sent_id, ans in sentid2ans.items():
-                result.append({
-                    'sentence_id': sent_id,
-                    'answer': ans
-                })
-            json.dump(result, f, indent=4, sort_keys=True)
+
+class RENCIDataset:
+    """
+    ROSMI data example in json file
+
+        {
+      "scenario_items": "scenario3.json" <--- contains all items of the map
+      "landmarks": [
+        {
+          "name": "husky17",
+          "distance": "118",
+          "bearing": "0",
+          "raw_gps": [],
+          "id": "3G5F9DBFOS5RDFXHAP1AIEBZCHJVHO_5_husky17",
+          "g_type": "Point"
+        }
+      ],
+      "dynamo_obj": [],
+      "gold_coordinates": [],
+      "sentid": 279,
+      "sentence": {
+        "raw": "send husky17 118m in north"
+      }
+    }
+    """
+    def __init__(self, splits: str):
+        self.name = splits
+        self.splits = splits.split(',')
+        # Using the bert tokenizer
+        self.tokenizer = BertTokenizer.from_pretrained(
+            "bert-base-uncased",
+            do_lower_case=True
+        )
+        # Loading datasets
+        self.data = []
+        for split in self.splits:
+            self.data.extend(json.load(open(os.path.join(args.data_path,"%s.json" % split))))
+        print("Load %d data from split(s) %s." % (len(self.data), self.name))
+
+        # Convert list to dict (for evaluation)
+        self.id2datum = {
+            datum['sentid']: datum
+            for datum in self.data
+        }
+        # if args.tiny:
+        #     topk = TINY_IMG_NUM
+        # elif args.fast:
+        #     topk = FAST_IMG_NUM
+        # else:
+        #     topk = None
+        #
+        IMGFEAT_ROOT = args.data_path
+        with open(os.path.join(IMGFEAT_ROOT,'renci_map.json')) as map:
+            img_data = json.load(map)
+        # # Loading detection features to img_data
+        # img_data = []
+        #
+        # img_data.extend(load_det_obj_tsv(
+        #         os.path.join(IMGFEAT_ROOT, 'easy_rosmi_obj36.tsv'),
+        #         topk=topk))
+        # Convert img list to dict
+        self.imgid2img = {}
+        for img_datum in img_data:
+            input(img_datum)
+            self.imgid2img[img_data[img_datum]] = img_datum
+
+        # Answers
+        self.bearing2label = json.load(open(os.path.join(args.data_path,"trainval_bearing2label.json")))
+        self.label2bearing = json.load(open(os.path.join(args.data_path,"trainval_label2bearing.json")))
+        self.convert2bearing = json.load(open(os.path.join(args.data_path,"convert_bearing_values.json")))
+        assert len(self.bearing2label) == len(self.label2bearing)
+
+    @property
+    def num_bearings(self):
+        return len(self.bearing2label)
+
+    def __len__(self):
+        return len(self.data)
+
+
+"""
+An example in obj36 tsv:
+FIELDNAMES = ["img_id", "img_h", "img_w", "objects_id", "objects_conf",
+              "attrs_id", "attrs_conf", "num_boxes", "boxes", "features"]
+FIELDNAMES would be keys in the dict returned by load_obj_tsv.
+"""
+class RENCITorchDataset(Dataset):
+    def __init__(self, dataset: ROSMIDataset):
+        super().__init__()
+        self.raw_dataset = dataset
+        self.max_seq_length = MAX_SENT_LENGTH
+
+
+        self.named_entities = True
+        # Using the bert tokenizer
+        self.tokenizer = BertTokenizer.from_pretrained(
+            "bert-base-uncased",
+            do_lower_case=True
+        )
+
+        # # Convert img list to dict
+        self.imgid2img = self.raw_dataset.imgid2img
+
+        # Only kept the data with loaded image features
+        self.data = []
+        for datum in self.raw_dataset.data:
+            if datum['img_id'] in self.imgid2img:
+                self.data.append(datum)
+        print("Use %d data in torch dataset" % (len(self.data)))
+        print()
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, item: int):
+        datum = self.data[item]
+
+        # with open('val_vocab.json') as training:
+        #     train_dict = json.load(training)
+
+        img_id = datum['img_id']
+        sent_id = datum['sentid']
+        sent = datum['sentence']['raw']
+
+        # if datum['landmarks'][0]['g_type'] != 'LineString':
+        #     landmark = torch.tensor(datum['landmarks'][0]['raw_pixels'])
+        # else:
+        #     landmark = torch.tensor(datum['landmarks'][0]['landmark_pixels'])
+
+
+        target = torch.tensor(datum['gold_coordinates'])
+
+
+
+        bearing = torch.zeros(self.raw_dataset.num_bearings)
+        bearing[self.raw_dataset.bearing2label[self.raw_dataset.convert2bearing[datum['landmarks'][0]['bearing']]]] = 1
+
+        # start and end id of distance
+        tokens = ["[CLS]"] + self.tokenizer.tokenize(sent.strip()) + ["[SEP]"]
+
+        dists = torch.zeros(MAX_SENT_LENGTH)
+        diste = torch.zeros(MAX_SENT_LENGTH)
+        if datum['landmarks'][0]['distance'] != '0':
+            t_distance = self.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
+            dists[int(tokens.index(t_distance[0]))]  = 1
+            diste[int(tokens.index(t_distance[-1]))]  = 1
+        else:
+            dists[-1]  = 1
+            diste[-1]  = 1
+
+
+        # Get image info
+        img_info = self.imgid2img[img_id]
+        # obj_num = img_info['num_boxes']
+        # obj_num = img_info['t_num_boxes']
+        # feats = img_info['features'].copy()
+        # boxes = img_info['boxes'].copy()
+        # names = img_info['names'].copy()
+        names = img_info['t_names'].copy()
+        # boxes = img_info['t_boxes'].copy()
+
+
+
+        sn_id = int(datum['scenario_items'].split('rio')[1].split('.j')[0])
+
+        centre = calculateTiles(CENTRES[sn_id],ZOOMS[sn_id])
+
+        filename = os.path.join('/home/marios/experiments/gps_prediction/ROSMI/ROSMI_dataset','images', datum["image_filename"])
+        landmark_id = 0
+        for ipd, name_box in enumerate(names):
+            # if datum['landmarks'][0]['g_type'] == 'Point':
+            if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
+             # or \
+             #        int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
+                landmark_id = ipd
+                break
+
+        # last is reserved for landmarks that do not appear in the input feat
+        landmark_id_ = torch.zeros(MAX_BOXES)
+        if landmark_id == 0:
+            landmark_id_[0] = 1
+        else:
+            landmark_id_[landmark_id] = 1
+
+
+        _names = 0
+
+
+
+        if self.named_entities:
+
+            names_ids = []
+            names_segment_ids = []
+            names_mask = []
+            for obj in names:
+                names_features = convert_sents_to_features(
+                    obj, self.max_seq_length, self.tokenizer)
+
+                # for f in names_features
+                names_ids.append(torch.tensor(names_features[0].input_ids, dtype=torch.long))
+                names_segment_ids.append(torch.tensor(names_features[0].segment_ids, dtype=torch.long))
+                names_mask.append(torch.tensor(names_features[0].input_mask, dtype=torch.long))
+
+
+            input(names_ids.shape[0])
+            padding = (73 - names_ids.shape[0])*[torch.zeros(MAX_SENT_LENGTH, dtype=torch.long)]
+
+            names_ids = torch.stack(names_ids + padding)
+            names_segment_ids = torch.stack(names_segment_ids + padding)
+            names_mask = torch.stack(names_mask + padding)
+            input(names_ids.shape)
+
+            # pseudo values
+            feats = torch.zeros(names_ids.shape[0],2048)
+            feat_mask = torch.ones(names_ids.shape[0], dtype=torch.double)
+            feats_padding = torch.zeros((73 - names_ids.shape[0]), dtype=torch.double)
+            feat_mask = torch.cat((feat_mask,feats_padding))
+            boxes = torch.zeros(names_ids.shape[0],4)
+            landmark = torch.zeros(4)
+            landmark_start = 0
+            landmark_end = 0
+            _names = (names_ids, names_segment_ids, names_mask)
+
+
+        return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, landmark_id_, bearing,landmark_start,landmark_end, target#bearing
+
+
+class RENCIEvaluator:
+    def __init__(self, dataset: ROSMIDataset):
+        self.dataset = dataset
+
+
+
+    def evaluate(self, sentid2ans: dict):
+        score = 0.
+        score2 = 0.
+        score3 = 0.
+        tScore = 0.
+        meanDist = []
+        pixDiff = []
+        mDist = 0.
+        lands = 0
+        counterDist = 0
+        thres = 0.50
+        # {id:'', sentence:'',gold:[a,b,c],pred:[a,b,c],outcome:True }
+        examples = []
+        scenarios = {'scenario0.json':[0,0],'scenario1.json':[0,0],'scenario2.json':[0,0],'scenario3.json':[0,0],'scenario4.json':[0,0],'scenario5.json':[0,0],'scenario6.json':[0,0]}
+        for sentid, (pred_box, diss,dise, ln, ln_, br, l_s,l_e) in sentid2ans.items():
+
+
+
+            siou2 = 0
+            siou3 = 0
+            distance2 = None
+            # qa land
+            # ln_ = ln_[0]
+
+
+
+            datum = self.dataset.id2datum[sentid]
+            img_info = self.dataset.imgid2img[datum['img_id']]
+            scenarios[datum['scenario_items']][1] += 1
+            names = img_info['t_names'].copy()
+            boxes = img_info['coordinates'].copy()
+            print(len(names))
+            print(len(boxes))
+            sent = datum['sentence']['raw']
+            landmark_id_ = 0
+            # landmark_id_ = random.randint(0,67)
+            for ipd, name_box in enumerate(names):
+                if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
+                    landmark_id_ = ipd
+                    break
+
+
+
+            # start and end id of distance
+            tokens = ["[CLS]"] + self.dataset.tokenizer.tokenize(datum['sentence']['raw'].strip()) + ["[SEP]"]
+
+            dists = torch.zeros(MAX_SENT_LENGTH)
+            diste = torch.zeros(MAX_SENT_LENGTH)
+            if datum['landmarks'][0]['distance'] != '0':
+                # t_distance = self.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
+                t_distance = self.dataset.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
+                # print(len(t_distance))
+
+                # dist = torch.tensor([0,0],dtype=torch.int)
+                # dist[0] = int(tokens.index(t_distance[0]))
+                # dist[1] = int(tokens.index(t_distance[-1]))
+
+                dists[int(tokens.index(t_distance[0]))]  = 1
+                diste[int(tokens.index(t_distance[-1]))]  = 1
+            else:
+                # dist = torch.tensor([-1,-1], dtype=torch.int)
+
+                # dist = torch.zeros(2,MAX_SENT_LENGTH)
+                dists[-1]  = 1
+                diste[-1]  = 1
+
+            dists = np.argmax(dists).item()
+            diste = np.argmax(diste).item()
+            print("Stats:---------------")
+            print(datum['sentence']['raw'])
+            print(diss,dise, datum['landmarks'][0]['distance'], dists, diste)
+            print(br, datum['landmarks'][0]['bearing'])
+
+
+
+
+            sn_id = int(datum['scenario_items'].split('rio')[1].split('.j')[0])
+
+            centre = calculateTiles(CENTRES[sn_id],ZOOMS[sn_id])
+
+
+            if landmark_id_ == ln_:
+                lands += 1
+                score3 += 1
+            try:
+
+                print(boxes[landmark_id_],boxes[ln_])
+                pred_cland_coords = [np.mean([x[0] for x in boxes[ln_]['coordinates']]),np.mean([x[1] for x in boxes[ln_]['coordinates']])]
+                #
+                # pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
+                #                         CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
+            except:
+                pred_cland_coords = None
+
+
+
+            bearing = BEAR2NUMS[br]
+            tmp_pixs = None
+            tmp_pixs2 = None
+            final_coord2 = None
+
+
+            # if datum['landmarks'][0]['distance'] != '0':
+                # t_distance = self.dataset.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
+
+                # if diss == int(tokens.index(t_distance[0])) and dise == int(tokens.index(t_distance[-1])):
+            if diss == dists and dise == diste:
+                print("correct")
+                _distance = int(datum['landmarks'][0]['distance'])
+
+
+                if pred_cland_coords:
+                    final_coord2 = destination([pred_cland_coords[1], pred_cland_coords[0]] , _distance, bearing)
+                    # final_coord = destination([datum['landmarks'][0]['raw_gps'][0], datum['landmarks'][0]['raw_gps'][1]] , datum['landmarks'][0]['distance'], datum['landmarks'][0]['bearing'])
+
+                    tmp_ob = {'g_type':'Point'}
+                    tmp_ob['coordinates'] = final_coord2
+
+
+
+            if final_coord2:
+                distance2 = haversine(final_coord2[0],final_coord2[1],datum['gold_coordinates'][0],datum['gold_coordinates'][1])*1000
+                if distance2 < 1:
+                    scenarios[datum['scenario_items']][0] += 1
+
+                #
+                #
+                # if siou3 > thres:
+                #     # print("ONE CORRECT")
+                # # if ans in label:
+                #     score3 += 1
+                # drawItem(['gold_pixels','predicted_pixels','landmark'],filename,pixels_bb=[datum['gold_pixels'],new_bbox,ln])
+
+
+            print(f"Distance is {distance2}m")
+            if distance2:
+                mDist += distance2
+                meanDist.append(distance2)
+
+            else:
+                counterDist +=1
+
+            if siou2 > thres or siou > thres or siou3 > thres:
+
+                tScore += 1
+
+            if pred_cland_coords:
+                save_land = str(names[ln_])
+            else:
+                save_land = str(None)
+            examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[str(names[landmark_id_]),str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),str(datum['landmarks'][0]['bearing'])], 'pred':[save_land,str(diss)+ ' '+str(dise),str(br)], 'outcome': str(siou3 > thres), 'distance':distance2 })
+
+
+        print(f"Total Score: {tScore / len(sentid2ans)}, Score1: {score / len(sentid2ans)}, Score2: {score2 / len(sentid2ans)}, Score3: {score3 / len(sentid2ans)}")
+        if len(pixDiff) > 0.2*len(sentid2ans):
+            # meanD =  mDist / (len(sentid2ans) - counterDist)
+            pixMean = int(np.mean(pixDiff))
+            # variance = int(np.var(pixDiff))
+            pixsd_ = int(np.std(pixDiff))
+            distMean = int(np.mean(meanDist))
+            # variance = int(np.var(pixDiff))
+            distsd_ = int(np.std(meanDist))
+        else:
+            pixMean = 99999999
+            distMean = 99999999
+            distsd_ = 99999999
+            pixsd_ = 99999999
+        print(len(sentid2ans))
+        print(lands/len(sentid2ans))
+        print(f"Mean distance , Mean pix : {distMean} [{distsd_}] , {pixMean} [{pixsd_}]")
+
+        # input(examples)
+        return score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios,examples), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)

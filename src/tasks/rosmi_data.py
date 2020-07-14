@@ -933,8 +933,7 @@ class RENCIDataset:
         # Convert img list to dict
         self.imgid2img = {}
         for img_datum in img_data:
-            input(img_datum)
-            self.imgid2img[img_data[img_datum]] = img_datum
+            self.imgid2img[img_datum] = img_data[img_datum]
 
         # Answers
         self.bearing2label = json.load(open(os.path.join(args.data_path,"trainval_bearing2label.json")))

@@ -183,8 +183,8 @@ class ROSMI:
                 # print(target)
                 # total_loss += iou_loss(logit, target)
 
-                iou,loss2 = giou_loss(logit, target)
-                self.writer.add_scalar('giou loss', loss2, n_iter)
+                # iou,loss2 = giou_loss(logit, target)
+                # self.writer.add_scalar('giou loss', loss2, n_iter)
                 # total_loss += loss2
 
                 p_dist_s, p_dist_e, p_land, p_cland, p_bear, p_start, p_end = auxilaries

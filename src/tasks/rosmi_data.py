@@ -1032,11 +1032,6 @@ class RENCITorchDataset(Dataset):
 
 
 
-        sn_id = int(datum['scenario_items'].split('rio')[1].split('.j')[0])
-
-        centre = calculateTiles(CENTRES[sn_id],ZOOMS[sn_id])
-
-        filename = os.path.join('/home/marios/experiments/gps_prediction/ROSMI/ROSMI_dataset','images', datum["image_filename"])
         landmark_id = 0
         for ipd, name_box in enumerate(names):
             # if datum['landmarks'][0]['g_type'] == 'Point':

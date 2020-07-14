@@ -1068,20 +1068,20 @@ class RENCITorchDataset(Dataset):
                 names_mask.append(torch.tensor(names_features[0].input_mask, dtype=torch.long))
 
 
-            input(names_ids.shape[0])
-            padding = (73 - names_ids.shape[0])*[torch.zeros(MAX_SENT_LENGTH, dtype=torch.long)]
+            print(len(names_ids))
+            padding = (73 - len(names_ids))*[torch.zeros(MAX_SENT_LENGTH, dtype=torch.long)]
 
             names_ids = torch.stack(names_ids + padding)
             names_segment_ids = torch.stack(names_segment_ids + padding)
             names_mask = torch.stack(names_mask + padding)
-            input(names_ids.shape)
+            print(names_ids.shape)
 
             # pseudo values
-            feats = torch.zeros(names_ids.shape[0],2048)
-            feat_mask = torch.ones(names_ids.shape[0], dtype=torch.double)
-            feats_padding = torch.zeros((73 - names_ids.shape[0]), dtype=torch.double)
+            feats = torch.zeros(len(names_ids),2048)
+            feat_mask = torch.ones(len(names_ids), dtype=torch.double)
+            feats_padding = torch.zeros((73 - len(names_ids)), dtype=torch.double)
             feat_mask = torch.cat((feat_mask,feats_padding))
-            boxes = torch.zeros(names_ids.shape[0],4)
+            boxes = torch.zeros(len(names_ids),4)
             landmark = torch.zeros(4)
             landmark_start = 0
             landmark_end = 0

@@ -15,7 +15,7 @@ from tqdm import tqdm
 from param import args
 from pretrain.qa_answer_table import load_lxmert_qa
 from tasks.rosmi_model import ROSMIModel
-from tasks.rosmi_data import ROSMIDataset, ROSMITorchDataset, ROSMIEvaluator
+from tasks.rosmi_data import ROSMIDataset, ROSMITorchDataset, ROSMIEvaluator,RENCIDataset, RENCITorchDataset, RENCIEvaluator
 from torch.utils.tensorboard import SummaryWriter
 from utils import iou_loss, giou_loss
 from torch.optim.lr_scheduler import ReduceLROnPlateau

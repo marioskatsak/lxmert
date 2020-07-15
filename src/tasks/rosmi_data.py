@@ -1179,21 +1179,21 @@ class RENCIEvaluator:
 
 
 
-
-            if landmark_id_ == ln_:
-                lands += 1
-                score3 += 1
-                tScore += 1
-            try:
-
-                print(boxes[landmark_id_],boxes[ln_])
-                pred_cland_coords = [np.mean([x[0] for x in boxes[ln_]['coordinates']]),np.mean([x[1] for x in boxes[ln_]['coordinates']])]
-                #
-                # pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
-                #                         CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
-            except:
-                pred_cland_coords = None
-
+            #
+            # if landmark_id_ == ln_:
+            #     lands += 1
+            #     score3 += 1
+            #     tScore += 1
+            # try:
+            #
+            #     print(boxes[landmark_id_],boxes[ln_])
+            #     pred_cland_coords = [np.mean([x[0] for x in boxes[ln_]['coordinates']]),np.mean([x[1] for x in boxes[ln_]['coordinates']])]
+            #     #
+            #     # pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
+            #     #                         CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
+            # except:
+            #     pred_cland_coords = None
+            #
 
 
             bearing = BEAR2NUMS[br]
@@ -1206,7 +1206,21 @@ class RENCIEvaluator:
                 # t_distance = self.dataset.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
 
                 # if diss == int(tokens.index(t_distance[0])) and dise == int(tokens.index(t_distance[-1])):
-            if diss == dists and dise == diste:
+            if diss == dists and dise == diste and landmark_id_ == ln_:
+
+
+                lands += 1
+                score3 += 1
+                tScore += 1
+                try:
+
+                    print(boxes[landmark_id_],boxes[ln_])
+                    pred_cland_coords = [np.mean([x[0] for x in boxes[ln_]['coordinates']]),np.mean([x[1] for x in boxes[ln_]['coordinates']])]
+                    #
+                    # pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
+                    #                         CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
+                except:
+                    pred_cland_coords = None
                 print("correct")
                 _distance = int(datum['landmarks'][0]['distance'])
 

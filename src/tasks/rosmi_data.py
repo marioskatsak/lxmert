@@ -1180,11 +1180,6 @@ class RENCIEvaluator:
 
 
 
-            sn_id = int(datum['scenario_items'].split('rio')[1].split('.j')[0])
-
-            centre = calculateTiles(CENTRES[sn_id],ZOOMS[sn_id])
-
-
             if landmark_id_ == ln_:
                 lands += 1
                 score3 += 1
@@ -1258,19 +1253,19 @@ class RENCIEvaluator:
 
 
         print(f"Total Score: {tScore / len(sentid2ans)}, Score1: {score / len(sentid2ans)}, Score2: {score2 / len(sentid2ans)}, Score3: {score3 / len(sentid2ans)}")
-        if len(pixDiff) > 0.2*len(sentid2ans):
-            # meanD =  mDist / (len(sentid2ans) - counterDist)
-            pixMean = int(np.mean(pixDiff))
-            # variance = int(np.var(pixDiff))
-            pixsd_ = int(np.std(pixDiff))
-            distMean = int(np.mean(meanDist))
-            # variance = int(np.var(pixDiff))
-            distsd_ = int(np.std(meanDist))
-        else:
-            pixMean = 99999999
-            distMean = 99999999
-            distsd_ = 99999999
-            pixsd_ = 99999999
+        # if len(pixDiff) > 0.2*len(sentid2ans):
+        #     # meanD =  mDist / (len(sentid2ans) - counterDist)
+        #     pixMean = int(np.mean(pixDiff))
+        #     # variance = int(np.var(pixDiff))
+        #     pixsd_ = int(np.std(pixDiff))
+        #     distMean = int(np.mean(meanDist))
+        #     # variance = int(np.var(pixDiff))
+        #     distsd_ = int(np.std(meanDist))
+        # else:
+        pixMean = 99999999
+        distMean = 99999999
+        distsd_ = 99999999
+        pixsd_ = 99999999
         print(len(sentid2ans))
         print(lands/len(sentid2ans))
         print(f"Mean distance , Mean pix : {distMean} [{distsd_}] , {pixMean} [{pixsd_}]")

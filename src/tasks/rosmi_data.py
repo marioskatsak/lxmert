@@ -1201,6 +1201,7 @@ class RENCIEvaluator:
             tmp_pixs2 = None
             final_coord2 = None
 
+            pred_cland_coords = None
 
             # if datum['landmarks'][0]['distance'] != '0':
                 # t_distance = self.dataset.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())

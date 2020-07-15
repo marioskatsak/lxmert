@@ -1137,6 +1137,8 @@ class RENCIEvaluator:
             boxes = img_info['coordinates'].copy()
             # print(len(names))
             # input(boxes)
+            for b in boxes:
+                input(b)
             sent = datum['sentence']['raw']
             landmark_id_ = 0
             # landmark_id_ = random.randint(0,67)

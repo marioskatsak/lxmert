@@ -1216,7 +1216,7 @@ class RENCIEvaluator:
                 try:
 
                     print(boxes[landmark_id_],boxes[ln_])
-                    pred_cland_coords = [np.mean([x[0] for x in boxes[ln_]['coordinates']]),np.mean([x[1] for x in boxes[ln_]['coordinates']])]
+                    pred_cland_coords = [np.mean([x[0] for x in boxes[ln_]]),np.mean([x[1] for x in boxes[ln_]])]
                     #
                     # pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
                     #                         CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
@@ -1230,7 +1230,7 @@ class RENCIEvaluator:
                 if pred_cland_coords:
                     final_coord2 = destination([pred_cland_coords[1], pred_cland_coords[0]] , _distance, bearing)
                     # final_coord = destination([datum['landmarks'][0]['raw_gps'][0], datum['landmarks'][0]['raw_gps'][1]] , datum['landmarks'][0]['distance'], datum['landmarks'][0]['bearing'])
-                    print(f"Final coord {final_coord2}")
+                    # print(f"Final coord {final_coord2}")
                     tmp_ob = {'g_type':'Point'}
                     tmp_ob['coordinates'] = final_coord2
 

@@ -1008,14 +1008,14 @@ class RENCITorchDataset(Dataset):
 
         # start and end id of distance
         tokens_a =  self.tokenizer.tokenize(sent.strip())
-        print(tokens_a)
+        # print(tokens_a)
         # Account for [CLS] and [SEP] with "- 2"
         if len(tokens_a) > MAX_SENT_LENGTH - 2:
             tokens_a = tokens_a[:(MAX_SENT_LENGTH - 2)]
 
         # Keep segment id which allows loading BERT-weights.
         tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-        print(tokens)
+        # print(tokens)
         dists = torch.zeros(MAX_SENT_LENGTH)
         diste = torch.zeros(MAX_SENT_LENGTH)
         if datum['landmarks'][0]['distance'] != '0':
@@ -1075,13 +1075,13 @@ class RENCITorchDataset(Dataset):
                 names_mask.append(torch.tensor(names_features[0].input_mask, dtype=torch.long))
 
 
-            print(len(names_ids))
+            # print(len(names_ids))
             padding = (73 - len(names_ids))*[torch.zeros(MAX_SENT_LENGTH, dtype=torch.long)]
 
             names_ids = torch.stack(names_ids + padding)
             names_segment_ids = torch.stack(names_segment_ids + padding)
             names_mask = torch.stack(names_mask + padding)
-            print(names_ids.shape)
+            # print(names_ids.shape)
 
             # pseudo values
             feats = torch.zeros(len(names_ids),2048)
@@ -1117,7 +1117,7 @@ class RENCIEvaluator:
         thres = 0.50
         # {id:'', sentence:'',gold:[a,b,c],pred:[a,b,c],outcome:True }
         examples = []
-        scenarios = {'scenario0.json':[0,0],'scenario1.json':[0,0],'scenario2.json':[0,0],'scenario3.json':[0,0],'scenario4.json':[0,0],'scenario5.json':[0,0],'scenario6.json':[0,0]}
+        scenarios = {'scenario0.json':[0,0],'scenario1.json':[0,0],'scenario2.json':[0,0],'scenario3.json':[0,0],'scenario4.json':[0,0],'scenario5.json':[0,0],'scenario6.json':[0,0],'scenario7.json':[0,0],'scenario8.json':[0,0],'scenario9.json':[0,0],'scenario10.json':[0,0]}
         for sentid, (pred_box, diss,dise, ln, ln_, br, l_s,l_e) in sentid2ans.items():
 
 
@@ -1135,8 +1135,8 @@ class RENCIEvaluator:
             scenarios[datum['scenario_items']][1] += 1
             names = img_info['t_names'].copy()
             boxes = img_info['coordinates'].copy()
-            print(len(names))
-            print(len(boxes))
+            # print(len(names))
+            # print(len(boxes))
             sent = datum['sentence']['raw']
             landmark_id_ = 0
             # landmark_id_ = random.randint(0,67)

@@ -1223,13 +1223,14 @@ class RENCIEvaluator:
                 except:
                     pred_cland_coords = None
                 print("correct")
+                print(pred_cland_coords)
                 _distance = int(datum['landmarks'][0]['distance'])
 
 
                 if pred_cland_coords:
                     final_coord2 = destination([pred_cland_coords[1], pred_cland_coords[0]] , _distance, bearing)
                     # final_coord = destination([datum['landmarks'][0]['raw_gps'][0], datum['landmarks'][0]['raw_gps'][1]] , datum['landmarks'][0]['distance'], datum['landmarks'][0]['bearing'])
-
+                    print(f"Final coord {final_coord2}")
                     tmp_ob = {'g_type':'Point'}
                     tmp_ob['coordinates'] = final_coord2
 
@@ -1239,6 +1240,7 @@ class RENCIEvaluator:
                 distance2 = haversine(final_coord2[0],final_coord2[1],datum['gold_coordinates'][0],datum['gold_coordinates'][1])*1000
                 if distance2 < 1:
                     scenarios[datum['scenario_items']][0] += 1
+                print(f"Distance is {distance2}m")
 
                 #
                 #
@@ -1249,7 +1251,6 @@ class RENCIEvaluator:
                 # drawItem(['gold_pixels','predicted_pixels','landmark'],filename,pixels_bb=[datum['gold_pixels'],new_bbox,ln])
 
 
-            print(f"Distance is {distance2}m")
             if distance2:
                 mDist += distance2
                 meanDist.append(distance2)
@@ -1274,6 +1275,7 @@ class RENCIEvaluator:
         #     pixMean = int(np.mean(pixDiff))
         #     # variance = int(np.var(pixDiff))
         #     pixsd_ = int(np.std(pixDiff))
+        print(meanDist)
         if len(meanDist) > 0:
             distMean = int(np.mean(meanDist))
         #     # variance = int(np.var(pixDiff))

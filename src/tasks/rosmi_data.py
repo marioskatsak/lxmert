@@ -1259,14 +1259,17 @@ class RENCIEvaluator:
         #     pixMean = int(np.mean(pixDiff))
         #     # variance = int(np.var(pixDiff))
         #     pixsd_ = int(np.std(pixDiff))
-        distMean = int(np.mean(meanDist))
+        if len(meanDist) > 0:
+            distMean = int(np.mean(meanDist))
         #     # variance = int(np.var(pixDiff))
-        distsd_ = int(np.std(meanDist))
-        # else:
-        pixMean = 99999999
-        # distMean = 99999999
-        # distsd_ = 99999999
-        pixsd_ = 99999999
+            distsd_ = int(np.std(meanDist))
+            pixMean = 99999999
+            pixsd_ = 99999999
+        else:
+            pixMean = 99999999
+            distMean = 99999999
+            distsd_ = 99999999
+            pixsd_ = 99999999
         print(len(sentid2ans))
         print(lands/len(sentid2ans))
         print(f"Mean distance , Mean pix : {distMean} [{distsd_}] , {pixMean} [{pixsd_}]")

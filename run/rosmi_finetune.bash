@@ -14,5 +14,5 @@ CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     --train train --valid valid --load /scratch/mmk11/snap/rosmi/BEST_2_t_NAME \
     --llayers 1 --xlayers 1 --rlayers 1 \
     --dataPath /scratch/mmk11/data/renci/ \
-    --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 200 --abla RENCI_NAME \
+    --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 100 --abla RENCI_NAME \
     --tqdm --output $output ${@:3}

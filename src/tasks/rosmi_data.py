@@ -1241,9 +1241,9 @@ class RENCIEvaluator:
             else:
                 counterDist +=1
 
-            # if siou2 > thres or siou > thres or siou3 > thres:
-            #
-            #     tScore += 1
+            if siou2 > thres or siou > thres or siou3 > thres:
+
+                tScore += 1
 
             if pred_cland_coords:
                 save_land = str(names[ln_])
@@ -1258,17 +1258,17 @@ class RENCIEvaluator:
         #     pixMean = int(np.mean(pixDiff))
         #     # variance = int(np.var(pixDiff))
         #     pixsd_ = int(np.std(pixDiff))
-        #     distMean = int(np.mean(meanDist))
+        distMean = int(np.mean(meanDist))
         #     # variance = int(np.var(pixDiff))
-        #     distsd_ = int(np.std(meanDist))
+        distsd_ = int(np.std(meanDist))
         # else:
         pixMean = 99999999
-        distMean = 99999999
-        distsd_ = 99999999
+        # distMean = 99999999
+        # distsd_ = 99999999
         pixsd_ = 99999999
         print(len(sentid2ans))
         print(lands/len(sentid2ans))
         print(f"Mean distance , Mean pix : {distMean} [{distsd_}] , {pixMean} [{pixsd_}]")
 
         # input(examples)
-        return score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios,examples), score2 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)
+        return score3 / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios,examples), score3 / len(sentid2ans),score3 / len(sentid2ans), tScore / len(sentid2ans)

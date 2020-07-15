@@ -1137,8 +1137,8 @@ class RENCIEvaluator:
             boxes = img_info['coordinates'].copy()
             # print(len(names))
             # input(boxes)
-            for b in boxes:
-                input(b)
+            # for b in boxes:
+            #     input(b)
             sent = datum['sentence']['raw']
             landmark_id_ = 0
             # landmark_id_ = random.randint(0,67)
@@ -1227,7 +1227,7 @@ class RENCIEvaluator:
                     print(e)
                     pred_cland_coords = None
                 print("correct")
-                print(pred_cland_coords)
+                # print(pred_cland_coords)
                 _distance = int(datum['landmarks'][0]['distance'])
 
 

@@ -1183,6 +1183,7 @@ class RENCIEvaluator:
             if landmark_id_ == ln_:
                 lands += 1
                 score3 += 1
+                tScore += 1
             try:
 
                 print(boxes[landmark_id_],boxes[ln_])
@@ -1240,10 +1241,10 @@ class RENCIEvaluator:
 
             else:
                 counterDist +=1
-
-            if siou2 > thres or siou > thres or siou3 > thres:
-
-                tScore += 1
+            #
+            # if siou2 > thres or siou > thres or siou3 > thres:
+            #
+            #     tScore += 1
 
             if pred_cland_coords:
                 save_land = str(names[ln_])

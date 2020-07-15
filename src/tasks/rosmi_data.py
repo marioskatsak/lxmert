@@ -1136,7 +1136,7 @@ class RENCIEvaluator:
             names = img_info['t_names'].copy()
             boxes = img_info['coordinates'].copy()
             # print(len(names))
-            input(boxes)
+            # input(boxes)
             sent = datum['sentence']['raw']
             landmark_id_ = 0
             # landmark_id_ = random.randint(0,67)
@@ -1215,7 +1215,7 @@ class RENCIEvaluator:
                 tScore += 1
                 try:
 
-                    print(boxes[landmark_id_],boxes[ln_])
+                    input(boxes[landmark_id_],boxes[ln_])
                     pred_cland_coords = [np.mean([x[0] for x in boxes[ln_]]),np.mean([x[1] for x in boxes[ln_]])]
                     #
                     # pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \

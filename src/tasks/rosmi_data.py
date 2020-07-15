@@ -1007,7 +1007,14 @@ class RENCITorchDataset(Dataset):
         bearing[self.raw_dataset.bearing2label[self.raw_dataset.convert2bearing[datum['landmarks'][0]['bearing']]]] = 1
 
         # start and end id of distance
-        tokens = ["[CLS]"] + self.tokenizer.tokenize(sent.strip()) + ["[SEP]"]
+        tokens_a =  self.tokenizer.tokenize(sent.strip())
+
+        # Account for [CLS] and [SEP] with "- 2"
+        if len(tokens_a) > MAX_SENT_LENGTH - 2:
+            tokens_a = tokens_a[:(MAX_SENT_LENGTH - 2)]
+
+        # Keep segment id which allows loading BERT-weights.
+        tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
 
         dists = torch.zeros(MAX_SENT_LENGTH)
         diste = torch.zeros(MAX_SENT_LENGTH)

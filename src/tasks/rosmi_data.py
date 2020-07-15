@@ -1215,12 +1215,14 @@ class RENCIEvaluator:
                 tScore += 1
                 try:
 
-                    input(boxes[landmark_id_],boxes[ln_])
+                    print(boxes[landmark_id_],boxes[ln_])
+                    input()
                     pred_cland_coords = [np.mean([x[0] for x in boxes[ln_]]),np.mean([x[1] for x in boxes[ln_]])]
                     #
                     # pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
                     #                         CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
-                except:
+                except Exception as e:
+                    print(e)
                     pred_cland_coords = None
                 print("correct")
                 print(pred_cland_coords)

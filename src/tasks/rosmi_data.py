@@ -1230,6 +1230,7 @@ class RENCIEvaluator:
                     # input()
                     pred_cland_coords = [np.mean([x[0] for x in boxes[ln_]]),np.mean([x[1] for x in boxes[ln_]])]
                     #
+                    print(pred_cland_coords)
                     # pred_cland_coords = getPointLatLng(boxes[ln_][0] + (boxes[ln_][2] - boxes[ln_][0])/2, boxes[ln_][1] + (boxes[ln_][3] - boxes[ln_][1])/2,  \
                     #                         CENTRES[sn_id][1],CENTRES[sn_id][0],ZOOMS[sn_id], 500, 700)
                 except Exception as e:
@@ -1242,6 +1243,7 @@ class RENCIEvaluator:
 
                 if pred_cland_coords:
                     final_coord2 = destination([pred_cland_coords[1], pred_cland_coords[0]] , _distance, bearing)
+
                     # final_coord = destination([datum['landmarks'][0]['raw_gps'][0], datum['landmarks'][0]['raw_gps'][1]] , datum['landmarks'][0]['distance'], datum['landmarks'][0]['bearing'])
                     # print(f"Final coord {final_coord2}")
                     tmp_ob = {'g_type':'Point'}
@@ -1250,6 +1252,7 @@ class RENCIEvaluator:
 
 
             if final_coord2:
+                input(final_coord2,datum['gold_coordinates'])
                 distance2 = haversine(final_coord2[0],final_coord2[1],datum['gold_coordinates'][0],datum['gold_coordinates'][1])*1000
                 if distance2 < 1:
                     scenarios[datum['scenario_items']][0] += 1
@@ -1288,7 +1291,7 @@ class RENCIEvaluator:
         #     pixMean = int(np.mean(pixDiff))
         #     # variance = int(np.var(pixDiff))
         #     pixsd_ = int(np.std(pixDiff))
-        print(meanDist)
+        # print(meanDist)
         if len(meanDist) > 0:
             distMean = int(np.mean(meanDist))
         #     # variance = int(np.var(pixDiff))

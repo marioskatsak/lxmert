@@ -1256,7 +1256,7 @@ class RENCIEvaluator:
                 distance2 = haversine(final_coord2[0],final_coord2[1],datum['gold_coordinates'][0],datum['gold_coordinates'][1])*1000
                 if distance2 < 1:
                     scenarios[datum['scenario_items']][0] += 1
-                print(f"Distance is {distance2}m")
+                input(f"Distance is {distance2}m")
 
                 #
                 #

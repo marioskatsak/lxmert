@@ -1015,7 +1015,7 @@ class RENCITorchDataset(Dataset):
 
         # Keep segment id which allows loading BERT-weights.
         tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-        # print(tokens)
+        print(tokens)
         dists = torch.zeros(MAX_SENT_LENGTH)
         diste = torch.zeros(MAX_SENT_LENGTH)
         if datum['landmarks'][0]['distance'] != '0':
@@ -1147,10 +1147,19 @@ class RENCIEvaluator:
                     landmark_id_ = ipd
                     break
 
-
-
+            # 
+            #
+            # # start and end id of distance
+            # tokens = ["[CLS]"] + self.dataset.tokenizer.tokenize(datum['sentence']['raw'].strip()) + ["[SEP]"]
             # start and end id of distance
-            tokens = ["[CLS]"] + self.dataset.tokenizer.tokenize(datum['sentence']['raw'].strip()) + ["[SEP]"]
+            tokens_a =  self.dataset.tokenizer.tokenize(datum['sentence']['raw'].strip())
+            # print(tokens_a)
+            # Account for [CLS] and [SEP] with "- 2"
+            if len(tokens_a) > MAX_SENT_LENGTH - 2:
+                tokens_a = tokens_a[:(MAX_SENT_LENGTH - 2)]
+
+            # Keep segment id which allows loading BERT-weights.
+            tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
 
             dists = torch.zeros(MAX_SENT_LENGTH)
             diste = torch.zeros(MAX_SENT_LENGTH)

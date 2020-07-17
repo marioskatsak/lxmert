@@ -1159,9 +1159,9 @@ class RENCIEvaluator:
             #         break
             for ipd, name_box in enumerate(ids):
                 if datum['landmarks'][0]['id'] == name_box:
-                    print(datum['landmarks'][0]['id'], name_box)
-                    print(names[landmark_id_])
-                    input(img_info[landmark_id_])
+                    # print(datum['landmarks'][0]['id'], name_box)
+                    # print(names[ipd])
+                    # input(img_info[ipd])
                     landmark_id_ = ipd
                     break
             #

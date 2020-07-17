@@ -1204,6 +1204,7 @@ class RENCIEvaluator:
             print(datum['sentence']['raw'])
             print(diss,dise, datum['landmarks'][0]['distance'], dists, diste)
             print(br, datum['landmarks'][0]['bearing'])
+            print(f"Landmark ids: {landmark_id_} - {ln_}")
 
 
 

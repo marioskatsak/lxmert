@@ -1285,7 +1285,7 @@ class RENCIEvaluator:
                 # drawItem(['gold_pixels','predicted_pixels','landmark'],filename,pixels_bb=[datum['gold_pixels'],new_bbox,ln])
 
 
-            if distance2:
+            if distance2 >= 0:
                 mDist += distance2
                 meanDist.append(distance2)
 

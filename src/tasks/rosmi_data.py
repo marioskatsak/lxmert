@@ -1243,7 +1243,7 @@ class RENCIEvaluator:
                 tScore += 1
                 try:
 
-                    print(boxes[landmark_id_],boxes[ln_])
+                    # print(boxes[landmark_id_],boxes[ln_])
                     # input()
                     pred_cland_coords = [np.mean([x[0] for x in boxes[ln_]]),np.mean([x[1] for x in boxes[ln_]])]
                     #
@@ -1273,7 +1273,7 @@ class RENCIEvaluator:
                 distance2 = haversine(final_coord2[0],final_coord2[1],datum['gold_coordinates'][0],datum['gold_coordinates'][1])*1000
                 if distance2 < 1:
                     scenarios[datum['scenario_items']][0] += 1
-                input(f"Distance is {distance2}m")
+                print(f"Distance is {distance2}m")
 
                 #
                 #

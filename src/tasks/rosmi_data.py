@@ -1034,9 +1034,13 @@ class RENCITorchDataset(Dataset):
         # feats = img_info['features'].copy()
         # boxes = img_info['boxes'].copy()
         # names = img_info['names'].copy()
-        names = img_info['t_names'].copy()
+        # names = img_info['t_names'].copy()
         # boxes = img_info['t_boxes'].copy()
-
+        names = [x['name'] for x in img_info]
+        boxes = [x['coordinates'] for x in img_info]
+        print(names[0])
+        print(boxes[0])
+        input(img_info[0])
 
 
         landmark_id = 0
@@ -1133,8 +1137,10 @@ class RENCIEvaluator:
             datum = self.dataset.id2datum[sentid]
             img_info = self.dataset.imgid2img[datum['img_id']]
             scenarios[datum['scenario_items']][1] += 1
-            names = img_info['t_names'].copy()
-            boxes = img_info['coordinates'].copy()
+            names = [x['name'] for x in img_info]
+            boxes = [x['coordinates'] for x in img_info]
+
+            # boxes = img_info['coordinates'].copy()
             # print(len(names))
             # input(boxes)
             # for b in boxes:

@@ -1038,9 +1038,9 @@ class RENCITorchDataset(Dataset):
         # boxes = img_info['t_boxes'].copy()
         names = [x['name'] for x in img_info]
         boxes = [x['coordinates'] for x in img_info]
-        print(names[0])
-        print(boxes[0])
-        input(img_info[0])
+        # print(names[0])
+        # print(boxes[0])
+        # input(img_info[0])
 
 
         landmark_id = 0

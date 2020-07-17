@@ -1038,19 +1038,23 @@ class RENCITorchDataset(Dataset):
         # boxes = img_info['t_boxes'].copy()
         names = [x['name'] for x in img_info]
         boxes = [x['coordinates'] for x in img_info]
+        ids = [x['id'] for x in img_info]
         # print(names[0])
         # print(boxes[0])
         # input(img_info[0])
 
 
         landmark_id = 0
-        for ipd, name_box in enumerate(names):
-            # if datum['landmarks'][0]['g_type'] == 'Point':
-            if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
-             # or \
-             #        int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
+        for ipd, name_box in enumerate(ids):
+            if datum['landmarks'][0]['id'] == name_box:
                 landmark_id = ipd
                 break
+            # if datum['landmarks'][0]['g_type'] == 'Point':
+            # if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
+            #  # or \
+            #  #        int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
+            #     landmark_id = ipd
+            #     break
 
         # last is reserved for landmarks that do not appear in the input feat
         landmark_id_ = torch.zeros(MAX_BOXES)
@@ -1138,6 +1142,7 @@ class RENCIEvaluator:
             img_info = self.dataset.imgid2img[datum['img_id']]
             scenarios[datum['scenario_items']][1] += 1
             names = [x['name'] for x in img_info]
+            ids = [x['id'] for x in img_info]
             boxes = [x['coordinates'] for x in img_info]
 
             # boxes = img_info['coordinates'].copy()
@@ -1148,11 +1153,17 @@ class RENCIEvaluator:
             sent = datum['sentence']['raw']
             landmark_id_ = 0
             # landmark_id_ = random.randint(0,67)
-            for ipd, name_box in enumerate(names):
-                if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
+            # for ipd, name_box in enumerate(names):
+            #     if "".join(datum['landmarks'][0]['name'].split(" ")).lower()  == "".join(name_box[0].split(" ")).lower():
+            #         landmark_id_ = ipd
+            #         break
+            for ipd, name_box in enumerate(ids):
+                if datum['landmarks'][0]['id'] == name_box:
+                    print(datum['landmarks'][0]['id'], name_box)
+                    print(names[landmark_id_])
+                    input(img_info[landmark_id_])
                     landmark_id_ = ipd
                     break
-
             #
             #
             # # start and end id of distance

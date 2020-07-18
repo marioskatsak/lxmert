@@ -572,6 +572,7 @@ if __name__ == "__main__":
                 results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
                 (clnd, dist_s, dist_e, bear_label) = results
                 print(clnd)
+                print(names[clnd[0]])
                 print(dist_s)
                 print(dist_e)
                 print(bear_label)

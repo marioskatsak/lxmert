@@ -1004,7 +1004,7 @@ class RENCITorchDataset(Dataset):
 
 
         bearing = torch.zeros(self.raw_dataset.num_bearings)
-        bearing[self.raw_dataset.bearing2label[self.raw_dataset.convert2bearing[datum['landmarks'][0]['bearing']]]] = 1
+        bearing[self.raw_dataset.bearing2label[self.raw_dataset.convert2bearing[str(datum['landmarks'][0]['bearing'])]]] = 1
 
         # start and end id of distance
         tokens_a =  self.tokenizer.tokenize(sent.strip())

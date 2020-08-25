@@ -956,7 +956,7 @@ FIELDNAMES = ["img_id", "img_h", "img_w", "objects_id", "objects_conf",
 FIELDNAMES would be keys in the dict returned by load_obj_tsv.
 """
 class RENCITorchDataset(Dataset):
-    def __init__(self, dataset: ROSMIDataset):
+    def __init__(self, dataset: RENCIDataset):
         super().__init__()
         self.raw_dataset = dataset
         self.max_seq_length = MAX_SENT_LENGTH
@@ -1107,7 +1107,7 @@ class RENCITorchDataset(Dataset):
 
 
 class RENCIEvaluator:
-    def __init__(self, dataset: ROSMIDataset):
+    def __init__(self, dataset: RENCIDataset):
         self.dataset = dataset
 
 

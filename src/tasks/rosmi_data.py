@@ -1015,12 +1015,11 @@ class RENCITorchDataset(Dataset):
 
         # Keep segment id which allows loading BERT-weights.
         tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-        print(tokens)
+        # print(tokens)
         dists = torch.zeros(MAX_SENT_LENGTH)
         diste = torch.zeros(MAX_SENT_LENGTH)
         if datum['landmarks'][0]['distance'] != '0':
             t_distance = self.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
-            print(t_distance)
             dists[int(tokens.index(t_distance[0]))]  = 1
             diste[int(tokens.index(t_distance[-1]))]  = 1
         else:

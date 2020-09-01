@@ -473,6 +473,7 @@ if __name__ == "__main__":
     # for k in range(7):
     # for k in range(10):
     enc_scen = [1,3,4,5,7,9,10]
+    enc_scen = [4]
     for k in enc_scen:
         print(f"{k} on cross")
         # args.train = f'{k}_easy_train'

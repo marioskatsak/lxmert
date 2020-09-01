@@ -1026,7 +1026,16 @@ class RENCITorchDataset(Dataset):
             dists[-1]  = 1
             diste[-1]  = 1
 
+        # sentence taggin for landmarks.
+        land_s = torch.zeros(MAX_SENT_LENGTH)
+        land_e = torch.zeros(MAX_SENT_LENGTH)
+        t_name = self.tokenizer.tokenize(datum['landmarks'][0]['name'].strip())
+        land_s[int(tokens.index(t_name[0]))]  = 1
+        land_e[int(tokens.index(t_name[-1]))]  = 1
 
+        print(tokens)
+        print(land_s)
+        input(land_e)
         # Get image info
         img_info = self.imgid2img[img_id]
         # obj_num = img_info['num_boxes']

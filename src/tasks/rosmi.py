@@ -98,10 +98,10 @@ class ROSMI:
             # input("bert")
             batch_per_epoch = len(self.train_tuple.loader)
             t_total = int(batch_per_epoch * args.epochs)
-            # t_total = -1
+            t_total = -1
             # batch 24 when 20 and epochs 3000 = 72000
             # input(int(batch_per_epoch * args.epochs))
-            t_total = 72000
+            # t_total = 72000
             print("BertAdam Total Iters: %d" % t_total)
             from lxrt.optimization import BertAdam
             self.optim = BertAdam(list(self.model.parameters()),

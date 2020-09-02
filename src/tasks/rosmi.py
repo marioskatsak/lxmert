@@ -22,6 +22,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from lxrt.entry import convert_sents_to_features
 
 from lxrt.tokenization import BertTokenizer
+
+import spacy
+nlp = spacy.load("en_core_web_md")
 DataTuple = collections.namedtuple("DataTuple", 'dataset loader evaluator')
 
 MAX_SENT_LENGTH = 25
@@ -462,7 +465,7 @@ class ROSMI:
         print(clnd)
         print(clnd.shape)
         _, clnd = clnd.max(1)
-        return (clnd, dist_s, dist_e, bear_label)
+        return (clnd, dist_s, dist_e, bear_label, land_start, land_end)
         # return None
 
 
@@ -576,13 +579,28 @@ if __name__ == "__main__":
                 feat_mask = torch.cat((feat_mask,feats_padding)).unsqueeze(0)
                 pos = torch.zeros(lands,4).unsqueeze(0)
                 sent = [input("Type instruction: ")]
-                input(sent)
+                tokenized = my_tokenizer(sent.strip())
+                input(tokenized)
                 results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
-                (clnd, dist_s, dist_e, bear_label) = results
+                (clnd, dist_s, dist_e, bear_label, l_s, l_e) = results
+                print(tokenized[int(l_s[0]):int(l_e[0])])
+                land_name = [' '+x[2:] if not x.startswith('##') else x for x in tokenized[int(l_s[0]):int(l_e[0])]]
+                print(land_name)
+                # for l_s and l_e :
+                index_l = clnd[0]
+                land_tokens = nlp(land_name)
+                for lan_in,tn in enumerate(names):
+                    tmp_n = nlp(tn)
+                    if tmp_n.similarity(land_tokens) > 0.98:
+                        index_l = lan_in
+
                 print(clnd)
                 print(names[clnd[0]])
+                print(names[index_l])
                 print(dist_s)
                 print(dist_e)
+                print(l_s)
+                print(l_e)
                 print(bear_label)
                 exper = input('t / f')
         else:

@@ -594,7 +594,7 @@ if __name__ == "__main__":
                 for lan_in,tn in enumerate(names):
                     print(tn[0])
                     tmp_n = nlp(tn[0])
-                    if tmp_n.similarity(land_tokens) > 0.98:
+                    if tmp_n.similarity(land_tokens) > 0.9:
                         index_l = lan_in
 
                 print(clnd)

@@ -1190,7 +1190,7 @@ class RENCIEvaluator:
             # sentence taggin for landmarks.
             land_s = torch.zeros(MAX_SENT_LENGTH)
             land_e = torch.zeros(MAX_SENT_LENGTH)
-            t_name = self.tokenizer.tokenize(datum['landmarks'][0]['name'].strip())
+            t_name = self.dataset.tokenizer.tokenize(datum['landmarks'][0]['name'].strip())
             land_s[int(tokens.index(t_name[0]))]  = 1
             land_e[int(tokens.index(t_name[-1]))]  = 1
 

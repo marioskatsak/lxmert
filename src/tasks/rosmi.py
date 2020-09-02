@@ -586,7 +586,7 @@ if __name__ == "__main__":
                 print(l_s)
                 print(l_e)
                 input(tokenized[int(l_s[0]):int(l_e[0])+1])
-                land_name = ''.join([' '+x[2:] if not x.startswith('##') else x for x in tokenized[int(l_s[0]):int(l_e[0])]])
+                land_name = ''.join([x[2:] if x.startswith('##') else ' '+x for x in tokenized[int(l_s[0]):int(l_e[0])]])
                 print(land_name)
                 # for l_s and l_e :
                 index_l = clnd[0]

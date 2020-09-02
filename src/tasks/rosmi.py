@@ -203,6 +203,13 @@ class ROSMI:
                 self.writer.add_scalar('distance End loss', diste_loss, n_iter)
                 total_loss += diste_loss* p_dist_e.size(1) * 2
 
+
+
+
+                p_start_loss = self.bce_loss(p_start,l_start.float())
+                total_loss += p_start_loss* p_start.size(1) * 2
+                p_end_loss = self.bce_loss(p_end,l_end.float())
+                total_loss += p_end_loss* p_end.size(1) * 2
                 # print(p_cland)
                 # print(cland_)
                 # print(p_cland.shape)

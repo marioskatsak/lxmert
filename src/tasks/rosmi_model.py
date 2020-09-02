@@ -30,6 +30,14 @@ class ROSMIModel(nn.Module):
             BertLayerNorm(self.hid_dim*6, eps=1e-12),
             nn.Linear(self.hid_dim*6, 2)
         )
+
+        self.landmark_feed = nn.Sequential(
+            nn.Linear(self.hid_dim, self.hid_dim*6),
+            # GeLU(),
+            GeLU(),
+            BertLayerNorm(self.hid_dim*6, eps=1e-12),
+            nn.Linear(self.hid_dim*6, 2)
+        )
         self.bearing_fc = nn.Sequential(
             nn.Linear(self.hid_dim, self.hid_dim*6),
             # GeLU(),
@@ -64,6 +72,7 @@ class ROSMIModel(nn.Module):
         self.land_cl.apply(self.lxrt_encoder.model.init_bert_weights)
         self.bearing_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         self.distance_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        self.landmark_feed.apply(self.lxrt_encoder.model.init_bert_weights)
 
 
     def forward(self, feat, feat_mask, pos, names, sent):
@@ -97,6 +106,7 @@ class ROSMIModel(nn.Module):
         # print(x.shape)
         logit = self.logit_fc(feat_seq[1][:,0])
         dist = self.distance_fc(feat_seq[0])
+        land_uni = self.landmark_feed(feat_seq[0])
         # dist_e = self.distance_fc(feat_seq[0])
 
 
@@ -106,14 +116,20 @@ class ROSMIModel(nn.Module):
         dist_e = dist_e.squeeze(-1)
 
 
+        land_uni_s, land_uni_e = land_uni.split(1, dim=-1)
+        # print(dist_s.shape)
+        start_logits = land_uni_s.squeeze(-1)
+        end_logits = land_uni_e.squeeze(-1)
+
+
         landmark_ = self.land_fc(feat_seq[1][:,0])
         if args.qa:
             start_logits, end_logits = out.split(1, dim=-1)
             start_logits = start_logits.squeeze(-1)
             end_logits = end_logits.squeeze(-1)
-        else:
-            start_logits = dist_s
-            end_logits = dist_s
+        # else:
+        #     start_logits = dist_s
+        #     end_logits = dist_s
         cland_ = self.land_cl(feat_seq[1])
         cland_ = cland_.squeeze(-1)
         bearing_ = self.bearing_fc(feat_seq[0][:,0])

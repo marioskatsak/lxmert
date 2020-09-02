@@ -1033,9 +1033,9 @@ class RENCITorchDataset(Dataset):
         land_s[int(tokens.index(t_name[0]))]  = 1
         land_e[int(tokens.index(t_name[-1]))]  = 1
 
-        print(tokens)
-        print(land_s)
-        input(land_e)
+        # print(tokens)
+        # print(land_s)
+        # input(land_e)
         # Get image info
         img_info = self.imgid2img[img_id]
         # obj_num = img_info['num_boxes']
@@ -1107,12 +1107,12 @@ class RENCITorchDataset(Dataset):
             feat_mask = torch.cat((feat_mask,feats_padding))
             boxes = torch.zeros(len(names_ids),4)
             landmark = torch.zeros(4)
-            landmark_start = 0
-            landmark_end = 0
+            # landmark_start = 0
+            # landmark_end = 0
             _names = (names_ids, names_segment_ids, names_mask)
 
 
-        return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, landmark_id_, bearing,landmark_start,landmark_end, target#bearing
+        return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, landmark_id_, bearing,land_s,land_e, target#bearing
 
 
 class RENCIEvaluator:
@@ -1187,6 +1187,13 @@ class RENCIEvaluator:
             # Keep segment id which allows loading BERT-weights.
             tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
 
+            # sentence taggin for landmarks.
+            land_s = torch.zeros(MAX_SENT_LENGTH)
+            land_e = torch.zeros(MAX_SENT_LENGTH)
+            t_name = self.tokenizer.tokenize(datum['landmarks'][0]['name'].strip())
+            land_s[int(tokens.index(t_name[0]))]  = 1
+            land_e[int(tokens.index(t_name[-1]))]  = 1
+
             dists = torch.zeros(MAX_SENT_LENGTH)
             diste = torch.zeros(MAX_SENT_LENGTH)
             if datum['landmarks'][0]['distance'] != '0':
@@ -1209,10 +1216,13 @@ class RENCIEvaluator:
 
             dists = np.argmax(dists).item()
             diste = np.argmax(diste).item()
+            land_s = np.argmax(land_s).item()
+            land_e = np.argmax(land_e).item()
             print("Stats:---------------")
             print(datum['sentence']['raw'])
             print(diss,dise, datum['landmarks'][0]['distance'], dists, diste)
             print(br, datum['landmarks'][0]['bearing'])
+            print(f"land :{l_s}, {l_e}, {tokens[land_s:land_e]}, {land_s},{land_e}")
             print(f"Landmark ids: {landmark_id_} - {ln_}")
 
 
@@ -1245,7 +1255,7 @@ class RENCIEvaluator:
                 # t_distance = self.dataset.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
 
                 # if diss == int(tokens.index(t_distance[0])) and dise == int(tokens.index(t_distance[-1])):
-            if diss == dists and dise == diste and landmark_id_ == ln_:
+            if diss == dists and dise == diste and (landmark_id_ == ln_ or (l_s == land_s and l_e == land_e)):
 
 
                 lands += 1

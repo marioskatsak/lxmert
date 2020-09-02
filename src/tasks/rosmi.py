@@ -579,7 +579,7 @@ if __name__ == "__main__":
                 feat_mask = torch.cat((feat_mask,feats_padding)).unsqueeze(0)
                 pos = torch.zeros(lands,4).unsqueeze(0)
                 sent = [input("Type instruction: ")]
-                tokenized = my_tokenizer(sent.strip())
+                tokenized = my_tokenizer(sent[0].strip())
                 input(tokenized)
                 results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
                 (clnd, dist_s, dist_e, bear_label, l_s, l_e) = results

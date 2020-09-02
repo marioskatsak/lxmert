@@ -590,11 +590,11 @@ if __name__ == "__main__":
                 print(land_name)
                 # for l_s and l_e :
                 index_l = clnd[0]
-                land_tokens = nlp(land_name)
+                # land_tokens = nlp(land_name)
                 for lan_in,tn in enumerate(names):
                     print(tn[0])
-                    tmp_n = nlp(tn[0])
-                    if tmp_n.similarity(land_tokens) > 0.9:
+                    # tmp_n = nlp(tn[0])
+                    if land_name.lower() in tn[0].lower():
                         index_l = lan_in
 
                 print(clnd)

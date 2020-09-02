@@ -585,13 +585,14 @@ if __name__ == "__main__":
                 (clnd, dist_s, dist_e, bear_label, l_s, l_e) = results
                 print(l_s)
                 print(l_e)
-                input(tokenized[int(l_s[0]):int(l_e[0])])
+                input(tokenized[int(l_s[0]):int(l_e[0])+1])
                 land_name = ''.join([' '+x[2:] if not x.startswith('##') else x for x in tokenized[int(l_s[0]):int(l_e[0])]])
                 print(land_name)
                 # for l_s and l_e :
                 index_l = clnd[0]
                 land_tokens = nlp(land_name)
                 for lan_in,tn in enumerate(names):
+                    print(tn)
                     tmp_n = nlp(tn)
                     if tmp_n.similarity(land_tokens) > 0.98:
                         index_l = lan_in

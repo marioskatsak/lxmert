@@ -583,8 +583,10 @@ if __name__ == "__main__":
                 input(tokenized)
                 results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
                 (clnd, dist_s, dist_e, bear_label, l_s, l_e) = results
-                print(tokenized[int(l_s[0]):int(l_e[0])])
-                land_name = [' '+x[2:] if not x.startswith('##') else x for x in tokenized[int(l_s[0]):int(l_e[0])]]
+                print(l_s)
+                print(l_e)
+                input(tokenized[int(l_s[0]):int(l_e[0])])
+                land_name = ''.join([' '+x[2:] if not x.startswith('##') else x for x in tokenized[int(l_s[0]):int(l_e[0])]])
                 print(land_name)
                 # for l_s and l_e :
                 index_l = clnd[0]

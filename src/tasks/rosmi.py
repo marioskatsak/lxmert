@@ -541,9 +541,8 @@ if __name__ == "__main__":
                     names = ["Air Park Plaza", "Unicol 76_0", "Unicol 76_1", "Unicol 76_2", "East Bay SPCA Spay and Neuter Center", "Pendleton Way", "Hegenberger Road_0", "Edgewater Drive_0", "Edgewater Drive_1", "Edgewater Drive_2", "Edgewater Drive_3", "Edgewater Drive_4", "Edgewater Drive_5", "Edgewater Drive_6", "Edgewater Drive_7", "Edgewater Drive_8", "Edgewater Drive_9", "Edgewater Drive_10", "Hegenberger Road_1", "Hegenberger Road_2", "Hegenberger Road_3", "Hegenberger Road_4", "Hegenberger Road_5", "Starbucks", "T-Mobile", "Jamba Juice", "Chipotle Mexican Grill", "Chevron", "Del Taco", "Wells Fargo", "The Raider Image", "Hanger Clinic", "Union Dental", "Wingstop", "GameStop", "Edgewater Dr:Hegenberger Rd", "Edgewater Dr:Pendleton Way", "Hegenberger Lp:Hegenberger Rd", "Hegenberger Rd:Edgewater Dr"]
                     names = [[y] for y in names]
 
-                input(names)
-                print(len(names))
                 names = names[-lands:]
+                print(names)
                 input(len(names))
                 names_ids = []
                 names_segment_ids = []
@@ -591,15 +590,19 @@ if __name__ == "__main__":
                 # for l_s and l_e :
                 index_l = clnd[0]
                 # land_tokens = nlp(land_name)
-                for lan_in,tn in enumerate(names):
-                    print(tn[0])
-                    # tmp_n = nlp(tn[0])
-                    if land_name.lower() in tn[0].lower():
-                        index_l = lan_in
+                tmp_names = [sn[0].lower() for sn in names]
+                cut_off = 1
+                while (difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off)) == 0:
+                    cut_off -= 0.01
+                # for lan_in,tn in enumerate(names):
+                #     print(tn[0])
+                #     # tmp_n = nlp(tn[0])
+                #     if land_name.lower() in tn[0].lower():
+                #         index_l = lan_in
 
                 print(clnd)
                 print(names[clnd[0]])
-                print(names[index_l])
+                print(difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off))
                 print(dist_s)
                 print(dist_e)
                 print(l_s)

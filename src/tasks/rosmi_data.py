@@ -934,7 +934,6 @@ class RENCIDataset:
         self.imgid2img = {}
         for img_datum in img_data:
             self.imgid2img[img_datum] = img_data[img_datum]
-
         # Answers
         self.bearing2label = json.load(open(os.path.join(args.data_path,"trainval_bearing2label.json")))
         self.label2bearing = json.load(open(os.path.join(args.data_path,"trainval_label2bearing.json")))
@@ -1033,9 +1032,6 @@ class RENCITorchDataset(Dataset):
         land_s[int(tokens.index(t_name[0]))]  = 1
         land_e[int(tokens.index(t_name[-1]))]  = 1
 
-        # print(tokens)
-        # print(land_s)
-        # input(land_e)
         # Get image info
         img_info = self.imgid2img[img_id]
         # obj_num = img_info['num_boxes']
@@ -1044,7 +1040,9 @@ class RENCITorchDataset(Dataset):
         # boxes = img_info['boxes'].copy()
         # names = img_info['names'].copy()
         # names = img_info['t_names'].copy()
+        # boxes = img_info['coordinates'].copy()
         # boxes = img_info['t_boxes'].copy()
+        # print(img_info)
         names = [x['name'] for x in img_info]
         boxes = [x['coordinates'] for x in img_info]
         ids = [x['id'] for x in img_info]

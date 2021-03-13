@@ -14,6 +14,8 @@ from torch.autograd import Variable
 from PIL import ImageFont, ImageDraw, Image
 from tqdm import tqdm
 from graphviz import Digraph
+from elasticsearch import Elasticsearch
+import spacy
 from math import (
     degrees, radians,
     sin, cos, asin, tan, atan, atan2, pi,
@@ -29,6 +31,42 @@ from constants import (
     HALF_PI,
     QUARTER_PI,
 )
+
+
+nlp = spacy.load("en_core_web_md")
+
+def elastic_prediction(landmarks, sentences):
+    es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
+    for index, item in enumerate(landmarks):
+        res = es.index(index='landmarks', id=index, body={'name': item})
+
+    print("Testing...")
+    # test3 = ['Redfish Point', 'pipeline area', 'obstructions','deep water area','platforms', 'southwest pass vermilion bay channel light 38', "light 36", "vermilion bay light 26","beacon 8" ]
+    # trying NER from Spacy
+    results = {}
+    for sent in sentences:
+        doc = nlp(sent)
+        # tmp_pobjs = [e.text for e in doc if e.dep_ == 'obj']
+        test10 = [e.text.lower() for e in doc.noun_chunks]
+        tmp_ids = {}
+        tmp_res = {}
+        for te in test10:
+            # print("--------------------------")
+            # print(te)
+            # print("Rsults:")
+
+            # replace ITEM with the search query
+            res = es.search(index='landmarks', body={'query': {'match': { 'name':{'query': te, 'fuzziness':'AUTO' }}}})
+            for hit in res['hits']['hits']:
+                tmp_ids[hit['_id']] = hit['_score']
+                tmp_res[hit['_id']] = {'_score': hit['_score'],'_id': hit['_id'], 'name': hit['_source']['name']}
+                # tmp_res[hit['_score']] =
+                # input(hit)
+                # print(hit['_source']['name'])
+        tmp_ids = dict(reversed(sorted(tmp_ids.items(), key=lambda item: item[1])))
+        results[sent] = {key : tmp_res[key] for key in list(tmp_ids.keys())[:3]}
+    return results
+
 
 def make_dot(var, params=None):
     """ Produces Graphviz representation of PyTorch autograd graph

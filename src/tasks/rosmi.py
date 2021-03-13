@@ -1,23 +1,25 @@
 # coding=utf-8
 # Copyleft 2019 project LXRT.
 
-import os, time
+import os, time, sys
 import collections
 
 import torch, json
 
 import torch.nn as nn
 import numpy as np
+import difflib
 from torch.autograd import Variable
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
-
+# from datasketch import MinHash, MinHashLSHForest, MinHashLSH
+from elasticsearch import Elasticsearch
 from param import args
 from pretrain.qa_answer_table import load_lxmert_qa
 from tasks.rosmi_model import ROSMIModel
 from tasks.rosmi_data import ROSMIDataset, ROSMITorchDataset, ROSMIEvaluator,RENCIDataset, RENCITorchDataset, RENCIEvaluator
 from torch.utils.tensorboard import SummaryWriter
-from utils import iou_loss, giou_loss
+from utils import iou_loss, giou_loss, elastic_prediction
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from lxrt.entry import convert_sents_to_features
 
@@ -29,9 +31,17 @@ DataTuple = collections.namedtuple("DataTuple", 'dataset loader evaluator')
 
 MAX_SENT_LENGTH = 25
 def get_data_tuple(splits: str, bs:int, shuffle=False, drop_last=False) -> DataTuple:
-    dset = ROSMIDataset(splits)
-    tset = ROSMITorchDataset(dset)
-    evaluator = ROSMIEvaluator(dset)
+
+    if 'enc' in args.data_path:
+        print("ENC dataset")
+        dset = RENCIDataset(splits)
+        tset = RENCITorchDataset(dset)
+        evaluator = RENCIEvaluator(dset)
+    else:
+        print("ROSMI dataset")
+        dset = ROSMIDataset(splits)
+        tset = ROSMITorchDataset(dset)
+        evaluator = ROSMIEvaluator(dset)
     data_loader = DataLoader(
         tset, batch_size=bs,
         shuffle=shuffle, num_workers=args.num_workers,
@@ -40,26 +50,29 @@ def get_data_tuple(splits: str, bs:int, shuffle=False, drop_last=False) -> DataT
 
     return DataTuple(dataset=dset, loader=data_loader, evaluator=evaluator)
 
-def get_renci_data_tuple(splits: str, bs:int, shuffle=False, drop_last=False) -> DataTuple:
-    dset = RENCIDataset(splits)
-    tset = RENCITorchDataset(dset)
-    evaluator = RENCIEvaluator(dset)
-    data_loader = DataLoader(
-        tset, batch_size=bs,
-        shuffle=shuffle, num_workers=args.num_workers,
-        drop_last=drop_last, pin_memory=True
-    )
-
-    return DataTuple(dataset=dset, loader=data_loader, evaluator=evaluator)
-
+# def get_renci_data_tuple(splits: str, bs:int, shuffle=False, drop_last=False) -> DataTuple:
+#     dset = RENCIDataset(splits)
+#     tset = RENCITorchDataset(dset)
+#     evaluator = RENCIEvaluator(dset)
+#     data_loader = DataLoader(
+#         tset, batch_size=bs,
+#         shuffle=shuffle, num_workers=args.num_workers,
+#         drop_last=drop_last, pin_memory=True
+#     )
+#
+#     return DataTuple(dataset=dset, loader=data_loader, evaluator=evaluator)
+#
 
 class ROSMI:
     def __init__(self,get_data_tuple):
 
         # Datasets
-        self.train_tuple = get_data_tuple(
-            args.train, bs=args.batch_size, shuffle=True, drop_last=True
-        )
+        if args.train != "":
+            self.train_tuple = get_data_tuple(
+                args.train, bs=args.batch_size, shuffle=True, drop_last=True
+            )
+        else:
+            self.train_tuple = None
         if args.valid != "":
             self.valid_tuple = get_data_tuple(
                 args.valid, bs=args.batch_size,
@@ -67,7 +80,7 @@ class ROSMI:
             )
         else:
             self.valid_tuple = None
-        if args.test:
+        if args.test != "":
             self.test_tuple = get_data_tuple(
                 args.test, bs=args.batch_size,
                 shuffle=False, drop_last=False
@@ -77,15 +90,15 @@ class ROSMI:
 
         self.writer = SummaryWriter(f'snap/rosmi/logging_rosmi_{args.n_ent}_names/{os.uname()[1]}.{time.time()}')
         # Model
-        self.model = ROSMIModel(self.train_tuple.dataset.num_bearings)
+        self.model = ROSMIModel()
 
 
         # Load pre-trained weights
         if args.load_lxmert is not None:
             self.model.lxrt_encoder.load(args.load_lxmert)
-        if args.load_lxmert_qa is not None:
-            load_lxmert_qa(args.load_lxmert_qa, self.model,
-                           label2ans=self.train_tuple.dataset.label2ans)
+        # if args.load_lxmert_qa is not None:
+        #     load_lxmert_qa(args.load_lxmert_qa, self.model,
+        #                    label2ans=self.train_tuple.dataset.label2ans)
 
         # GPU options
         self.model = self.model.cuda()
@@ -99,7 +112,8 @@ class ROSMI:
 
         if 'bert' in args.optim:
             # input("bert")
-            batch_per_epoch = len(self.train_tuple.loader)
+            # batch_per_epoch = len(self.train_tuple.loader)
+            batch_per_epoch = args.batch_size
             t_total = int(batch_per_epoch * args.epochs)
             # t_total = -1
             # batch 24 when 20 and epochs 3000 = 72000
@@ -134,7 +148,6 @@ class ROSMI:
         best_acc3 = 0
         best_test_acc = 0
         best_mDist = [99999,99999,99999,99999]
-        best_testDist = [99999,99999,99999,99999]
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
@@ -317,17 +330,17 @@ class ROSMI:
                            f"Epoch {epoch}: Best Val3 {best_acc3 * 100.}%\n" + \
                            f"Epoch {epoch}: T-Best Val {best_tacc * 100.}%\n"
 
-            if self.test_tuple is not None:  # Do Validation
-                _, test_dist, _, _, test_acc = self.evaluate(self.test_tuple)
-                print("test")
-
-                if test_acc > best_test_acc:
-                    best_test_acc = test_acc
-                if test_dist[0] < best_testDist[0]:
-                    best_testDist = test_dist
-                log_str += f"Epoch {epoch}: Test {test_acc * 100.}%\n" + \
-                        f"Epoch {epoch}: Best Test dist/pixel [SD] {best_testDist[0]} [{best_testDist[1]}] / {best_testDist[2]} [{best_testDist[1]}]\n" + \
-                            f"Epoch {epoch}: Best Test {best_test_acc * 100.}%\n"
+            # if self.test_tuple is not None:  # Do Test
+            #     _, test_dist, _, _, test_acc = self.evaluate(self.test_tuple)
+            #     print("test")
+            #
+            #     if test_acc > best_test_acc:
+            #         best_test_acc = test_acc
+            #     if test_dist[0] < best_testDist[0]:
+            #         best_testDist = test_dist
+            #     log_str += f"Epoch {epoch}: Test {test_acc * 100.}%\n" + \
+            #             f"Epoch {epoch}: Best Test dist/pixel [SD] {best_testDist[0]} [{best_testDist[1]}] / {best_testDist[2]} [{best_testDist[1]}]\n" + \
+            #                 f"Epoch {epoch}: Best Test {best_test_acc * 100.}%\n"
             print(log_str, end='')
 
             with open(self.output + "/log.log", 'a') as f:
@@ -335,7 +348,7 @@ class ROSMI:
                 f.flush()
 
         self.save(f"LAST_{args.abla}")
-        return best_acc3, best_mDist, best_testDist
+        return best_acc3, best_mDist
 
     def predict(self, eval_tuple: DataTuple, dump=None):
         """
@@ -382,13 +395,19 @@ class ROSMI:
                     # ans = dset.label2ans[l]
                     # input(br)
                     br = dset.label2bearing[br]
-                    sentid2ans[qid.item()] = (l, diss, dise, ln,cln, br, l_s, l_e)
+                    sentid2ans[qid.item()] = (l.tolist(), int(diss), int(dise), ln.tolist(),int(cln), br, int(l_s), int(l_e))
+        # input(sentid2ans)
+        with open(dump, 'w') as scores_out:
+            json.dump(sentid2ans, scores_out)
         return sentid2ans
 
     def evaluate(self, eval_tuple: DataTuple, dump=None):
         """Evaluate all data in data_tuple."""
         sentid2ans = self.predict(eval_tuple, dump)
-        return eval_tuple.evaluator.evaluate(sentid2ans)
+        evaluation = eval_tuple.evaluator.evaluate(sentid2ans)
+        with open(dump, 'w') as scores_out:
+            json.dump(evaluation, scores_out)
+        return
 
     @staticmethod
     def oracle_score(data_tuple):
@@ -470,8 +489,52 @@ class ROSMI:
 
 
 
-if __name__ == "__main__":
 
+def run_experiment():
+
+    rosmi = ROSMI(get_data_tuple)
+    # Load ROSMI model weights
+    # Note: It is different from loading LXMERT pre-trained weights.
+    if args.load is not None:
+        rosmi.load(args.load)
+
+    # Test or Train
+    if rosmi.test_tuple is not None:
+        pred_result = rosmi.predict(
+            get_data_tuple(args.test, bs=args.batch_size,
+                           shuffle=False, drop_last=False),
+            dump=os.path.join(args.output, f'{args.abla}_test_predict.json')
+        )
+    if rosmi.valid_tuple is not None:
+        # Since part of valididation data are used in pre-training/fine-tuning,
+        # only validate on the minival set.
+        result = rosmi.evaluate(
+            get_data_tuple(args.valid, bs=args.batch_size,
+                           shuffle=False, drop_last=False),
+            dump=os.path.join(args.output, f'{args.abla}_val_predict.json')
+        )
+        print(result)
+
+
+    if rosmi.train_tuple is not None:
+        print('Splits in Train data:', rosmi.train_tuple.dataset.splits)
+        if rosmi.valid_tuple is not None:
+            print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
+            tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
+
+
+            print("Valid Oracle: %0.2f" % (tmpA * 100))
+            tmpA, dis = rosmi.oracle_score(rosmi.train_tuple)
+
+
+            print("Train Oracle: %0.2f" % (tmpA * 100))
+        else:
+            print("DO NOT USE VALIDATION")
+        input("All good?")
+        best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
+        return tmpA, dis, best_tacc, best_mDist
+    return
+def cross_validation():
     scores = []
     scores2 = []
     distances = [[],[],[],[]]
@@ -480,205 +543,172 @@ if __name__ == "__main__":
     t_scores = []
     oracle_scores = []
     examples = []
+    # {k}_easy_train' is for for 10-fold cross validation
+    # {k}_train' is for 7-fold zero shot cross validation
     # for k in range(7):
     # for k in range(10):
-    enc_scen = [1,3,4,5,7,9,10]
-    enc_scen = [4]
-    for k in enc_scen:
+    if 'enc' in args.train:
+        scen = [1,3,4,5,7,9,10]
+    else:
+        if '7' in args.data_path:
+            scen = list(range(7))
+        else:
+            scen = list(range(10))
+
+    # enc_scen = [4]
+
+    for k in scen:
         print(f"{k} on cross")
         # args.train = f'{k}_easy_train'
         # args.valid = f'{k}_easy_val'
         # args.train = f'{k}_train'
         # args.valid = f'{k}_val'
-        args.train = f'{k}_train_enc'
-        args.valid = f'{k}_val_enc'
-        # args.train = '440_train'
-        # args.valid = '55_val'
-        # Build Class
-        rosmi = ROSMI(get_renci_data_tuple)
-        # Load ROSMI model weights
-        # Note: It is different from loading LXMERT pre-trained weights.
-        if args.load is not None:
-            rosmi.load(args.load)
+        args.train = f'{k}_'+args.train
+        args.valid = f'{k}_'+args.valid
 
-        # Test or Train
-        if args.test is not None and False:
-            args.fast = args.tiny = False       # Always loading all data in test
-            if 'test' in args.test:
-                rosmi.predict(
-                    get_renci_data_tuple(args.test, bs=args.batch_size,
-                                   shuffle=False, drop_last=False),
-                    dump=os.path.join(args.output, 'test_predict.json')
-                )
-            elif 'val' in args.test:
-                # Since part of valididation data are used in pre-training/fine-tuning,
-                # only validate on the minival set.
-                result = rosmi.evaluate(
-                    get_renci_data_tuple('val', bs=args.batch_size,
-                                   shuffle=False, drop_last=False),
-                    dump=os.path.join(args.output, 'val_predict.json')
-                )
-                print(result)
-            else:
-                assert False, "No such test option for %s" % args.test
-        elif args.single:
+        tmpA, dis, best_tacc, best_mDist = run_experiment()
+        oracle_distances[0].append(dis[0])
+        oracle_distances[1].append(dis[1])
+        oracle_distances[2].append(dis[2])
+        oracle_distances[3].append(dis[3])
+        oracle_scores.append(tmpA)
+        # input(dis[4])
+        with open(f'{args.abla}_oracle_scores.json', 'w') as scores_out:
+            json.dump(oracle_scores, scores_out)
 
-            my_tokenizer = BertTokenizer.from_pretrained(
-                "bert-base-uncased",
-                do_lower_case=True
-            )
-            # testing on enc 10 scenario - read maps {names, GPS}
-            with open('enc_chart.json', 'r') as enc:
-                map = json.load(enc)
-            # map = []
-            exper = 't'
-            while exper == 't':
-                lands = int(input("landmarks: "))
-                maps = input("osm/enc")
-                if maps == 'enc':
-                    names = [[nm['name']] for nm in map]
-                else:
-                    names = ["Air Park Plaza", "Unicol 76_0", "Unicol 76_1", "Unicol 76_2", "East Bay SPCA Spay and Neuter Center", "Pendleton Way", "Hegenberger Road_0", "Edgewater Drive_0", "Edgewater Drive_1", "Edgewater Drive_2", "Edgewater Drive_3", "Edgewater Drive_4", "Edgewater Drive_5", "Edgewater Drive_6", "Edgewater Drive_7", "Edgewater Drive_8", "Edgewater Drive_9", "Edgewater Drive_10", "Hegenberger Road_1", "Hegenberger Road_2", "Hegenberger Road_3", "Hegenberger Road_4", "Hegenberger Road_5", "Starbucks", "T-Mobile", "Jamba Juice", "Chipotle Mexican Grill", "Chevron", "Del Taco", "Wells Fargo", "The Raider Image", "Hanger Clinic", "Union Dental", "Wingstop", "GameStop", "Edgewater Dr:Hegenberger Rd", "Edgewater Dr:Pendleton Way", "Hegenberger Lp:Hegenberger Rd", "Hegenberger Rd:Edgewater Dr"]
-                    names = [[y] for y in names]
-
-                names = names[-lands:]
-                print(names)
-                input(len(names))
-                names_ids = []
-                names_segment_ids = []
-                names_mask = []
-                for obj in names:
-                    names_features = convert_sents_to_features(
-                        obj, MAX_SENT_LENGTH, my_tokenizer)
-
-                    # for f in names_features
-                    names_ids.append(torch.tensor(names_features[0].input_ids, dtype=torch.long))
-                    names_segment_ids.append(torch.tensor(names_features[0].segment_ids, dtype=torch.long))
-                    names_mask.append(torch.tensor(names_features[0].input_mask, dtype=torch.long))
+        with open(f'{args.abla}_oracle_distances.json', 'w') as scores_out:
+            json.dump(oracle_distances, scores_out)
 
 
-                padding = (73 - lands)*[torch.zeros(MAX_SENT_LENGTH, dtype=torch.long)]
+        distances[0].append(best_mDist[0])
+        distances[1].append(best_mDist[1])
+        distances[2].append(best_mDist[2])
+        distances[3].append(best_mDist[3])
+        scenarios.append(best_mDist[4])
+        t_scores.append(best_tacc)
+        examples.append(best_mDist[5])
 
-                names_ids = torch.stack(names_ids + padding).unsqueeze(0)
-                names_segment_ids = torch.stack(names_segment_ids + padding).unsqueeze(0)
-                names_mask = torch.stack(names_mask + padding).unsqueeze(0)
-                input(names_ids.shape)
+        with open(f'{args.abla}_examples.json', 'w') as scores_out:
+            json.dump(examples, scores_out)
 
-                _names = (names_ids, names_segment_ids, names_mask)
+        with open(f'{args.abla}_t_scores.json', 'w') as scores_out:
+            json.dump(t_scores, scores_out)
 
+        with open(f'{args.abla}_distances.json', 'w') as scores_out:
+            json.dump(distances, scores_out)
 
-                # feat_mask = torch.ones(boxes.shape[0], dtype=torch.double)
-                # feats_padding = torch.zeros((MAX_BOXES - boxes.shape[0]), dtype=torch.double)
-                # # # input(feats_padding.shape)
-                # feat_mask = torch.cat((feat_mask,feats_padding))
-
-                feat = torch.zeros(lands,2048).unsqueeze(0)
-                feat_mask = torch.ones(lands, dtype=torch.double)
-                feats_padding = torch.zeros((73 - lands), dtype=torch.double)
-                feat_mask = torch.cat((feat_mask,feats_padding)).unsqueeze(0)
-                pos = torch.zeros(lands,4).unsqueeze(0)
-                sent = [input("Type instruction: ")]
-                tokenized = my_tokenizer.tokenize(sent[0].strip())
-                input(tokenized)
-                results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
-                (clnd, dist_s, dist_e, bear_label, l_s, l_e) = results
-                print(l_s)
-                print(l_e)
-                input(tokenized[int(l_s[0]):int(l_e[0])+1])
-                land_name = ''.join([x[2:] if x.startswith('##') else ' '+x for x in tokenized[int(l_s[0]):int(l_e[0])]])
-                print(land_name)
-                # for l_s and l_e :
-                index_l = clnd[0]
-                # land_tokens = nlp(land_name)
-                tmp_names = [sn[0].lower() for sn in names]
-                cut_off = 1
-                while (difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off)) == 0:
-                    cut_off -= 0.01
-                # for lan_in,tn in enumerate(names):
-                #     print(tn[0])
-                #     # tmp_n = nlp(tn[0])
-                #     if land_name.lower() in tn[0].lower():
-                #         index_l = lan_in
-
-                print(clnd)
-                print(names[clnd[0]])
-                print(difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off))
-                print(dist_s)
-                print(dist_e)
-                print(l_s)
-                print(l_e)
-                print(bear_label)
-                exper = input('t / f')
-        else:
-            print('Splits in Train data:', rosmi.train_tuple.dataset.splits)
-            # rosmi.oracle_score(rosmi.train_tuple)
-            # rosmi.oracle_score(rosmi.valid_tuple)
-            # input("??")
-            if rosmi.valid_tuple is not None:
-                print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
-                tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
-
-                oracle_distances[0].append(dis[0])
-                oracle_distances[1].append(dis[1])
-                oracle_distances[2].append(dis[2])
-                oracle_distances[3].append(dis[3])
-                oracle_scores.append(tmpA)
-                # input(dis[4])
-                with open(f'{args.abla}_oracle_scores.json', 'w') as scores_out:
-                    json.dump(oracle_scores, scores_out)
-
-                with open(f'{args.abla}_oracle_distances.json', 'w') as scores_out:
-                    json.dump(oracle_distances, scores_out)
-                print("Valid Oracle: %0.2f" % (tmpA * 100))
-            else:
-                print("DO NOT USE VALIDATION")
-            # input()
-            if rosmi.test_tuple is not None:
-                print('Splits in Valid data:', rosmi.test_tuple.dataset.splits)
-
-                tmpA, dis = rosmi.oracle_score(rosmi.test_tuple)
-                oracle_distances = [[],[],[],[]]
-                oracle_scores = []
-
-                oracle_distances[0].append(dis[0])
-                oracle_distances[1].append(dis[1])
-                oracle_distances[2].append(dis[2])
-                oracle_distances[3].append(dis[3])
-                oracle_scores.append(tmpA)
-                with open(f'{args.abla}_t_oracle_scores.json', 'w') as scores_out:
-                    json.dump(oracle_scores, scores_out)
-
-                with open(f'{args.abla}_t_oracle_distances.json', 'w') as scores_out:
-                    json.dump(oracle_distances, scores_out)
-
-                with open(f'{args.abla}_t_oracle_examples.json', 'w') as scores_out:
-                    json.dump(dis[5], scores_out)
-                print("Test Oracle: %0.2f" % (tmpA * 100))
-            # input()
-            best_tacc, best_mDist, bestTest = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
-
-            distances[0].append(best_mDist[0])
-            distances[1].append(best_mDist[1])
-            distances[2].append(best_mDist[2])
-            distances[3].append(best_mDist[3])
-            scenarios.append(best_mDist[4])
-            t_scores.append(best_tacc)
-            examples.append(best_mDist[5])
-
-            with open(f'{args.abla}_examples.json', 'w') as scores_out:
-                json.dump(examples, scores_out)
-
-            with open(f'{args.abla}_t_scores.json', 'w') as scores_out:
-                json.dump(t_scores, scores_out)
-
-            with open(f'{args.abla}_distances.json', 'w') as scores_out:
-                json.dump(distances, scores_out)
-
-            with open(f'{args.abla}_scenarios.json', 'w') as scores_out:
-                json.dump(scenarios, scores_out)
+        with open(f'{args.abla}_scenarios.json', 'w') as scores_out:
+            json.dump(scenarios, scores_out)
         # input("???")
     # print(f"Best scores: {scores, scores2, scores3, t_scores}")
     # print(f"Mean 6-fold accuracy 1 {sum(scores) / len(scores)}")
     # print(f"Mean 6-fold accuracy 2 {sum(scores2) / len(scores2)}")
     # print(f"Mean 6-fold accuracy 3 {sum(scores3) / len(scores3)}")
     # print(f"Mean 6-fold total accuracy {sum(t_scores) / len(t_scores)}")
+
+
+if __name__ == "__main__":
+    # args.train = '440_train'
+    # args.valid = '55_val'
+    # args.test = '55_test'
+    if args.cross:
+        cross_validation()
+    else:
+        run_experiment()
+        sys.exit(0)
+    if args.single:
+
+        my_tokenizer = BertTokenizer.from_pretrained(
+            "bert-base-uncased",
+            do_lower_case=True
+        )
+        # testing on enc 10 scenario - read maps {names, GPS}
+        with open('data/renci/scenario10.json', 'r') as enc:
+            map = json.load(enc)
+
+        # # find landmark in sentence usint Elasticsearch
+        # names = [nm['name'] for nm in map]
+        # print(names)
+        # test10 = ['restricted area and danger.', 'special anchorage A1.', 'pontoons','southwestern yacht club']
+        # sent10 = ['Keep off restricted area and danger.', 'Prevent the vehicle from going close to the special anchorage A1.','Exclude all the pontoons please.','Send veh1 30m northwest the southwestern yacht club.']
+        # input(elastic_prediction(names, sent10))
+        # map = []
+        exper = 't'
+        while exper == 't':
+            lands = int(input("landmarks: "))
+            maps = input("osm/enc")
+            if maps == 'enc':
+                names = [[nm['name']] for nm in map]
+            else:
+                names = ["Air Park Plaza", "Unicol 76_0", "Unicol 76_1", "Unicol 76_2", "East Bay SPCA Spay and Neuter Center", "Pendleton Way", "Hegenberger Road_0", "Edgewater Drive_0", "Edgewater Drive_1", "Edgewater Drive_2", "Edgewater Drive_3", "Edgewater Drive_4", "Edgewater Drive_5", "Edgewater Drive_6", "Edgewater Drive_7", "Edgewater Drive_8", "Edgewater Drive_9", "Edgewater Drive_10", "Hegenberger Road_1", "Hegenberger Road_2", "Hegenberger Road_3", "Hegenberger Road_4", "Hegenberger Road_5", "Starbucks", "T-Mobile", "Jamba Juice", "Chipotle Mexican Grill", "Chevron", "Del Taco", "Wells Fargo", "The Raider Image", "Hanger Clinic", "Union Dental", "Wingstop", "GameStop", "Edgewater Dr:Hegenberger Rd", "Edgewater Dr:Pendleton Way", "Hegenberger Lp:Hegenberger Rd", "Hegenberger Rd:Edgewater Dr"]
+                names = [[y] for y in names]
+
+            names = names[-lands:]
+            print(names)
+            input(len(names))
+            lands = len(names)
+            names_ids = []
+            names_segment_ids = []
+            names_mask = []
+            for obj in names:
+                names_features = convert_sents_to_features(
+                    obj, MAX_SENT_LENGTH, my_tokenizer)
+
+                # for f in names_features
+                names_ids.append(torch.tensor(names_features[0].input_ids, dtype=torch.long))
+                names_segment_ids.append(torch.tensor(names_features[0].segment_ids, dtype=torch.long))
+                names_mask.append(torch.tensor(names_features[0].input_mask, dtype=torch.long))
+
+
+            padding = (73 - lands)*[torch.zeros(MAX_SENT_LENGTH, dtype=torch.long)]
+
+            names_ids = torch.stack(names_ids + padding).unsqueeze(0)
+            names_segment_ids = torch.stack(names_segment_ids + padding).unsqueeze(0)
+            names_mask = torch.stack(names_mask + padding).unsqueeze(0)
+            input(names_ids.shape)
+
+            _names = (names_ids, names_segment_ids, names_mask)
+
+
+            # feat_mask = torch.ones(boxes.shape[0], dtype=torch.double)
+            # feats_padding = torch.zeros((MAX_BOXES - boxes.shape[0]), dtype=torch.double)
+            # # # input(feats_padding.shape)
+            # feat_mask = torch.cat((feat_mask,feats_padding))
+
+            feat = torch.zeros(lands,2048).unsqueeze(0)
+            feat_mask = torch.ones(lands, dtype=torch.double)
+            feats_padding = torch.zeros((73 - lands), dtype=torch.double)
+            feat_mask = torch.cat((feat_mask,feats_padding)).unsqueeze(0)
+            pos = torch.zeros(lands,4).unsqueeze(0)
+            sent = [input("Type instruction: ")]
+            tokenized = my_tokenizer.tokenize(sent[0].strip())
+            input(tokenized)
+            results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
+            (clnd, dist_s, dist_e, bear_label, l_s, l_e) = results
+            print(l_s)
+            print(l_e)
+            input(tokenized[int(l_s[0]):int(l_e[0])+1])
+            land_name = ''.join([x[2:] if x.startswith('##') else ' '+x for x in tokenized[int(l_s[0]):int(l_e[0])]])
+            print(land_name)
+            # for l_s and l_e :
+            # index_l = clnd[0]
+            # land_tokens = nlp(land_name)
+            tmp_names = [sn[0].lower() for sn in names]
+            cut_off = 1
+            while (difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off)) == 0:
+                cut_off -= 0.01
+            # for lan_in,tn in enumerate(names):
+            #     print(tn[0])
+            #     # tmp_n = nlp(tn[0])
+            #     if land_name.lower() in tn[0].lower():
+            #         index_l = lan_in
+
+            print(clnd)
+            print(names[clnd[0]] if clnd[0] < len(names) else "Landmark not found")
+            # print(difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off))
+            print(dist_s)
+            print(dist_e)
+            print(l_s)
+            print(l_e)
+            print(bear_label)
+            exper = input('t / f')

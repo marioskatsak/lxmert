@@ -13,7 +13,7 @@ MAX_VQA_LENGTH = 25
 MAX_BOXES = 73
 
 class ROSMIModel(nn.Module):
-    def __init__(self, num_bearings):
+    def __init__(self):
         super().__init__()
 
         # Build LXRT encoder
@@ -38,12 +38,13 @@ class ROSMIModel(nn.Module):
             BertLayerNorm(self.hid_dim*6, eps=1e-12),
             nn.Linear(self.hid_dim*6, 2)
         )
+        # num_bearings = 9
         self.bearing_fc = nn.Sequential(
             nn.Linear(self.hid_dim, self.hid_dim*6),
             # GeLU(),
             GeLU(),
             BertLayerNorm(self.hid_dim*6, eps=1e-12),
-            nn.Linear(self.hid_dim*6, num_bearings)
+            nn.Linear(self.hid_dim*6, 9)
         )
         self.land_cl = nn.Sequential(
             nn.Linear(self.hid_dim, self.hid_dim*5),

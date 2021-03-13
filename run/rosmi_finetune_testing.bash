@@ -10,7 +10,7 @@ cp $0 $output/run.bash
 # See Readme.md for option details.
 CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
-    --valid valid \
+    --valid 4_val_enc --load snap/rosmi/BEST_load_k_RENCI_NAME \
     --llayers 1 --xlayers 1 --rlayers 1 \
     --dataPath data/renci/k --single \
     --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 80 --abla load_k_RENCI_NAME \

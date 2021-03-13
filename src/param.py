@@ -37,9 +37,11 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     # Data Splits
-    parser.add_argument("--train", default='train')
-    parser.add_argument("--valid", default='valid')
-    parser.add_argument("--test", default=None)
+    parser.add_argument("--train", default='')
+    parser.add_argument("--valid", default='')
+    parser.add_argument("--test", default='')
+    parser.add_argument("--cross", default='',type=str,
+                help='If you want to do cross-validation change to "7_easy_train" or "10_easy_train".')
 
     # Training Hyper-parameters
     parser.add_argument('--batchSize', dest='batch_size', type=int, default=256)

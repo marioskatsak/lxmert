@@ -396,9 +396,12 @@ class ROSMI:
                     # input(br)
                     br = dset.label2bearing[br]
                     sentid2ans[qid.item()] = (l.tolist(), int(diss), int(dise), ln.tolist(),int(cln), br, int(l_s), int(l_e))
+        try:
+            with open(dump, 'w') as scores_out:
+                json.dump(sentid2ans, scores_out)
+        except Exception as e:
+            print(f"Cannot save dump because {e}")
 
-        with open(dump, 'w') as scores_out:
-            json.dump(sentid2ans, scores_out)
         return sentid2ans
 
     def evaluate(self, eval_tuple: DataTuple, dump=None):

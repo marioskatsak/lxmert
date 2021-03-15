@@ -1300,8 +1300,10 @@ class RENCIEvaluator:
                 save_land = str(names[ln_])
             else:
                 save_land = str(None)
-            examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[str(names[landmark_id_]),str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),str(datum['landmarks'][0]['bearing'])], 'pred':[names[ln_],str(diss)+ ' '+str(dise),str(br), tokens[l_s:l_e+1]], 'outcome': str(siou3 > thres), 'distance':distance2 })
-
+            try:
+                examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[str(names[landmark_id_]),str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),str(datum['landmarks'][0]['bearing'])], 'pred':[names[ln_],str(diss)+ ' '+str(dise),str(br), tokens[l_s:l_e+1]], 'outcome': str(siou3 > thres), 'distance':distance2 })
+            except Exception as e:
+                print(f"No examples because {e}")
 
         print(f"Total Score: {tScore / len(sentid2ans)}, Score1: {score / len(sentid2ans)}, Score2: {score2 / len(sentid2ans)}, Score3: {score3 / len(sentid2ans)}")
         # if len(pixDiff) > 0.2*len(sentid2ans):

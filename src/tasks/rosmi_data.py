@@ -1193,12 +1193,15 @@ class RENCIEvaluator:
             diste = np.argmax(diste).item()
             land_s = np.argmax(land_s).item()
             land_e = np.argmax(land_e).item()
-            print("Stats:---------------")
-            print(datum['sentence']['raw'])
-            print(diss,dise, datum['landmarks'][0]['distance'], dists, diste)
-            print(br, datum['landmarks'][0]['bearing'])
-            print(f"land :{l_s}, {l_e}, {tokens[l_s:l_e+1]}, {land_s},{land_e}")
-            print(f"Landmark ids: {landmark_id_} {names[landmark_id_]} - {ln_} {names[ln_]}")
+            try:
+                print("Stats:---------------")
+                print(datum['sentence']['raw'])
+                print(diss,dise, datum['landmarks'][0]['distance'], dists, diste)
+                print(br, datum['landmarks'][0]['bearing'])
+                print(f"land :{l_s}, {l_e}, {tokens[l_s:l_e+1]}, {land_s},{land_e}")
+                print(f"Landmark ids: {landmark_id_} {names[landmark_id_]} - {ln_} {names[ln_]}")
+            except Exception as e:
+                print(f"Cannot print stats because {e}")
 
 
 
@@ -1262,8 +1265,8 @@ class RENCIEvaluator:
                     tmp_ob = {'g_type':'Point'}
                     tmp_ob['coordinates'] = final_coord2
 
-            else:
-                input("Wrong!!! ")
+            # else:
+            #     input("Wrong!!! ")
 
 
             if final_coord2:

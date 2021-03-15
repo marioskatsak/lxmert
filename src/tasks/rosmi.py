@@ -414,7 +414,7 @@ class ROSMI:
                 json.dump(evaluation, scores_out)
         except Exception as e:
             print(f"Cannot save dump because {e}")
-        return
+        return evaluation[0],9999, evaluation[2], evaluation[3], evaluation[4]
 
     @staticmethod
     def oracle_score(data_tuple):

@@ -86,6 +86,53 @@ MAX_BOXES = 73
 # The path to data and image features.
 # VQA_DATA_ROOT = '/scratch/mmk11/data/vqa/'
 # IMGFEAT_ROOT = '/scratch/mmk11/data/rosmi/'
+SPLIT2NAME = {
+    'train': 'train',
+    'valid': 'val',
+    'test': 'test',
+    'mini_train': 'mini_train',
+    'mini_valid': 'mini_val',
+    'mini_test': 'mini_test',
+    '0_train':'0_train',
+    '0_val':'0_val',
+    '1_train':'1_train',
+    '1_val':'1_val',
+    '2_train':'2_train',
+    '2_val':'2_val',
+    '3_train':'3_train',
+    '3_val':'3_val',
+    '4_train':'4_train',
+    '4_val':'4_val',
+    '5_train':'5_train',
+    '5_val':'5_val',
+    '6_train':'6_train',
+    '6_val':'6_val',
+    '0_easy_train':'0_easy_train',
+    '0_easy_val':'0_easy_val',
+    '1_easy_train':'1_easy_train',
+    '1_easy_val':'1_easy_val',
+    '2_easy_train':'2_easy_train',
+    '2_easy_val':'2_easy_val',
+    '3_easy_train':'3_easy_train',
+    '3_easy_val':'3_easy_val',
+    '4_easy_train':'4_easy_train',
+    '4_easy_val':'4_easy_val',
+    '5_easy_train':'5_easy_train',
+    '5_easy_val':'5_easy_val',
+    '6_easy_train':'6_easy_train',
+    '6_easy_val':'6_easy_val',
+    '7_easy_train':'7_easy_train',
+    '7_easy_val':'7_easy_val',
+    '8_easy_train':'8_easy_train',
+    '8_easy_val':'8_easy_val',
+    '9_easy_train':'9_easy_train',
+    '9_easy_val':'9_easy_val',
+    '440_train':'440_train',
+    '55_val':'55_val',
+    '55_test':'55_test',
+
+}
+
 
 class ROSMIDataset:
     """
@@ -135,11 +182,13 @@ class ROSMIDataset:
             "bert-base-uncased",
             do_lower_case=True
         )
+        input(self.splits)
+
 
         # Loading datasets
         self.data = []
         for split in self.splits:
-            self.data.extend(json.load(open(os.path.join(args.data_path,args.cross,"%s.json" % split))))
+            self.data.extend(json.load(open(os.path.join(args.data_path,"%s.json" % split))))
         print("Load %d data from split(s) %s." % (len(self.data), self.name))
 
         # Convert list to dict (for evaluation)
@@ -157,6 +206,16 @@ class ROSMIDataset:
         IMGFEAT_ROOT = args.data_path
         # Loading detection features to img_data
         img_data = []
+        # for split in self.splits:
+        #     # Minival is 5K images in MS COCO, which is used in evaluating VQA/LXMERT-pre-training.
+        #     # It is saved as the top 5K features in val2014_***.tsv
+        #     load_topk = 5000 if (split == 'minival' and topk is None) else topk
+        #     img_data.extend(load_det_obj_tsv(
+        #         os.path.join(IMGFEAT_ROOT, '%s_obj36.tsv' % (SPLIT2NAME[split])),
+        #         topk=load_topk))
+        #     # img_data.extend(load_obj_tsv(
+        #     #     os.path.join(IMGFEAT_ROOT, 'train_obj36.tsv'),
+        #     #     topk=load_topk))
 
         img_data.extend(load_det_obj_tsv(
                 os.path.join(IMGFEAT_ROOT, 'easy_rosmi_obj36.tsv'),
@@ -830,18 +889,18 @@ class RENCIDataset:
             do_lower_case=True
         )
 
+        input(self.splits)
+
         # Loading datasets
         self.data = []
         for split in self.splits:
             self.data.extend(json.load(open(os.path.join(args.data_path,"%s.json" % split))))
         print("Load %d data from split(s) %s." % (len(self.data), self.name))
 
-        # making sure no sentence with landmark is being passed
-        self.data = [datum for datum in self.data if datum['landmarks'][0]['name']]
         # Convert list to dict (for evaluation)
         self.id2datum = {
             datum['sentid']: datum
-            for datum in self.data if datum['landmarks'][0]['name']
+            for datum in self.data
         }
         # if args.tiny:
         #     topk = TINY_IMG_NUM
@@ -850,16 +909,9 @@ class RENCIDataset:
         # else:
         #     topk = None
         #
-
-        # Load ENC map names and landmarks. Too heavy needs fixing
         IMGFEAT_ROOT = args.data_path
-        # with open(os.path.join(IMGFEAT_ROOT,'renci_map.json')) as map:
-        #     img_data = json.load(map)
-        self.regions = {}
-        for scen in [1,3,4,5,7,9,10]:
-            with open(os.path.join(IMGFEAT_ROOT,f'scenario{scen}.json')) as map:
-                self.regions[f'scenario{scen}.json'] = json.load(map)
-        # img_id
+        with open(os.path.join(IMGFEAT_ROOT,'renci_map.json')) as map:
+            img_data = json.load(map)
         # # Loading detection features to img_data
         # img_data = []
         #
@@ -868,11 +920,8 @@ class RENCIDataset:
         #         topk=topk))
         # Convert img list to dict
         self.imgid2img = {}
-        for datum in self.data:
-            tmp_lands = datum['dynamo_obj'] + self.regions[datum['scenario_items']]
-            random.shuffle(tmp_lands)
-            self.imgid2img[datum['img_id']] = tmp_lands
-            # input(self.imgid2img)
+        for img_datum in img_data:
+            self.imgid2img[img_datum] = img_data[img_datum]
         # Answers
         self.bearing2label = json.load(open(os.path.join(args.data_path,"trainval_bearing2label.json")))
         self.label2bearing = json.load(open(os.path.join(args.data_path,"trainval_label2bearing.json")))
@@ -958,9 +1007,8 @@ class RENCITorchDataset(Dataset):
         diste = torch.zeros(MAX_SENT_LENGTH)
         if datum['landmarks'][0]['distance'] != '0':
             t_distance = self.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
-            start_ = int(tokens.index(t_distance[0]))
-            dists[start_]  = 1
-            diste[int(tokens[start_:].index(t_distance[-1]))+start_]  = 1
+            dists[int(tokens.index(t_distance[0]))]  = 1
+            diste[int(tokens.index(t_distance[-1]))]  = 1
         else:
             dists[-1]  = 1
             diste[-1]  = 1
@@ -969,23 +1017,11 @@ class RENCITorchDataset(Dataset):
         land_s = torch.zeros(MAX_SENT_LENGTH)
         land_e = torch.zeros(MAX_SENT_LENGTH)
         t_name = self.tokenizer.tokenize(datum['landmarks'][0]['name'].strip())
-        # print(t_name)
-        # print(datum['landmarks'][0]['name'])
-        # print(sent)
-        start_ = [idx for idx,x in enumerate(tokens) if t_name[0] in x][0]
-        land_s[start_]  = 1
-        # land_e[int(tokens.index(t_name[0])) + len(t_name)-1]  = 1
-        land_e[start_ + len(t_name)-1]  = 1
-
-
-
-
+        land_s[int(tokens.index(t_name[0]))]  = 1
+        land_e[int(tokens.index(t_name[-1]))]  = 1
 
         # Get image info
         img_info = self.imgid2img[img_id]
-        # img_info = datum['dynamo_obj'] + self.regions[temp_enc['scenario_items']]
-
-
         # obj_num = img_info['num_boxes']
         # obj_num = img_info['t_num_boxes']
         # feats = img_info['features'].copy()
@@ -1032,9 +1068,7 @@ class RENCITorchDataset(Dataset):
             names_ids = []
             names_segment_ids = []
             names_mask = []
-            # print(names)
             for obj in names:
-                # print(obj)
                 names_features = convert_sents_to_features(
                     obj, self.max_seq_length, self.tokenizer)
 
@@ -1063,19 +1097,6 @@ class RENCITorchDataset(Dataset):
             # landmark_end = 0
             _names = (names_ids, names_segment_ids, names_mask)
 
-
-
-        # diss = np.argmax(dists).item()
-        # dise = np.argmax(diste).item()
-        # lan_s = np.argmax(land_s).item()
-        # lan_e = np.argmax(land_e).item()
-        # print("Stats:---------------")
-        # print(sent)
-        # print(datum['landmarks'][0]['distance'], diss, dise, tokens[diss :dise+1])
-        # print(bearing, datum['landmarks'][0]['bearing'])
-        # print(f"land :{tokens[lan_s:lan_e+1]}, {lan_s},{lan_e}")
-        # print(f"Landmark ids: {landmark_id} {names[landmark_id]}")
-        # input("?")
 
         return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, landmark_id_, bearing,land_s,land_e, target#bearing
 
@@ -1133,7 +1154,6 @@ class RENCIEvaluator:
             #         break
             for ipd, name_box in enumerate(ids):
                 if datum['landmarks'][0]['id'] == name_box:
-                    # print(ipd)
                     # print(datum['landmarks'][0]['id'], name_box)
                     # print(names[ipd])
                     # input(img_info[ipd])
@@ -1157,31 +1177,22 @@ class RENCIEvaluator:
             land_s = torch.zeros(MAX_SENT_LENGTH)
             land_e = torch.zeros(MAX_SENT_LENGTH)
             t_name = self.dataset.tokenizer.tokenize(datum['landmarks'][0]['name'].strip())
-            start_ = [idx for idx,x in enumerate(tokens) if t_name[0] in x][0]
-            land_s[start_]  = 1
-            # land_e[int(tokens.index(t_name[0])) + len(t_name)-1]  = 1
-            land_e[start_ + len(t_name)-1]  = 1
-
-
-            # print(t_name)
-            # print(land_s)
-            # print(land_e)
-
+            land_s[int(tokens.index(t_name[0]))]  = 1
+            land_e[int(tokens.index(t_name[-1]))]  = 1
 
             dists = torch.zeros(MAX_SENT_LENGTH)
             diste = torch.zeros(MAX_SENT_LENGTH)
             if datum['landmarks'][0]['distance'] != '0':
                 # t_distance = self.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
                 t_distance = self.dataset.tokenizer.tokenize(datum['landmarks'][0]['distance'].strip())
-                # print(tokens)
-                # print(t_distance)
+                # print(len(t_distance))
 
                 # dist = torch.tensor([0,0],dtype=torch.int)
                 # dist[0] = int(tokens.index(t_distance[0]))
                 # dist[1] = int(tokens.index(t_distance[-1]))
-                start_ = int(tokens.index(t_distance[0]))
-                dists[start_]  = 1
-                diste[int(tokens[start_:].index(t_distance[-1]))+start_]  = 1
+
+                dists[int(tokens.index(t_distance[0]))]  = 1
+                diste[int(tokens.index(t_distance[-1]))]  = 1
             else:
                 # dist = torch.tensor([-1,-1], dtype=torch.int)
 
@@ -1197,8 +1208,8 @@ class RENCIEvaluator:
             print(datum['sentence']['raw'])
             print(diss,dise, datum['landmarks'][0]['distance'], dists, diste)
             print(br, datum['landmarks'][0]['bearing'])
-            print(f"land :{l_s}, {l_e}, {tokens[l_s:l_e+1]}, {land_s},{land_e}")
-            print(f"Landmark ids: {landmark_id_} {names[landmark_id_]} - {ln_} {names[ln_]}")
+            print(f"land :{l_s}, {l_e}, {tokens[land_s:land_e]}, {land_s},{land_e}")
+            print(f"Landmark ids: {landmark_id_} - {ln_}")
 
 
 
@@ -1236,7 +1247,6 @@ class RENCIEvaluator:
                 lands += 1
                 score3 += 1
                 tScore += 1
-                siou3 = 100
                 try:
 
                     # print(boxes[landmark_id_],boxes[ln_])
@@ -1262,8 +1272,6 @@ class RENCIEvaluator:
                     tmp_ob = {'g_type':'Point'}
                     tmp_ob['coordinates'] = final_coord2
 
-            else:
-                input("Wrong!!! ")
 
 
             if final_coord2:
@@ -1297,7 +1305,7 @@ class RENCIEvaluator:
                 save_land = str(names[ln_])
             else:
                 save_land = str(None)
-            examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[str(names[landmark_id_]),str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),str(datum['landmarks'][0]['bearing'])], 'pred':[names[ln_],str(diss)+ ' '+str(dise),str(br), tokens[l_s:l_e+1]], 'outcome': str(siou3 > thres), 'distance':distance2 })
+            examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[str(names[landmark_id_]),str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),str(datum['landmarks'][0]['bearing'])], 'pred':[save_land,str(diss)+ ' '+str(dise),str(br)], 'outcome': str(siou3 > thres), 'distance':distance2 })
 
 
         print(f"Total Score: {tScore / len(sentid2ans)}, Score1: {score / len(sentid2ans)}, Score2: {score2 / len(sentid2ans)}, Score3: {score3 / len(sentid2ans)}")

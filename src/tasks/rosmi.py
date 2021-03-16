@@ -621,6 +621,12 @@ if __name__ == "__main__":
 
     if args.single:
 
+        rosmi = ROSMI(get_data_tuple)
+        # Load ROSMI model weights
+        # Note: It is different from loading LXMERT pre-trained weights.
+        if args.load is not None:
+            rosmi.load(args.load)
+            
         my_tokenizer = BertTokenizer.from_pretrained(
             "bert-base-uncased",
             do_lower_case=True
@@ -685,7 +691,7 @@ if __name__ == "__main__":
             pos = torch.zeros(lands,4).unsqueeze(0)
             for sent in sent10:
                 # sent = [input("Type in  struction: ")]
-                tokenized = my_tokenizer.tokenize(sent[0].strip())
+                tokenized = my_tokenizer.tokenize(sent.strip())
                 input(tokenized)
                 results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
                 (clnd, dist_s, dist_e, bear_label, l_s, l_e) = results

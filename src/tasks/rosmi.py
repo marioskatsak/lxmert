@@ -626,7 +626,7 @@ if __name__ == "__main__":
             do_lower_case=True
         )
         # testing on enc 10 scenario - read maps {names, GPS}
-        with open('data/renci/scenario10.json', 'r') as enc:
+        with open(os.path.join(self.data_path,'scenario10.json', 'r')) as enc:
             map = json.load(enc)
 
         # # find landmark in sentence usint Elasticsearch

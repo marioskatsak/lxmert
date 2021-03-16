@@ -618,11 +618,7 @@ if __name__ == "__main__":
     # args.train = '440_train'
     # args.valid = '55_val'
     # args.test = '55_test'
-    if args.cross:
-        cross_validation()
-    else:
-        run_experiment()
-        sys.exit(0)
+
     if args.single:
 
         my_tokenizer = BertTokenizer.from_pretrained(
@@ -637,7 +633,7 @@ if __name__ == "__main__":
         # names = [nm['name'] for nm in map]
         # print(names)
         # test10 = ['restricted area and danger.', 'special anchorage A1.', 'pontoons','southwestern yacht club']
-        # sent10 = ['Keep off restricted area and danger.', 'Prevent the vehicle from going close to the special anchorage A1.','Exclude all the pontoons please.','Send veh1 30m northwest the southwestern yacht club.']
+        sent10 = ['Keep off restricted area and danger.', 'Prevent the vehicle from going close to the special anchorage A1.','Exclude all the pontoons please.','Send veh1 30m northwest the southwestern yacht club.']
         # input(elastic_prediction(names, sent10))
         # map = []
         exper = 't'
@@ -687,35 +683,41 @@ if __name__ == "__main__":
             feats_padding = torch.zeros((73 - lands), dtype=torch.double)
             feat_mask = torch.cat((feat_mask,feats_padding)).unsqueeze(0)
             pos = torch.zeros(lands,4).unsqueeze(0)
-            sent = [input("Type instruction: ")]
-            tokenized = my_tokenizer.tokenize(sent[0].strip())
-            input(tokenized)
-            results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
-            (clnd, dist_s, dist_e, bear_label, l_s, l_e) = results
-            print(l_s)
-            print(l_e)
-            input(tokenized[int(l_s[0]):int(l_e[0])+1])
-            land_name = ''.join([x[2:] if x.startswith('##') else ' '+x for x in tokenized[int(l_s[0]):int(l_e[0])]])
-            print(land_name)
-            # for l_s and l_e :
-            # index_l = clnd[0]
-            # land_tokens = nlp(land_name)
-            tmp_names = [sn[0].lower() for sn in names]
-            cut_off = 1
-            while (difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off)) == 0:
-                cut_off -= 0.01
-            # for lan_in,tn in enumerate(names):
-            #     print(tn[0])
-            #     # tmp_n = nlp(tn[0])
-            #     if land_name.lower() in tn[0].lower():
-            #         index_l = lan_in
+            for sent in sent10:
+                # sent = [input("Type in  struction: ")]
+                tokenized = my_tokenizer.tokenize(sent[0].strip())
+                input(tokenized)
+                results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
+                (clnd, dist_s, dist_e, bear_label, l_s, l_e) = results
+                print(l_s)
+                print(l_e)
+                input(tokenized[int(l_s[0]):int(l_e[0])+1])
+                land_name = ''.join([x[2:] if x.startswith('##') else ' '+x for x in tokenized[int(l_s[0]):int(l_e[0])]])
+                print(land_name)
+                # for l_s and l_e :
+                # index_l = clnd[0]
+                # land_tokens = nlp(land_name)
+                tmp_names = [sn[0].lower() for sn in names]
+                cut_off = 1
+                while (difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off)) == 0:
+                    cut_off -= 0.01
+                # for lan_in,tn in enumerate(names):
+                #     print(tn[0])
+                #     # tmp_n = nlp(tn[0])
+                #     if land_name.lower() in tn[0].lower():
+                #         index_l = lan_in
 
-            print(clnd)
-            print(names[clnd[0]] if clnd[0] < len(names) else "Landmark not found")
-            # print(difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off))
-            print(dist_s)
-            print(dist_e)
-            print(l_s)
-            print(l_e)
-            print(bear_label)
-            exper = input('t / f')
+                print(clnd)
+                print(names[clnd[0]] if clnd[0] < len(names) else "Landmark not found")
+                # print(difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off))
+                print(dist_s)
+                print(dist_e)
+                print(l_s)
+                print(l_e)
+                print(bear_label)
+                exper = input('t / f')
+    if args.cross:
+        cross_validation()
+    else:
+        run_experiment()
+        sys.exit(0)

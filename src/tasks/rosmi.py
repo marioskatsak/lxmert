@@ -123,6 +123,7 @@ class ROSMI:
             self.optim = BertAdam(list(self.model.parameters()),
                                   lr=args.lr,
                                   warmup=0.6,
+                                  weight_decay=0.1,
                                   t_total=t_total)
             # self.optim = torch.optim.Adam(list(self.model.parameters()), lr=args.lr)
             # self.optim = torch.optim.AdamW(self.model.parameters(), args.lr, weight_decay=0.1,amsgrad=True)

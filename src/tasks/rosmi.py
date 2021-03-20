@@ -227,7 +227,7 @@ class ROSMI:
                 cland_loss = self.bce_loss(p_cland,cland_)
 
                 self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
-                total_loss += cland_loss* p_cland.size(1) * 24
+                total_loss += cland_loss* p_cland.size(1) * 4
 
 
                 # total_loss /=4

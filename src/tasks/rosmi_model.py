@@ -87,11 +87,7 @@ class ROSMIModel(nn.Module):
         :param leng: (b,) Type -- int numpy array
         :return: (b, num_answer) The logit of each answers.
         """
-        # input(feat_mask)
-        if args.qa:
-            feat_seq, out = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
-        else:
-            feat_seq = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
+        feat_seq = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
 
         # 0 = language 1 = vision
         # print(feat_seq[0].shape)
@@ -124,13 +120,7 @@ class ROSMIModel(nn.Module):
 
 
         landmark_ = self.land_fc(feat_seq[1][:,0])
-        if args.qa:
-            start_logits, end_logits = out.split(1, dim=-1)
-            start_logits = start_logits.squeeze(-1)
-            end_logits = end_logits.squeeze(-1)
-        # else:
-        #     start_logits = dist_s
-        #     end_logits = dist_s
+
         cland_ = self.land_cl(feat_seq[1])
         cland_ = cland_.squeeze(-1)
         bearing_ = self.bearing_fc(feat_seq[0][:,0])

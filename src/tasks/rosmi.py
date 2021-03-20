@@ -508,7 +508,7 @@ def run_experiment():
                            shuffle=False, drop_last=False),
             dump=os.path.join(args.output, f'{args.abla}_val_predict.json')
         )
-        print(result)
+        # print(result)
 
 
     if rosmi.train_tuple is not None:

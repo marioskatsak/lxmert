@@ -117,8 +117,8 @@ class ROSMIModel(nn.Module):
         # # print(dist_s.shape)
         # start_logits = land_uni_s.squeeze(-1)
         # end_logits = land_uni_e.squeeze(-1)
-        start_logits = None
-        end_logits = None
+        start_logits = dist_s
+        end_logits = dist_e
 
         landmark_ = self.land_fc(feat_seq[1][:,0])
 

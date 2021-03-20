@@ -157,6 +157,7 @@ class BertAdam(Optimizer):
                     schedule_fct = SCHEDULES[group['schedule']]
                     progress = state['step']/group['t_total']
                     lr_scheduled = group['lr'] * schedule_fct(progress, group['warmup'])
+                    print(lr_scheduled)
                     # warning for exceeding t_total (only active with warmup_linear
                     if group['schedule'] == "warmup_linear" and progress > 1. and not warned_for_t_total:
                         logger.warning(

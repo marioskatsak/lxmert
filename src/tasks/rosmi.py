@@ -291,7 +291,7 @@ class ROSMI:
             # self.scheduler.step(loss)
             log_str = f"\nEpoch {epoch}: Total Loss {total_loss}\n"
             tmp_acc, mDist, acc2, train_acc3 = evaluator.evaluate(sentid2ans)
-            log_str += f"\nEpoch {epoch}: Train {acc3 * 100.}%\n"
+            log_str += f"\nEpoch {epoch}: Train {train_acc3 * 100.}%\n"
             # log_str += f"\nEpoch {epoch}: Training Av. Distance {mDist}m\n"
             self.writer.add_scalar('Accuracy/train [IoU=0.5]', train_acc3 * 100., n_iter)
             # awlf.writer.close()

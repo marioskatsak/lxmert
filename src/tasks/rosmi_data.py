@@ -612,7 +612,7 @@ class ROSMIEvaluator:
 
             if distance2:
                 mDist += distance2
-                distance2 = distance2*SCALES2[datum['scenario_items'].split('rio')[1].split('.json')[0]]
+                distance2 = distance2*SCALES2[sn_id]
                 meanDist.append(distance2)
 
             else:
@@ -641,7 +641,8 @@ class ROSMIEvaluator:
                 iou = calc_iou_individual(new_bbox2, datum['gold_pixels'])
                 _scale = 25/SCALES[sn_id]
                 # siou3 = iou*_scale
-                siou3 = iou/SCALES2[datum['scenario_items'].split('rio')[1].split('.json')[0]]
+                siou3 = iou/SCALES2[sn_id]
+                print(iou*_scale)
                 print(siou3)
                 # input(iou/SCALES2[datum['scenario_items'].split('rio')[1].split('.json')[0]])
                 if siou3 > thres:

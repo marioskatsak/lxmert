@@ -68,8 +68,8 @@ class ROSMIModel(nn.Module):
             BertLayerNorm(self.hid_dim*4, eps=1e-12),
             nn.Linear(self.hid_dim*4, 4)
         )
-        # self.logit_fc.apply(self.lxrt_encoder.model.init_bert_weights)
-        # self.land_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        self.logit_fc.apply(self.lxrt_encoder.model.init_bert_weights)
+        self.land_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         self.land_cl.apply(self.lxrt_encoder.model.init_bert_weights)
         self.bearing_fc.apply(self.lxrt_encoder.model.init_bert_weights)
         self.distance_fc.apply(self.lxrt_encoder.model.init_bert_weights)

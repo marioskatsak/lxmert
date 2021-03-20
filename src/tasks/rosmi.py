@@ -92,7 +92,6 @@ class ROSMI:
         # Model
         self.model = ROSMIModel()
 
-
         # Load pre-trained weights
         if args.load_lxmert is not None:
             self.model.lxrt_encoder.load(args.load_lxmert)
@@ -144,9 +143,7 @@ class ROSMI:
         best_valid = 0.
         best_train = 0.
         best_acc2 = 0.
-        best_tacc = 0
         best_acc3 = 0
-        best_test_acc = 0
         best_mDist = [99999,99999,99999,99999]
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
@@ -226,18 +223,11 @@ class ROSMI:
                 total_loss += p_start_loss* p_start.size(1) * 2
                 p_end_loss = self.bce_loss(p_end,l_end.float())
                 total_loss += p_end_loss* p_end.size(1) * 2
-                # print(p_cland)
-                # print(cland_)
-                # print(p_cland.shape)
-                # input(cland_.shape)
-                if args.qa:
-                    cland_loss = self.bce_loss(p_start,l_start) + self.bce_loss(p_end,l_end)
-                    total_loss += cland_loss* p_start.size(1) * 2
-                else:
-                    cland_loss = self.bce_loss(p_cland,cland_)
 
-                    self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
-                    total_loss += cland_loss* p_cland.size(1) * 4
+                cland_loss = self.bce_loss(p_cland,cland_)
+
+                self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
+                total_loss += cland_loss* p_cland.size(1) * 24
 
 
                 # total_loss /=4
@@ -265,7 +255,7 @@ class ROSMI:
                 #     total_loss = loss2
                 # total_loss = loss + loss2
 
-                self.writer.add_scalar('total loss', total_loss, n_iter)
+
                 # print(loss)
                 total_loss.backward()
                 nn.utils.clip_grad_norm_(self.model.parameters(), 5.)
@@ -300,14 +290,14 @@ class ROSMI:
 
             # self.scheduler.step(loss)
             log_str = f"\nEpoch {epoch}: Total Loss {total_loss}\n"
-            tmp_acc, mDist, acc2, acc3, tmpAcc = evaluator.evaluate(sentid2ans)
+            tmp_acc, mDist, acc2, acc3 = evaluator.evaluate(sentid2ans)
             log_str += f"\nEpoch {epoch}: Train {tmpAcc * 100.}%\n"
             # log_str += f"\nEpoch {epoch}: Training Av. Distance {mDist}m\n"
-            self.writer.add_scalar('Accuracy/train [IoU=0.5]', tmpAcc * 100., n_iter)
+            self.writer.add_scalar('Accuracy/train [IoU=0.5]', acc3 * 100., n_iter)
             # awlf.writer.close()
 
             if self.valid_tuple is not None:  # Do Validation
-                valid_score, m_dist, acc2, acc3, tAcc = self.evaluate(eval_tuple)
+                valid_score, m_dist, acc2, acc3 = self.evaluate(eval_tuple)
                 if valid_score > best_valid:
                     best_valid = valid_score
                     # self.save(f"BEST_{args.abla}")
@@ -318,8 +308,6 @@ class ROSMI:
                 if acc3 > best_acc3:
                     best_acc3 = acc3
                     self.save(f"BEST_{args.abla}")
-                if tAcc > best_tacc:
-                    best_tacc = tAcc
                 if m_dist[0] < best_mDist[0]:
                     best_mDist = m_dist
 
@@ -327,8 +315,7 @@ class ROSMI:
                 # awlf.writer.close()
                 log_str += f"Epoch {epoch}: Best Valid dist/pixel [SD] {best_mDist[0]} [{best_mDist[1]}] / {best_mDist[2]} [{best_mDist[1]}] \n" + \
                            f"Epoch {epoch}: Best Train {best_train * 100.}%\n" + \
-                           f"Epoch {epoch}: Best Val3 {best_acc3 * 100.}%\n" + \
-                           f"Epoch {epoch}: T-Best Val {best_tacc * 100.}%\n"
+                           f"Epoch {epoch}: Best Val3 {best_acc3 * 100.}%\n"
 
             # if self.test_tuple is not None:  # Do Test
             #     _, test_dist, _, _, test_acc = self.evaluate(self.test_tuple)
@@ -414,7 +401,7 @@ class ROSMI:
                 json.dump(evaluation, scores_out)
         except Exception as e:
             print(f"Cannot save dump because {e}")
-        return evaluation[0],evaluation[1], evaluation[2], evaluation[3], evaluation[4]
+        return evaluation[0],evaluation[1], evaluation[2], evaluation[3]
 
     @staticmethod
     def oracle_score(data_tuple):
@@ -441,7 +428,7 @@ class ROSMI:
                 cln = np.argmax(cln)
                 br = dset.label2bearing[br]
                 sentid2ans[qid.item()] = (l, diss,dise, ln,cln, br,l_s,l_e)
-        valid_score, m_dist, acc2, acc3, tAcc = evaluator.evaluate(sentid2ans)
+        valid_score, m_dist, acc2, acc3 = evaluator.evaluate(sentid2ans)
         return acc3, m_dist
 
     def save(self, name, k = ''):
@@ -467,7 +454,7 @@ class ROSMI:
         # sentid2ans = {}
         # for i, datum_tuple in enumerate(loader):
         # ques_id, feats, feat_mask, boxes, names, sent, g_ds, g_de, land_,cland_, bear_ = datum_tuple[:11]   # Avoid seeing ground truth
-        input(names[0].shape)
+        # input(names[0].shape)
         with torch.no_grad():
             if args.n_ent:
                 names = (names[0].cuda(), \
@@ -488,9 +475,9 @@ class ROSMI:
         _, dist_s = dist_s.max(1)
         _, land_start = land_start.max(1)
         _, land_end = land_end.max(1)
+        _, clnd = clnd.max(1)
         print(clnd)
         print(clnd.shape)
-        _, clnd = clnd.max(1)
         return (clnd, dist_s, dist_e, bear_label, land_start, land_end)
         # return None
 
@@ -626,35 +613,48 @@ if __name__ == "__main__":
         # Note: It is different from loading LXMERT pre-trained weights.
         if args.load is not None:
             rosmi.load(args.load)
-            
+
         my_tokenizer = BertTokenizer.from_pretrained(
             "bert-base-uncased",
             do_lower_case=True
         )
-        # testing on enc 10 scenario - read maps {names, GPS}
-        with open(os.path.join(args.data_path,'scenario10.json'), 'r') as enc:
-            map = json.load(enc)
 
-        # # find landmark in sentence usint Elasticsearch
-        # names = [nm['name'] for nm in map]
-        # print(names)
-        # test10 = ['restricted area and danger.', 'special anchorage A1.', 'pontoons','southwestern yacht club']
-        sent10 = ['Keep off restricted area and danger.', 'Prevent the vehicle from going close to the special anchorage A1.','Exclude all the pontoons please.','Send veh1 30m northwest the southwestern yacht club.']
-        # input(elastic_prediction(names, sent10))
-        # map = []
-        exper = 't'
-        while exper == 't':
-            lands = int(input("landmarks: "))
-            maps = input("osm/enc")
+        test_samples = json.load(open(os.path.join(args.data_path,"all_test.json")))
+        save_results = {}
+        for key_test, value_test in test_samples.items():
+            print(key_test)
+            # testing on enc 10 scenario - read maps {names, GPS}
+            with open(os.path.join(args.data_path,key_test), 'r') as enc:
+                map = json.load(enc)
+
+            label2bearing = json.load(open(os.path.join(args.data_path,"trainval_label2bearing.json")))
+            # # find landmark in sentence usint Elasticsearch
+            # names = [nm['name'] for nm in map]
+            # print(names)
+            # test10 = ['restricted area and danger.', 'special anchorage A1.', 'pontoons','southwestern yacht club']
+            # sent10 = ['Keep off restricted area and danger.', 'Prevent the vehicle from going close to the special anchorage A1.','Exclude all the pontoons please.','Send veh1 30m northwest the southwestern yacht club.']
+            # input(elastic_prediction(names, sent10))
+            # map = []
+            exper = 't'
+        # while exper == 't':
+            # lands = int(input("landmarks: "))
+            # maps = input("osm/enc")
+            maps ='enc'
             if maps == 'enc':
                 names = [[nm['name']] for nm in map]
             else:
                 names = ["Air Park Plaza", "Unicol 76_0", "Unicol 76_1", "Unicol 76_2", "East Bay SPCA Spay and Neuter Center", "Pendleton Way", "Hegenberger Road_0", "Edgewater Drive_0", "Edgewater Drive_1", "Edgewater Drive_2", "Edgewater Drive_3", "Edgewater Drive_4", "Edgewater Drive_5", "Edgewater Drive_6", "Edgewater Drive_7", "Edgewater Drive_8", "Edgewater Drive_9", "Edgewater Drive_10", "Hegenberger Road_1", "Hegenberger Road_2", "Hegenberger Road_3", "Hegenberger Road_4", "Hegenberger Road_5", "Starbucks", "T-Mobile", "Jamba Juice", "Chipotle Mexican Grill", "Chevron", "Del Taco", "Wells Fargo", "The Raider Image", "Hanger Clinic", "Union Dental", "Wingstop", "GameStop", "Edgewater Dr:Hegenberger Rd", "Edgewater Dr:Pendleton Way", "Hegenberger Lp:Hegenberger Rd", "Hegenberger Rd:Edgewater Dr"]
                 names = [[y] for y in names]
 
-            names = names[-lands:]
-            print(names)
-            input(len(names))
+            landmarks = [nm[0] for nm in names]
+            # prepare elastic search
+            es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
+            for index, item in enumerate(landmarks):
+                res = es.index(index='landmarks', id=index, body={'name': item})
+
+            # names = names[-lands:]
+            input(names)
+            print(len(names))
             lands = len(names)
             names_ids = []
             names_segment_ids = []
@@ -674,7 +674,7 @@ if __name__ == "__main__":
             names_ids = torch.stack(names_ids + padding).unsqueeze(0)
             names_segment_ids = torch.stack(names_segment_ids + padding).unsqueeze(0)
             names_mask = torch.stack(names_mask + padding).unsqueeze(0)
-            input(names_ids.shape)
+            # input(names_ids.shape)
 
             _names = (names_ids, names_segment_ids, names_mask)
 
@@ -689,41 +689,87 @@ if __name__ == "__main__":
             feats_padding = torch.zeros((73 - lands), dtype=torch.double)
             feat_mask = torch.cat((feat_mask,feats_padding)).unsqueeze(0)
             pos = torch.zeros(lands,4).unsqueeze(0)
-            for sent in sent10:
+            results_ = []
+            for sentence in value_test:
                 # sent = [input("Type in  struction: ")]
-                tokenized = my_tokenizer.tokenize(sent.strip())
-                input(tokenized)
+                sent = [sentence]
+                tokens_a =  my_tokenizer.tokenize(sentence.strip())
+                # print(tokens_a)
+                # Account for [CLS] and [SEP] with "- 2"
+                if len(tokens_a) > MAX_SENT_LENGTH - 2:
+                    tokens_a = tokens_a[:(MAX_SENT_LENGTH - 2)]
+
+                # Keep segment id which allows loading BERT-weights.
+                tokenized = ["[CLS]"] + tokens_a + ["[SEP]"]
+
+
+                print(tokenized)
                 results = rosmi.single_predict( feat, feat_mask, pos, _names, sent)
                 (clnd, dist_s, dist_e, bear_label, l_s, l_e) = results
-                print(l_s)
-                print(l_e)
-                input(tokenized[int(l_s[0]):int(l_e[0])+1])
-                land_name = ''.join([x[2:] if x.startswith('##') else ' '+x for x in tokenized[int(l_s[0]):int(l_e[0])]])
-                print(land_name)
+                # print(l_s)
+                # print(l_e)
+                # input(tokenized[int(l_s[0]):int(l_e[0])+1])
+                land_name = ''.join([x[2:] if x.startswith('##') else ' '+x for x in tokenized[int(l_s[0]):int(l_e[0])+1]])
+                # print(land_name)
                 # for l_s and l_e :
                 # index_l = clnd[0]
                 # land_tokens = nlp(land_name)
-                tmp_names = [sn[0].lower() for sn in names]
-                cut_off = 1
-                while (difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off)) == 0:
-                    cut_off -= 0.01
+                # tmp_names = [sn[0].lower() for sn in names]
+                # cut_off = 1
+                # while (difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off)) == 0:
+                #     cut_off -= 0.01
                 # for lan_in,tn in enumerate(names):
                 #     print(tn[0])
                 #     # tmp_n = nlp(tn[0])
                 #     if land_name.lower() in tn[0].lower():
                 #         index_l = lan_in
 
-                print(clnd)
-                print(names[clnd[0]] if clnd[0] < len(names) else "Landmark not found")
                 # print(difflib.get_close_matches(land_name.lower(),tmp_names,cutoff=cut_off))
-                print(dist_s)
-                print(dist_e)
-                print(l_s)
-                print(l_e)
-                print(bear_label)
+
+
+                # print(clnd)
+                # print(l_s)
+                # print(l_e)
+                # print(bear_label)
+                # print(str(bear_label[0].item()))
+                # input(rosmi.convert2bearing)
+
+
+                # replace ITEM with the search query
+                res = es.search(index='landmarks', body={'query': {'match': { 'name':{'query': land_name, 'fuzziness':'AUTO' }}}})
+                tmp_ids = {}
+                tmp_res = {}
+                for hit in res['hits']['hits']:
+                    tmp_ids[hit['_id']] = hit['_score']
+                    tmp_res[hit['_id']] = {'_score': hit['_score'],'_id': hit['_id'], 'name': hit['_source']['name']}
+                    # tmp_res[hit['_score']] =
+                    # input(hit)
+                    # print(hit['_source']['name'])
+                tmp_ids = dict(reversed(sorted(tmp_ids.items(), key=lambda item: item[1])))
+                land_found = {key : tmp_res[key]['name'] for key in list(tmp_ids.keys())[:3]}
+                to_save = f"Sentence: ''{sentence}' predictions:    Distance start end: {dist_s[0]} {dist_e[0]} {tokenized[int(dist_s[0]):int(dist_e[0])+1]} "+ \
+                                f"Bearing: {bear_label[0]} {label2bearing[int(bear_label[0])]} "+\
+                                f"land :{l_s[0]}, {l_e[0]}, {tokenized[int(l_s[0]):int(l_e[0])+1]}, landmark:{land_name} "+\
+                                f"Landmark ids: {names[clnd[0]]} "+\
+                                f"Sentence lands: {land_found}"
+                print(to_save)
+                try:
+                    results_.append(to_save)
+                    print("Stats:---------------")
+                    print(f"Distance start end: {dist_s[0]} {dist_e[0]} {tokenized[int(dist_s[0]):int(dist_e[0])+1]}")
+                    print(f"Bearing: {bear_label[0]} {label2bearing[int(bear_label[0])]}")
+                    print(f"land :{l_s[0]}, {l_e[0]}, {tokenized[int(l_s[0]):int(l_e[0])+1]}")
+                    print(f"Sentence lands: {land_found}")
+                    if clnd[0] < len(names):
+                        print(f"Landmark ids: {names[clnd[0]]}")
+                except Exception as e:
+                    print(f"Cannot print stats because {e}")
                 exper = input('t / f')
+            save_results[key_test] = results_
+        with open(os.path.join(args.data_path,"results_all_test.json"), 'w') as out_test:
+            json.dump(save_results, out_test)
+        sys.exit(0)
     if args.cross:
         cross_validation()
     else:
         run_experiment()
-        sys.exit(0)

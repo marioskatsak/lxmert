@@ -11,15 +11,8 @@ cp $0 $output/run.bash
 #--loadLXMERT snap/pretrained/model \
 CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
-    --train 4_train_enc --valid 4_val_enc \
-    --llayers 1 --xlayers 1 --rlayers 1 \
-    --dataPath /scratch/mmk11/data/renci/k \
-    --batchSize 32 --optim bert --lr 1e-3 --n_ent --epochs 80 --abla k_RENCI_NAME_24_loss \
+    --valid 0_val --load /scratch/mmk11/snap/rosmi/BEST_2_t_NAME \
+    --llayers 1 --xlayers 1 --rlayers 1\
+    --dataPath /scratch/mmk11/data/rosmi/7_easy_train \
+    --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 80 --abla BEST_2_t_NAME \
     --tqdm --output $output ${@:3}
-# CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
-#     python src/tasks/rosmi.py \
-#     --valid valid --load /scratch/mmk11/snap/rosmi/BEST_2_t_NAME \
-#     --llayers 1 --xlayers 1 --rlayers 1\
-#     --dataPath /scratch/mmk11/data/rosmi \
-#     --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 80 --abla BEST_2_t_NAME \
-#     --tqdm --output $output ${@:3}

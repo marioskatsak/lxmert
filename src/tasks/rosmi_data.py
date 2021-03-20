@@ -145,9 +145,16 @@ class ROSMIDataset:
         img_data.extend(load_det_obj_tsv(
                 os.path.join(IMGFEAT_ROOT, 'easy_rosmi_obj36.tsv'),
                 topk=topk))
+
         # Convert img list to dict
         self.imgid2img = {}
         for img_datum in img_data:
+            # c = list(zip(img_datum['t_names'].tolist(), img_datum['t_boxes'].tolist()))
+            # random.shuffle(c)
+            # a, b = zip(*c)
+            # img_datum['t_names'] = np.array(a,dtype='<U100')
+            # img_datum['t_boxes'] = np.array(b)
+
             self.imgid2img[img_datum['img_id']] = img_datum
 
         # Answers
@@ -250,7 +257,6 @@ class ROSMITorchDataset(Dataset):
         # names = img_info['names'].copy()
         names = img_info['t_names'].copy()
         boxes = img_info['t_boxes'].copy()
-
 
 
         sn_id = int(datum['scenario_items'].split('rio')[1].split('.j')[0])

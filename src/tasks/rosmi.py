@@ -290,10 +290,10 @@ class ROSMI:
 
             # self.scheduler.step(loss)
             log_str = f"\nEpoch {epoch}: Total Loss {total_loss}\n"
-            tmp_acc, mDist, acc2, acc3 = evaluator.evaluate(sentid2ans)
+            tmp_acc, mDist, acc2, train_acc3 = evaluator.evaluate(sentid2ans)
             log_str += f"\nEpoch {epoch}: Train {acc3 * 100.}%\n"
             # log_str += f"\nEpoch {epoch}: Training Av. Distance {mDist}m\n"
-            self.writer.add_scalar('Accuracy/train [IoU=0.5]', acc3 * 100., n_iter)
+            self.writer.add_scalar('Accuracy/train [IoU=0.5]', train_acc3 * 100., n_iter)
             # awlf.writer.close()
 
             if self.valid_tuple is not None:  # Do Validation
@@ -301,8 +301,8 @@ class ROSMI:
                 if valid_score > best_valid:
                     best_valid = valid_score
                     # self.save(f"BEST_{args.abla}")
-                if tmpAcc > best_train:
-                    best_train = tmpAcc
+                if train_acc3 > best_train:
+                    best_train = train_acc3
                 if acc2 > best_acc2:
                     best_acc2 = acc2
                 if acc3 > best_acc3:

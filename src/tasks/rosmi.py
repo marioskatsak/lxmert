@@ -203,26 +203,26 @@ class ROSMI:
                 p_dist_s, p_dist_e, p_land, p_cland, p_bear, p_start, p_end = auxilaries
 
                 assert logit.dim() == target.dim() == 2
-                bear_loss = self.bce_loss(p_bear,bear_.float())
-                self.writer.add_scalar('Bearing loss', bear_loss, n_iter)
+                # bear_loss = self.bce_loss(p_bear,bear_.float())
+                # self.writer.add_scalar('Bearing loss', bear_loss, n_iter)
+                #
+                # total_loss += bear_loss* p_bear.size(1) * 2
 
-                total_loss += bear_loss* p_bear.size(1) * 2
-
-                dists_loss = self.bce_loss(p_dist_s,dists.float())
-                self.writer.add_scalar('distance Start loss', dists_loss, n_iter)
-                total_loss += dists_loss* p_dist_s.size(1) * 2
-
-                diste_loss = self.bce_loss(p_dist_e,diste.float())
-                self.writer.add_scalar('distance End loss', diste_loss, n_iter)
-                total_loss += diste_loss* p_dist_e.size(1) * 2
-
-
+                # dists_loss = self.bce_loss(p_dist_s,dists.float())
+                # self.writer.add_scalar('distance Start loss', dists_loss, n_iter)
+                # total_loss += dists_loss* p_dist_s.size(1) * 2
+                #
+                # diste_loss = self.bce_loss(p_dist_e,diste.float())
+                # self.writer.add_scalar('distance End loss', diste_loss, n_iter)
+                # total_loss += diste_loss* p_dist_e.size(1) * 2
 
 
-                p_start_loss = self.bce_loss(p_start,l_start.float())
-                total_loss += p_start_loss* p_start.size(1) * 2
-                p_end_loss = self.bce_loss(p_end,l_end.float())
-                total_loss += p_end_loss* p_end.size(1) * 2
+
+
+                # p_start_loss = self.bce_loss(p_start,l_start.float())
+                # total_loss += p_start_loss* p_start.size(1) * 2
+                # p_end_loss = self.bce_loss(p_end,l_end.float())
+                # total_loss += p_end_loss* p_end.size(1) * 2
 
                 cland_loss = self.bce_loss(p_cland,cland_)
 
@@ -515,7 +515,7 @@ def run_experiment():
         if rosmi.valid_tuple is not None:
             print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
             tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
-            input("All val good?")
+            # input("All val good?")
 
             print("Valid Oracle: %0.2f" % (tmpA * 100))
             tmpA, dis = rosmi.oracle_score(rosmi.train_tuple)
@@ -524,7 +524,7 @@ def run_experiment():
             print("Train Oracle: %0.2f" % (tmpA * 100))
         else:
             print("DO NOT USE VALIDATION")
-        input("All train good?")
+        # input("All train good?")
         best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
         return tmpA, dis, best_tacc, best_mDist
     return

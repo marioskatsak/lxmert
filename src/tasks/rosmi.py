@@ -122,7 +122,7 @@ class ROSMI:
             from lxrt.optimization import BertAdam
             self.optim = BertAdam(list(self.model.parameters()),
                                   lr=args.lr,
-                                  warmup=0.8,
+                                  warmup=0.5,
                                   weight_decay=0.05,
                                   t_total=t_total)
             # self.optim = torch.optim.Adam(list(self.model.parameters()), lr=args.lr)

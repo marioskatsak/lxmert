@@ -41,6 +41,7 @@ class ROSMIModel(nn.Module):
         # num_bearings = 9
         self.bearing_fc = nn.Sequential(
             nn.Linear(self.hid_dim, self.hid_dim*6),
+            nn.Linear(self.hid_dim*6, self.hid_dim*6),
             # GeLU(),
             GeLU(),
             BertLayerNorm(self.hid_dim*6, eps=1e-12),

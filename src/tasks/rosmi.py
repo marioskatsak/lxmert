@@ -117,12 +117,12 @@ class ROSMI:
             # t_total = -1
             # batch 24 when 20 and epochs 3000 = 72000
             # input(int(batch_per_epoch * args.epochs))
-            t_total = 72000
+            # t_total = 72000
             print("BertAdam Total Iters: %d" % t_total)
             from lxrt.optimization import BertAdam
             self.optim = BertAdam(list(self.model.parameters()),
                                   lr=args.lr,
-                                  warmup=0.5,
+                                  warmup=0.6,
                                   t_total=t_total)
             # self.optim = torch.optim.Adam(list(self.model.parameters()), lr=args.lr)
             # self.optim = torch.optim.AdamW(self.model.parameters(), args.lr, weight_decay=0.1,amsgrad=True)
@@ -220,12 +220,12 @@ class ROSMI:
 
 
 
-
-                p_start_loss = self.bce_loss(p_start,l_start.float())
-                total_loss += p_start_loss* p_start.size(1)
-
-                p_end_loss = self.bce_loss(p_end,l_end.float())
-                total_loss += p_end_loss* p_end.size(1)
+                # 
+                # p_start_loss = self.bce_loss(p_start,l_start.float())
+                # total_loss += p_start_loss* p_start.size(1)
+                #
+                # p_end_loss = self.bce_loss(p_end,l_end.float())
+                # total_loss += p_end_loss* p_end.size(1)
 
                 cland_loss = self.bce_loss(p_cland,cland_)
 

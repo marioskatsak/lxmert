@@ -220,17 +220,17 @@ class ROSMI:
 
 
 
-                # 
-                # p_start_loss = self.bce_loss(p_start,l_start.float())
-                # total_loss += p_start_loss* p_start.size(1)
-                #
-                # p_end_loss = self.bce_loss(p_end,l_end.float())
-                # total_loss += p_end_loss* p_end.size(1)
+
+                p_start_loss = self.bce_loss(p_start,l_start.float())
+                total_loss += p_start_loss* p_start.size(1)
+
+                p_end_loss = self.bce_loss(p_end,l_end.float())
+                total_loss += p_end_loss* p_end.size(1)
 
                 cland_loss = self.bce_loss(p_cland,cland_)
 
                 self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
-                total_loss += cland_loss* p_cland.size(1)
+                total_loss += cland_loss* p_cland.size(1)*4
 
 
                 # total_loss /=4

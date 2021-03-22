@@ -495,22 +495,22 @@ def run_experiment():
     if args.load is not None:
         rosmi.load(args.load)
 
-    # Test or Train
-    if rosmi.test_tuple is not None:
-        pred_result = rosmi.predict(
-            get_data_tuple(args.test, bs=args.batch_size,
-                           shuffle=False, drop_last=False),
-            dump=os.path.join(args.output, f'{args.abla}_test_predict.json')
-        )
-    if rosmi.valid_tuple is not None:
-        # Since part of valididation data are used in pre-training/fine-tuning,
-        # only validate on the minival set.
-        result = rosmi.evaluate(
-            get_data_tuple(args.valid, bs=args.batch_size,
-                           shuffle=False, drop_last=False),
-            dump=os.path.join(args.output, f'{args.abla}_val_predict.json')
-        )
-        # print(result)
+    # # Test or Train
+    # if rosmi.test_tuple is not None:
+    #     pred_result = rosmi.predict(
+    #         get_data_tuple(args.test, bs=args.batch_size,
+    #                        shuffle=False, drop_last=False),
+    #         dump=os.path.join(args.output, f'{args.abla}_test_predict.json')
+    #     )
+    # if rosmi.valid_tuple is not None:
+    #     # Since part of valididation data are used in pre-training/fine-tuning,
+    #     # only validate on the minival set.
+    #     result = rosmi.evaluate(
+    #         get_data_tuple(args.valid, bs=args.batch_size,
+    #                        shuffle=False, drop_last=False),
+    #         dump=os.path.join(args.output, f'{args.abla}_val_predict.json')
+    #     )
+    #     # print(result)
 
 
     if rosmi.train_tuple is not None:
@@ -518,7 +518,7 @@ def run_experiment():
         if rosmi.valid_tuple is not None:
             print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
             tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
-            # input("All val good?")
+            input("All val good?")
 
             print("Valid Oracle: %0.2f" % (tmpA * 100))
             tmpA, dis = rosmi.oracle_score(rosmi.train_tuple)

@@ -769,9 +769,9 @@ class RENCIDataset:
         self.imgid2img = {}
         for datum in self.data:
             tmp_lands = datum['dynamo_obj'] + self.regions[datum['scenario_items']]
-            random.shuffle(tmp_lands)
+            # random.shuffle(tmp_lands)
             self.imgid2img[datum['img_id']] = tmp_lands
-            # input(self.imgid2img)
+        # input(self.imgid2img)
         # Answers
         self.bearing2label = json.load(open(os.path.join(args.data_path,"trainval_bearing2label.json")))
         self.label2bearing = json.load(open(os.path.join(args.data_path,"trainval_label2bearing.json")))

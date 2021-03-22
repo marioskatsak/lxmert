@@ -14,7 +14,7 @@ CUDA_VISIBLE_DEVICES=3 PYTHONPATH=$PYTHONPATH:./src \
     --train 4_train_enc --valid 4_val_enc \
     --llayers 2 --xlayers 0 --rlayers 2 \
     --dataPath /scratch/mmk11/data/renci/k \
-    --batchSize 128 --optim bert --lr 1e-4 --n_ent --epochs 140 --abla k_RENCI_meta \
+    --batchSize 20 --optim bert --lr 1e-4 --n_ent --epochs 140 --abla k_RENCI_meta \
     --tqdm --output $output ${@:3}
 # CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
 #     python src/tasks/rosmi.py \

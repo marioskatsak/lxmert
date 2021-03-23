@@ -1483,8 +1483,14 @@ class LXRTModel(BertPreTrainedModel):
             # input("??NOOOOO")
             # TO DO
             names_output = self.embeddings(names_feat[0], names_feat[1])
+            names_attention_mask = names_feat[2].unsqueeze(1).unsqueeze(2)
+            print(names_attention_mask.shape)
+            names_attention_mask = names_attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
+            names_attention_mask = (1.0 - names_attention_mask) * -10000.0
             print(names_feat[2].shape)
-            input(names_output.shape)
+            print(names_output.shape)
+            n_output = self.bert_layer(names_output,names_attention_mask)
+            input(n_output.shape)
             _names = []
             for id in range(names_output.shape[1]):
 

@@ -1483,14 +1483,6 @@ class LXRTModel(BertPreTrainedModel):
             # input("??NOOOOO")
             # TO DO
             names_output = self.embeddings(names_feat[0], names_feat[1])
-            # names_attention_mask = names_feat[2].unsqueeze(1).unsqueeze(2)
-            # print(names_attention_mask.shape)
-            # names_attention_mask = names_attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
-            # names_attention_mask = (1.0 - names_attention_mask) * -10000.0
-            # print(names_feat[2].shape)
-            # print(names_output.shape)
-            # n_output = self.bert_layer(names_output,names_attention_mask)
-            # input(n_output.shape)
             _names = []
             for id in range(names_output.shape[1]):
 
@@ -1505,15 +1497,15 @@ class LXRTModel(BertPreTrainedModel):
                 # print(names_output[:,id,:,:].squeeze(1).shape)
                 # new_name = self.crossAtt(embedding_output, names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
                 new_name = self.bert_layer(names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
-                print(new_name.shape)
+                # print(new_name.shape)
                 # pooled_name = self.crossPooler(new_name)
                 pooled_name = self.pooler(new_name)
-                print(pooled_name.shape)
+                # print(pooled_name.shape)
 
                 _names.append(pooled_name)
                 # _names.append(torch.max(new_name,dim=1).values)
             _names = torch.stack(_names).permute(1,0,2)
-            input(_names.shape)
+            # input(_names.shape)
             # _names = None
         else:
             _names = None

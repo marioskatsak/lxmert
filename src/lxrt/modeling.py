@@ -776,7 +776,7 @@ class VisualFeatEncoder(nn.Module):
             feats, boxes, _ = visn_input
         except:
             feats, boxes = visn_input
-        # input(feats.shape)
+        # print()
         x = self.visn_fc(feats)
         x = self.visn_layer_norm(x)
         y = self.box_fc(boxes)
@@ -804,6 +804,8 @@ class VisualFeatEncoder(nn.Module):
             # output = y
         # input(output.shape)
         output = self.dropout(output)
+
+        input(output.shape)
         return output
 
 
@@ -1480,7 +1482,7 @@ class LXRTModel(BertPreTrainedModel):
             # input("??NOOOOO")
             # TO DO
             names_output = self.embeddings(names_feat[0], names_feat[1])
-            # print(names_output.shape)
+            print(names_output.shape)
             _names = []
             for id in range(names_output.shape[1]):
 
@@ -1502,7 +1504,7 @@ class LXRTModel(BertPreTrainedModel):
                 _names.append(pooled_name)
                 # _names.append(torch.max(new_name,dim=1).values)
             _names = torch.stack(_names).permute(1,0,2)
-            # input(_names.shape)
+            input(_names.shape)
             # _names = None
         else:
             _names = None

@@ -1439,6 +1439,7 @@ class LXRTModel(BertPreTrainedModel):
         self.crossAtt = BertCrossattLayer(config)
         self.encoder = LXRTEncoder(config)
         self.crossPooler = NamesPooler(config)
+        self.bert_layer = BertLayer(config)
         self.pooler = BertPooler(config)
         self.pooler2 = BertPooler(config)
         self.apply(self.init_bert_weights)
@@ -1482,7 +1483,8 @@ class LXRTModel(BertPreTrainedModel):
             # input("??NOOOOO")
             # TO DO
             names_output = self.embeddings(names_feat[0], names_feat[1])
-            # print(names_output.shape)
+            print(names_feat[2].shape)
+            input(names_output.shape)
             _names = []
             for id in range(names_output.shape[1]):
 

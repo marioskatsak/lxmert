@@ -805,7 +805,7 @@ class VisualFeatEncoder(nn.Module):
         # input(output.shape)
         output = self.dropout(output)
 
-        input(output.shape)
+        # input(output.shape)
         return output
 
 
@@ -871,7 +871,7 @@ class BertPooler(nn.Module):
         # to the first token.
         first_token_tensor = hidden_states[:, 0]
         pooled_output = self.dense(first_token_tensor)
-        pooled_output = self.activation(pooled_output)
+        # pooled_output = self.activation(pooled_output)
         return pooled_output
 
 class NamesPooler(nn.Module):
@@ -885,7 +885,7 @@ class NamesPooler(nn.Module):
         # to the first token.
         first_token_tensor = hidden_states[:, 0]
         pooled_output = self.dense(first_token_tensor)
-        pooled_output = self.activation(pooled_output)
+        # pooled_output = self.activation(pooled_output)
         return pooled_output
 
 
@@ -1482,7 +1482,7 @@ class LXRTModel(BertPreTrainedModel):
             # input("??NOOOOO")
             # TO DO
             names_output = self.embeddings(names_feat[0], names_feat[1])
-            print(names_output.shape)
+            # print(names_output.shape)
             _names = []
             for id in range(names_output.shape[1]):
 
@@ -1504,7 +1504,7 @@ class LXRTModel(BertPreTrainedModel):
                 _names.append(pooled_name)
                 # _names.append(torch.max(new_name,dim=1).values)
             _names = torch.stack(_names).permute(1,0,2)
-            input(_names.shape)
+            # input(_names.shape)
             # _names = None
         else:
             _names = None

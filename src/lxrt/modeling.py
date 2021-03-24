@@ -1495,8 +1495,8 @@ class LXRTModel(BertPreTrainedModel):
                 # print(extended_attention_mask.shape)
 
                 # print(names_output[:,id,:,:].squeeze(1).shape)
-                # new_name = self.crossAtt(embedding_output, names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
-                new_name = self.bert_layer(names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
+                new_name = self.crossAtt(embedding_output, names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
+                # new_name = self.bert_layer(names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
                 # print(new_name.shape)
                 # pooled_name = self.crossPooler(new_name)
                 pooled_name = self.pooler(new_name)
@@ -1505,7 +1505,7 @@ class LXRTModel(BertPreTrainedModel):
                 _names.append(pooled_name)
                 # _names.append(torch.max(new_name,dim=1).values)
             _names = torch.stack(_names).permute(1,0,2)
-            _names = torch.ones_like(_names)
+            # _names = torch.ones_like(_names)
             # input(_names.shape)
             # _names = None
         else:

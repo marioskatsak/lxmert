@@ -768,7 +768,7 @@ class RENCIDataset:
         # Convert img list to dict
         self.imgid2img = {}
         for datum in self.data:
-            tmp_lands = datum['dynamo_obj'] + self.regions[datum['scenario_items']]
+            tmp_lands = self.regions[datum['scenario_items']] + datum['dynamo_obj']
             random.shuffle(tmp_lands)
             self.imgid2img[datum['img_id']] = tmp_lands
         # input(self.imgid2img)

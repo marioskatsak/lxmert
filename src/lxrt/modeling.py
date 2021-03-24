@@ -1505,6 +1505,7 @@ class LXRTModel(BertPreTrainedModel):
                 _names.append(pooled_name)
                 # _names.append(torch.max(new_name,dim=1).values)
             _names = torch.stack(_names).permute(1,0,2)
+            _names = torch.ones_like(_names)
             # input(_names.shape)
             # _names = None
         else:

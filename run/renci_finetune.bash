@@ -9,7 +9,7 @@ cp $0 $output/run.bash
 
 # See Readme.md for option details.
 #--loadLXMERT snap/pretrained/model \
-CUDA_VISIBLE_DEVICES=2 PYTHONPATH=$PYTHONPATH:./src \
+CUDA_VISIBLE_DEVICES=3 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
     --train 4_train_enc --valid 4_val_enc \
     --llayers 1 --xlayers 1 --rlayers 1 --dropout 0 \

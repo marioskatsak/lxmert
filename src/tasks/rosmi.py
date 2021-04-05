@@ -357,7 +357,7 @@ class ROSMI:
             ques_id, feats, feat_mask, boxes, names, sent, g_ds, g_de, land_,cland_, bear_ = datum_tuple[:11]   # Avoid seeing ground truth
 
 
-            datum = dset.id2datum[sentid]
+            datum = dset.id2datum[ques_id]
             img_info = dset.imgid2img[datum['img_id']]
             text_names = img_info['t_names'].copy()
             input(text_names)

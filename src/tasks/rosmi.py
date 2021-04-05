@@ -389,9 +389,20 @@ class ROSMI:
                 _, land_end = land_end.max(1)
                 _, clnd = clnd.max(1)
 
-                print(sent)
+
+                # start and end id of distance
+                tokens_a =  self.dataset.tokenizer.tokenize(sent[0].strip())
+                # print(tokens_a)
+                # Account for [CLS] and [SEP] with "- 2"
+                if len(tokens_a) > MAX_SENT_LENGTH - 2:
+                    tokens_a = tokens_a[:(MAX_SENT_LENGTH - 2)]
+
+                # Keep segment id which allows loading BERT-weights.
+                tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
+
+                print(tokens[int(land_start):int(land_end)+1])
                 # replace ITEM with the search query
-                res = es.search(index='landmarks', body={'query': {'match': { 'name':{'query': sent[int(land_start):int(land_end)+1], 'fuzziness':'AUTO' }}}})
+                res = es.search(index='landmarks', body={'query': {'match': { 'name':{'query': tokens[int(land_start):int(land_end)+1], 'fuzziness':'AUTO' }}}})
                 max_hit = -9999
                 for hit in res['hits']['hits']:
                     if hit['_score'] > max_hit:

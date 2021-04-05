@@ -402,6 +402,7 @@ class ROSMI:
 
                 tmp_land = " ".join(tokens[int(land_start):int(land_end)+1])
                 tmp_land = tmp_land.split('##')
+                landmrk = ''
                 for enu, t in enumerate(tmp_land):
                     if enu%2 == 0:
                         landmrk += t[:-1]
@@ -409,7 +410,7 @@ class ROSMI:
                         landmrk += t
                 print(landmrk)
                 # replace ITEM with the search query
-                res = es.search(index='landmarks', body={'query': {'match': { 'name':{'query': tokens[int(land_start):int(land_end)+1], 'fuzziness':'AUTO' }}}})
+                res = es.search(index='landmarks', body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
                 max_hit = -9999
                 for hit in res['hits']['hits']:
                     if hit['_score'] > max_hit:

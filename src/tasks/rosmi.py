@@ -409,7 +409,7 @@ class ROSMI:
 
         sentid2ans = self.predict(eval_tuple, dump)
         if rule_based:
-        else:
+            pass
         evaluation = eval_tuple.evaluator.evaluate(sentid2ans)
         # input(sentid2ans)
         try:

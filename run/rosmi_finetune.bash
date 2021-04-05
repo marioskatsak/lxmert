@@ -22,5 +22,5 @@ cp $0 $output/run.bash
         --valid 0_val --load /scratch/mmk11/snap/rosmi/BEST_k_RENCI_NAME \
         --llayers 1 --xlayers 1 --rlayers 1\
         --dataPath /scratch/mmk11/data/rosmi/7_easy_train \
-        --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 80 --abla BEST_2_t_NAME \
+        --batchSize 1 --optim bert --lr 1e-3 --n_ent --epochs 80 --abla BEST_2_t_NAME \
         --tqdm --output $output ${@:3}

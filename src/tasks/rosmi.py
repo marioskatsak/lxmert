@@ -391,7 +391,7 @@ class ROSMI:
 
 
                 # start and end id of distance
-                tokens_a =  self.dataset.tokenizer.tokenize(sent[0].strip())
+                tokens_a =  dset.tokenizer.tokenize(sent[0].strip())
                 # print(tokens_a)
                 # Account for [CLS] and [SEP] with "- 2"
                 if len(tokens_a) > MAX_SENT_LENGTH - 2:

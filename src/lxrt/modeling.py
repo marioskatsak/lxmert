@@ -871,7 +871,7 @@ class BertPooler(nn.Module):
         # to the first token.
         first_token_tensor = hidden_states[:, 0]
         pooled_output = self.dense(first_token_tensor)
-        # pooled_output = self.activation(pooled_output)
+        pooled_output = self.activation(pooled_output)
         return pooled_output
 
 class NamesPooler(nn.Module):
@@ -885,7 +885,7 @@ class NamesPooler(nn.Module):
         # to the first token.
         first_token_tensor = hidden_states[:, 0]
         pooled_output = self.dense(first_token_tensor)
-        # pooled_output = self.activation(pooled_output)
+        pooled_output = self.activation(pooled_output)
         return pooled_output
 
 
@@ -1439,7 +1439,7 @@ class LXRTModel(BertPreTrainedModel):
         self.crossAtt = BertCrossattLayer(config)
         self.encoder = LXRTEncoder(config)
         self.crossPooler = NamesPooler(config)
-        self.bert_layer = BertLayer(config)
+        # self.bert_layer = BertLayer(config)
         self.pooler = BertPooler(config)
         self.pooler2 = BertPooler(config)
         self.apply(self.init_bert_weights)
@@ -1495,8 +1495,8 @@ class LXRTModel(BertPreTrainedModel):
                 # print(extended_attention_mask.shape)
 
                 # print(names_output[:,id,:,:].squeeze(1).shape)
-                # new_name = self.crossAtt(embedding_output, names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
-                new_name = self.bert_layer(names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
+                new_name = self.crossAtt(embedding_output, names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
+                # new_name = self.bert_layer(names_output[:,id,:,:].squeeze(1),extended_names_attention_mask)
                 # print(new_name.shape)
                 # pooled_name = self.crossPooler(new_name)
                 pooled_name = self.pooler(new_name)

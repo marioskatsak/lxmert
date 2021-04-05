@@ -355,6 +355,12 @@ class ROSMI:
         sentid2ans = {}
         for i, datum_tuple in enumerate(loader):
             ques_id, feats, feat_mask, boxes, names, sent, g_ds, g_de, land_,cland_, bear_ = datum_tuple[:11]   # Avoid seeing ground truth
+
+
+            datum = dset.id2datum[sentid]
+            img_info = dset.imgid2img[datum['img_id']]
+            text_names = img_info['t_names'].copy()
+            input(text_names)
             with torch.no_grad():
                 if args.n_ent:
                     names = (names[0].squeeze(2).cuda(), \
@@ -388,6 +394,8 @@ class ROSMI:
                     # input(br)
                     br = dset.label2bearing[br]
                     sentid2ans[qid.item()] = (l.tolist(), int(diss), int(dise), ln.tolist(),int(cln), br, int(l_s), int(l_e))
+
+
         try:
             with open(dump, 'w') as scores_out:
                 json.dump(sentid2ans, scores_out)
@@ -396,9 +404,12 @@ class ROSMI:
 
         return sentid2ans
 
-    def evaluate(self, eval_tuple: DataTuple, dump=None):
+    def evaluate(self, eval_tuple: DataTuple, dump=None, rule_based=False):
         """Evaluate all data in data_tuple."""
+
         sentid2ans = self.predict(eval_tuple, dump)
+        if rule_based:
+        else:
         evaluation = eval_tuple.evaluator.evaluate(sentid2ans)
         # input(sentid2ans)
         try:
@@ -598,7 +609,7 @@ def cross_validation():
 
         with open(f'{args.abla}_scenarios.json', 'w') as scores_out:
             json.dump(scenarios, scores_out)
-        # input("???")
+        input("???")
     # print(f"Best scores: {scores, scores2, scores3, t_scores}")
     # print(f"Mean 6-fold accuracy 1 {sum(scores) / len(scores)}")
     # print(f"Mean 6-fold accuracy 2 {sum(scores2) / len(scores2)}")
@@ -616,6 +627,7 @@ if __name__ == "__main__":
         rosmi = ROSMI(get_data_tuple)
         # Load ROSMI model weights
         # Note: It is different from loading LXMERT pre-trained weights.
+        # load
         if args.load is not None:
             rosmi.load(args.load)
 

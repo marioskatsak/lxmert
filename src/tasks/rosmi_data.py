@@ -272,7 +272,6 @@ class ROSMITorchDataset(Dataset):
              #        int(datum['landmarks'][0]['raw_pixels'][0]) == int(boxes[ipd][0]):
                 landmark_id = ipd
                 break
-
             # #     # print(type(datum['landmarks'][0]['raw_pixels']))
             # # #     # print(type(feat_box))
             # # #     # print(datum['landmarks'][0]['raw_pixels'])

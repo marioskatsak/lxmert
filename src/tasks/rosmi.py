@@ -515,15 +515,15 @@ def run_experiment():
     #                        shuffle=False, drop_last=False),
     #         dump=os.path.join(args.output, f'{args.abla}_test_predict.json')
     #     )
-    # if rosmi.valid_tuple is not None:
-    #     # Since part of valididation data are used in pre-training/fine-tuning,
-    #     # only validate on the minival set.
-    #     result = rosmi.evaluate(
-    #         get_data_tuple(args.valid, bs=args.batch_size,
-    #                        shuffle=False, drop_last=False),
-    #         dump=os.path.join(args.output, f'{args.abla}_val_predict.json')
-    #     )
-    #     # print(result)
+    if rosmi.valid_tuple is not None:
+        # Since part of valididation data are used in pre-training/fine-tuning,
+        # only validate on the minival set.
+        result = rosmi.evaluate(
+            get_data_tuple(args.valid, bs=args.batch_size,
+                           shuffle=False, drop_last=False),
+            dump=os.path.join(args.output, f'{args.abla}_val_predict.json')
+        )
+        # print(result)
 
 
     if rosmi.train_tuple is not None:

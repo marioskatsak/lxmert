@@ -389,8 +389,9 @@ class ROSMI:
                 _, land_end = land_end.max(1)
                 _, clnd = clnd.max(1)
 
+                print(sent)
                 # replace ITEM with the search query
-                res = es.search(index='landmarks', body={'query': {'match': { 'name':{'query': te, 'fuzziness':'AUTO' }}}})
+                res = es.search(index='landmarks', body={'query': {'match': { 'name':{'query': sent[int(land_start):int(land_end)+1], 'fuzziness':'AUTO' }}}})
                 max_hit = -9999
                 for hit in res['hits']['hits']:
                     if hit['_score'] > max_hit:

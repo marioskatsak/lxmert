@@ -614,7 +614,8 @@ def cross_validation():
             scen = list(range(10))
 
     # enc_scen = [4]
-
+    train_ = args.train
+    val_ = args.val
     for k in scen:
         print(f"{k} on cross")
         # args.train = f'{k}_easy_train'
@@ -622,10 +623,10 @@ def cross_validation():
         # args.train = f'{k}_train'
         # args.valid = f'{k}_val'
         if args.train:
-            args.train = f'{k}_'+args.train
+            args.train = f'{k}_'+train_
 
         if args.valid:
-            args.valid = f'{k}_'+args.valid
+            args.valid = f'{k}_'+val_
 
         tmpA, dis, best_tacc, best_mDist = run_experiment()
         oracle_distances[0].append(dis[0])

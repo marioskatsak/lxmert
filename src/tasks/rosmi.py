@@ -615,7 +615,7 @@ def cross_validation():
 
     # enc_scen = [4]
     train_ = args.train
-    val_ = args.val
+    val_ = args.valid
     for k in scen:
         print(f"{k} on cross")
         # args.train = f'{k}_easy_train'

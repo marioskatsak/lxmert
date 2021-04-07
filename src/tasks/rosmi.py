@@ -403,17 +403,21 @@ class ROSMI:
                 tmp_land = " ".join(tokens[int(land_start):int(land_end)+1])
                 tmp_land = tmp_land.split('##')
                 landmrk = ''
-                for enu, t in enumerate(tmp_land):
-                    if enu%2 == 0:
-                        landmrk += t[:-1]
-                    else:
-                        landmrk += t
-                # print(landmrk)
+                if len(tmp_land) > 1:
+                    for enu, t in enumerate(tmp_land):
+                        if enu%2 == 0:
+                            landmrk += t[:-1]
+                        else:
+                            landmrk += t
+                else:
+                    landmrk = tmp_land[0]
+                print(landmrk)
                 # replace ITEM with the search query
                 res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
                 max_hit = -9999
                 land_id_ = None
                 for hit in res['hits']['hits']:
+                    print(f'_score: {hit['_score']},_id: {hit['_id']} name: {hit['_source']['name']}')
                     if hit['_score'] > max_hit:
                         land_id_ = hit['_id']
                     # tmp_ids[hit['_id']] = hit['_score']
@@ -422,7 +426,7 @@ class ROSMI:
                     # input(hit)
                     # print(hit['_source']['name'])
 
-                # print(sent)
+                print(sent)
 
                 for qid,diss,dise, ln,cln, br,l_s,l_e, l in zip(ques_id,dist_s.cpu().detach().numpy(), \
                                                 dist_e.cpu().detach().numpy(), \
@@ -433,7 +437,7 @@ class ROSMI:
                                                 land_end.cpu().detach().numpy(), \
                                                     label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
-                    # input(cln)
+                    input(cln)
                     if land_id_ != None:
                         # print(text_names[int(cln)])
                         # input(text_names[int(land_id_)])

@@ -70,7 +70,7 @@ class ROSMI:
         if args.train != "":
             self.train_tuple = get_data_tuple(
                 args.train, bs=args.batch_size, shuffle=True, drop_last=True
-            )
+            )get_data_tuple
         else:
             self.train_tuple = None
         if args.valid != "":
@@ -564,7 +564,7 @@ def run_experiment():
     if rosmi.valid_tuple is not None:
         # Since part of valididation data are used in pre-training/fine-tuning,
         # only validate on the minival set.
-        result = rosmi.evaluate(
+        valid_score, m_dist, acc2, acc3 = rosmi.evaluate(
             get_data_tuple(args.valid, bs=args.batch_size,
                            shuffle=False, drop_last=False),
             dump=os.path.join(args.output, f'{args.abla}_val_predict.json')
@@ -589,7 +589,7 @@ def run_experiment():
         # input("All train good?")
         best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
         return tmpA, dis, best_tacc, best_mDist
-    return
+    return 0, 0, acc3, m_dist
 def cross_validation():
     scores = []
     scores2 = []

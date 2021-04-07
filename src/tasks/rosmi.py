@@ -410,7 +410,7 @@ class ROSMI:
                         landmrk += t
                 print(landmrk)
                 # replace ITEM with the search query
-                res = es.search(index='landmarks', body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
+                res = es.search(index='scenario0', body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
                 max_hit = -9999
                 for hit in res['hits']['hits']:
                     if hit['_score'] > max_hit:

@@ -361,7 +361,7 @@ class ROSMI:
             datum = dset.id2datum[int(ques_id[0])]
             img_info = dset.imgid2img[datum['img_id']]
             text_names = img_info['t_names'].copy()
-            input(text_names)
+            # input(text_names)
 
 
             for index, item in enumerate(text_names):
@@ -408,7 +408,7 @@ class ROSMI:
                         landmrk += t[:-1]
                     else:
                         landmrk += t
-                print(landmrk)
+                # print(landmrk)
                 # replace ITEM with the search query
                 res = es.search(index='scenario0', body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
                 max_hit = -9999
@@ -421,8 +421,8 @@ class ROSMI:
                     # input(hit)
                     # print(hit['_source']['name'])
 
-                print(clnd)
-                print(land_id_)
+                # print(clnd)
+                # print(land_id_)
 
                 for qid,diss,dise, ln,cln, br,l_s,l_e, l in zip(ques_id,dist_s.cpu().detach().numpy(), \
                                                 dist_e.cpu().detach().numpy(), \
@@ -433,7 +433,8 @@ class ROSMI:
                                                 land_end.cpu().detach().numpy(), \
                                                     label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
-                    input(cln)
+                    # input(cln)
+                    cln = land_id_
                     br = dset.label2bearing[br]
                     sentid2ans[qid.item()] = (l.tolist(), int(diss), int(dise), ln.tolist(),int(cln), br, int(l_s), int(l_e))
 

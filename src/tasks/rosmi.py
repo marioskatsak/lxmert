@@ -365,7 +365,7 @@ class ROSMI:
 
 
             for index, item in enumerate(text_names):
-                res = es.index(index='scenario0', id=index, body={'name': item[0]})
+                res = es.index(index=str(ques_id[0]), id=index, body={'name': item[0]})
 
             with torch.no_grad():
                 if args.n_ent:
@@ -410,7 +410,7 @@ class ROSMI:
                         landmrk += t
                 # print(landmrk)
                 # replace ITEM with the search query
-                res = es.search(index='scenario0', body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
+                res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
                 max_hit = -9999
                 for hit in res['hits']['hits']:
                     if hit['_score'] > max_hit:

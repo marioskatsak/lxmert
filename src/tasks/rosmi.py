@@ -417,7 +417,7 @@ class ROSMI:
                 max_hit = -9999
                 land_id_ = None
                 for hit in res['hits']['hits']:
-                    print(f'_score: {hit['_score']},_id: {hit['_id']} name: {hit['_source']['name']}')
+                    print(f'_score: {hit["_score"]},_id: {hit["_id"]} name: {hit["_source"]['name']}')
                     if hit['_score'] > max_hit:
                         land_id_ = hit['_id']
                     # tmp_ids[hit['_id']] = hit['_score']

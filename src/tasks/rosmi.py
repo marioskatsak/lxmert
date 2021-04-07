@@ -412,6 +412,7 @@ class ROSMI:
                 # replace ITEM with the search query
                 res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
                 max_hit = -9999
+                land_id_ = None
                 for hit in res['hits']['hits']:
                     if hit['_score'] > max_hit:
                         land_id_ = hit['_id']
@@ -434,7 +435,8 @@ class ROSMI:
                                                     label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
                     # input(cln)
-                    cln = land_id_
+                    if land_id_ != None:
+                        cln = land_id_
                     br = dset.label2bearing[br]
                     sentid2ans[qid.item()] = (l.tolist(), int(diss), int(dise), ln.tolist(),int(cln), br, int(l_s), int(l_e))
 

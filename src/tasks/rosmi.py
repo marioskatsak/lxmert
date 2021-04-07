@@ -562,6 +562,8 @@ def run_experiment():
     #         dump=os.path.join(args.output, f'{args.abla}_test_predict.json')
     #     )
     if rosmi.valid_tuple is not None:
+        print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
+        tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
         # Since part of valididation data are used in pre-training/fine-tuning,
         # only validate on the minival set.
         valid_score, m_dist, acc2, acc3 = rosmi.evaluate(
@@ -589,7 +591,7 @@ def run_experiment():
         # input("All train good?")
         best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
         return tmpA, dis, best_tacc, best_mDist
-    return 0, 0, acc3, m_dist
+    return tmpA, dis, acc3, m_dist
 def cross_validation():
     scores = []
     scores2 = []

@@ -123,7 +123,7 @@ class ROSMIDataset:
         # Loading datasets
         self.data = []
         for split in self.splits:
-            self.data.extend(json.load(open(os.path.join(args.data_path,args.cross,"%s.json" % split))))
+            self.data.extend(json.load(open(os.path.join(args.data_path,"%s.json" % split))))
         print("Load %d data from split(s) %s." % (len(self.data), self.name))
 
         # Convert list to dict (for evaluation)

@@ -70,7 +70,7 @@ class ROSMI:
         if args.train != "":
             self.train_tuple = get_data_tuple(
                 args.train, bs=args.batch_size, shuffle=True, drop_last=True
-            )get_data_tuple
+            )
         else:
             self.train_tuple = None
         if args.valid != "":

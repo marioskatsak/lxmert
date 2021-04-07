@@ -603,7 +603,7 @@ def cross_validation():
     # {k}_train' is for 7-fold zero shot cross validation
     # for k in range(7):
     # for k in range(10):
-    if 'enc' in args.train:
+    if 'enc' in args.train or 'enc' in args.valid:
         scen = [1,3,4,5,7,9,10]
     else:
         if '7' in args.data_path:
@@ -619,8 +619,11 @@ def cross_validation():
         # args.valid = f'{k}_easy_val'
         # args.train = f'{k}_train'
         # args.valid = f'{k}_val'
-        args.train = f'{k}_'+args.train
-        args.valid = f'{k}_'+args.valid
+        if args.train:
+            args.train = f'{k}_'+args.train
+
+        if args.valid:
+            args.valid = f'{k}_'+args.valid
 
         tmpA, dis, best_tacc, best_mDist = run_experiment()
         oracle_distances[0].append(dis[0])

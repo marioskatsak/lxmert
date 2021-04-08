@@ -392,14 +392,14 @@ class ROSMI:
 
                 # start and end id of distance
                 tokens_a =  dset.tokenizer.tokenize(sent[0].strip())
-                print(tokens_a)
+                # print(tokens_a)
                 # Account for [CLS] and [SEP] with "- 2"
                 if len(tokens_a) > MAX_SENT_LENGTH - 2:
                     tokens_a = tokens_a[:(MAX_SENT_LENGTH - 2)]
 
                 # Keep segment id which allows loading BERT-weights.
                 tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-                print(tokens[int(land_start):int(land_end)+1])
+                # print(tokens[int(land_start):int(land_end)+1])
                 tlndmrk = tokens[int(land_start):int(land_end)+1] + ['']
                 landmrk = ''
                 if len(tlndmrk) > 1:
@@ -421,13 +421,13 @@ class ROSMI:
                 #             landmrk += t[:-1]
                 #         else:
                 #             landmrk += t
-                print(landmrk)
+                # print(landmrk)
                 # replace ITEM with the search query
                 res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
                 max_hit = -9999
                 land_id_ = None
                 for hit in res['hits']['hits']:
-                    print(f'_score: {hit["_score"]},_id: {hit["_id"]} name: {hit["_source"]["name"]}')
+                    # print(f'_score: {hit["_score"]},_id: {hit["_id"]} name: {hit["_source"]["name"]}')
                     if hit['_score'] > max_hit:
                         land_id_ = hit['_id']
                         max_hit = hit['_score']
@@ -447,10 +447,10 @@ class ROSMI:
                                                 land_end.cpu().detach().numpy(), \
                                                     label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
-                    print(cln)
+                    # print(cln)
                     if land_id_ != None:
-                        print(text_names[int(cln)])
-                        input(text_names[int(land_id_)])
+                        # print(text_names[int(cln)])
+                        # input(text_names[int(land_id_)])
                         cln = land_id_
                     br = dset.label2bearing[br]
                     sentid2ans[qid.item()] = (l.tolist(), int(diss), int(dise), ln.tolist(),int(cln), br, int(l_s), int(l_e))

@@ -400,17 +400,29 @@ class ROSMI:
                 # Keep segment id which allows loading BERT-weights.
                 tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
                 print(tokens[int(land_start):int(land_end)+1])
-                tmp_land = " ".join(tokens[int(land_start):int(land_end)+1])
-                tmp_land = tmp_land.split('##')
+                tlndmrk = tokens[int(land_start):int(land_end)+1] + ['']
                 landmrk = ''
-                if len(tmp_land) > 1:
-                    for enu, t in enumerate(tmp_land):
-                        if enu%2 == 0:
-                            landmrk += t[:-1]
+                for ide, tlnd in enumerate(tlndmrk):
+                    if '##' in tlndmrk[ide+1]:
+                        if '##' in tlnd:
+                            landmrk += tlnd[2:]
                         else:
-                            landmrk += t
-                else:
-                    landmrk = tmp_land[0]
+                            landmrk += tlnd
+                    else:
+                        landmrk += tlnd + ' '
+                    if ide + 2 == len(tlndmrk):
+                        break
+                # tmp_land = " ".join(tokens[int(land_start):int(land_end)+1])
+                # tmp_land = tmp_land.split('##')
+                # landmrk = ''
+                # if len(tmp_land) > 1:
+                #     for enu, t in enumerate(tmp_land):
+                #         if enu%2 == 0:
+                #             landmrk += t[:-1]
+                #         else:
+                #             landmrk += t
+                # else:
+                #     landmrk = tmp_land[0]
                 print(landmrk)
                 # replace ITEM with the search query
                 res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
@@ -437,10 +449,10 @@ class ROSMI:
                                                 land_end.cpu().detach().numpy(), \
                                                     label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
-                    # input(cln)
+                    print(cln)
                     if land_id_ != None:
-                        # print(text_names[int(cln)])
-                        # input(text_names[int(land_id_)])
+                        print(text_names[int(cln)])
+                        input(text_names[int(land_id_)])
                         cln = land_id_
                     br = dset.label2bearing[br]
                     sentid2ans[qid.item()] = (l.tolist(), int(diss), int(dise), ln.tolist(),int(cln), br, int(l_s), int(l_e))

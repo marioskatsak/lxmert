@@ -402,15 +402,16 @@ class ROSMI:
                 print(tokens[int(land_start):int(land_end)+1])
                 tlndmrk = tokens[int(land_start):int(land_end)+1] + ['']
                 landmrk = ''
-                for ide, tlnd in enumerate(tlndmrk):
-                    if '##' in tlnd:
-                        landmrk += tlnd[2:]
-                    else:
-                        landmrk += tlnd
-                    if '##' not in tlndmrk[ide+1]:
-                        landmrk += ' '
-                    if ide + 2 == len(tlndmrk):
-                        break
+                if len(tlndmrk) > 1:
+                    for ide, tlnd in enumerate(tlndmrk):
+                        if '##' in tlnd:
+                            landmrk += tlnd[2:]
+                        else:
+                            landmrk += tlnd
+                        if '##' not in tlndmrk[ide+1]:
+                            landmrk += ' '
+                        if ide + 2 == len(tlndmrk):
+                            break
                 # tmp_land = " ".join(tokens[int(land_start):int(land_end)+1])
                 # tmp_land = tmp_land.split('##')
                 # landmrk = ''
@@ -420,8 +421,6 @@ class ROSMI:
                 #             landmrk += t[:-1]
                 #         else:
                 #             landmrk += t
-                # else:
-                #     landmrk = tmp_land[0]
                 print(landmrk)
                 # replace ITEM with the search query
                 res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})

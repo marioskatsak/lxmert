@@ -408,7 +408,7 @@ class ROSMI:
                     else:
                         landmrk += tlnd
                     if '##' not in tlndmrk[ide+1]:
-                        landmrk += tlnd + ' '
+                        landmrk += ' '
                     if ide + 2 == len(tlndmrk):
                         break
                 # tmp_land = " ".join(tokens[int(land_start):int(land_end)+1])

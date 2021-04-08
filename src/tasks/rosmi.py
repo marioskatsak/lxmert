@@ -392,14 +392,14 @@ class ROSMI:
 
                 # start and end id of distance
                 tokens_a =  dset.tokenizer.tokenize(sent[0].strip())
-                # print(tokens_a)
+                print(tokens_a)
                 # Account for [CLS] and [SEP] with "- 2"
                 if len(tokens_a) > MAX_SENT_LENGTH - 2:
                     tokens_a = tokens_a[:(MAX_SENT_LENGTH - 2)]
 
                 # Keep segment id which allows loading BERT-weights.
                 tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-
+                print(tokens[int(land_start):int(land_end)+1])
                 tmp_land = " ".join(tokens[int(land_start):int(land_end)+1])
                 tmp_land = tmp_land.split('##')
                 landmrk = ''
@@ -411,13 +411,13 @@ class ROSMI:
                             landmrk += t
                 else:
                     landmrk = tmp_land[0]
-                # print(landmrk)
+                print(landmrk)
                 # replace ITEM with the search query
                 res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
                 max_hit = -9999
                 land_id_ = None
                 for hit in res['hits']['hits']:
-                    # print(f'_score: {hit["_score"]},_id: {hit["_id"]} name: {hit["_source"]["name"]}')
+                    print(f'_score: {hit["_score"]},_id: {hit["_id"]} name: {hit["_source"]["name"]}')
                     if hit['_score'] > max_hit:
                         land_id_ = hit['_id']
                         max_hit = hit['_score']
@@ -425,7 +425,6 @@ class ROSMI:
                     # tmp_res[hit['_id']] = {'_score': hit['_score'],'_id': hit['_id'], 'name': hit['_source']['name']}
                     # tmp_res[hit['_score']] =
                     # input(hit)
-                    # print(hit['_source']['name'])
 
                 # print(sent)
 

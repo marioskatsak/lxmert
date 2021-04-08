@@ -403,12 +403,11 @@ class ROSMI:
                 tlndmrk = tokens[int(land_start):int(land_end)+1] + ['']
                 landmrk = ''
                 for ide, tlnd in enumerate(tlndmrk):
-                    if '##' in tlndmrk[ide+1]:
-                        if '##' in tlnd:
-                            landmrk += tlnd[2:]
-                        else:
-                            landmrk += tlnd
+                    if '##' in tlnd:
+                        landmrk += tlnd[2:]
                     else:
+                        landmrk += tlnd
+                    if '##' not in tlndmrk[ide+1]:
                         landmrk += tlnd + ' '
                     if ide + 2 == len(tlndmrk):
                         break

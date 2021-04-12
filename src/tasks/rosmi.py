@@ -675,7 +675,7 @@ def cross_validation():
 
         with open(f'{args.abla}_scenarios.json', 'w') as scores_out:
             json.dump(scenarios, scores_out)
-        input("???")
+        # input("???")
     # print(f"Best scores: {scores, scores2, scores3, t_scores}")
     # print(f"Mean 6-fold accuracy 1 {sum(scores) / len(scores)}")
     # print(f"Mean 6-fold accuracy 2 {sum(scores2) / len(scores2)}")

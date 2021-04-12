@@ -22,5 +22,5 @@ cp $0 $output/run.bash
         --valid 0_train --valid 0_val --load /scratch/mmk11/snap/rosmi/BEST_k_RENCI_NAME \
         --llayers 1 --xlayers 1 --rlayers 1 \
         --dataPath /scratch/mmk11/data/rosmi/7_easy_train \
-        --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 30 --abla hybrid_rule_based \
+        --batchSize 1 --optim bert --lr 1e-3 --n_ent --epochs 10 --abla hybrid_rule_based \
         --tqdm --output $output ${@:3}

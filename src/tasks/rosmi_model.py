@@ -113,7 +113,7 @@ class ROSMIModel(nn.Module):
         dist_e = dist_e.squeeze(-1)
 
 
-        land_uni_s, land_uni_e = land_uni.split(1, dim=-1)
+        # land_uni_s, land_uni_e = land_uni.split(1, dim=-1)
         # print(dist_s.shape)
         # start_logits = land_uni_s.squeeze(-1)
         # end_logits = land_uni_e.squeeze(-1)

@@ -593,7 +593,7 @@ def run_experiment():
         if rosmi.valid_tuple is not None:
             print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
             tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
-            input("All val good?")
+            # input("All val good?")
 
             print("Valid Oracle: %0.2f" % (tmpA * 100))
             tmpA, dis = rosmi.oracle_score(rosmi.train_tuple)

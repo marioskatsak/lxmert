@@ -390,53 +390,53 @@ class ROSMI:
                 _, clnd = clnd.max(1)
 
 
-                # start and end id of distance
-                tokens_a =  dset.tokenizer.tokenize(sent[0].strip())
-                # print(tokens_a)
-                # Account for [CLS] and [SEP] with "- 2"
-                if len(tokens_a) > MAX_SENT_LENGTH - 2:
-                    tokens_a = tokens_a[:(MAX_SENT_LENGTH - 2)]
-
-                # Keep segment id which allows loading BERT-weights.
-                tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-                # print(tokens[int(land_start):int(land_end)+1])
-                tlndmrk = tokens[int(land_start):int(land_end)+1] + ['']
-                landmrk = ''
-                if len(tlndmrk) > 1:
-                    for ide, tlnd in enumerate(tlndmrk):
-                        if '##' in tlnd:
-                            landmrk += tlnd[2:]
-                        else:
-                            landmrk += tlnd
-                        if '##' not in tlndmrk[ide+1]:
-                            landmrk += ' '
-                        if ide + 2 == len(tlndmrk):
-                            break
-                # tmp_land = " ".join(tokens[int(land_start):int(land_end)+1])
-                # tmp_land = tmp_land.split('##')
+                # # start and end id of distance
+                # tokens_a =  dset.tokenizer.tokenize(sent[0].strip())
+                # # print(tokens_a)
+                # # Account for [CLS] and [SEP] with "- 2"
+                # if len(tokens_a) > MAX_SENT_LENGTH - 2:
+                #     tokens_a = tokens_a[:(MAX_SENT_LENGTH - 2)]
+                #
+                # # Keep segment id which allows loading BERT-weights.
+                # tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
+                # # print(tokens[int(land_start):int(land_end)+1])
+                # tlndmrk = tokens[int(land_start):int(land_end)+1] + ['']
                 # landmrk = ''
-                # if len(tmp_land) > 1:
-                #     for enu, t in enumerate(tmp_land):
-                #         if enu%2 == 0:
-                #             landmrk += t[:-1]
+                # if len(tlndmrk) > 1:
+                #     for ide, tlnd in enumerate(tlndmrk):
+                #         if '##' in tlnd:
+                #             landmrk += tlnd[2:]
                 #         else:
-                #             landmrk += t
-                # print(landmrk)
-                # replace ITEM with the search query
-                res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
-                max_hit = -9999
-                land_id_ = None
-                for hit in res['hits']['hits']:
-                    # print(f'_score: {hit["_score"]},_id: {hit["_id"]} name: {hit["_source"]["name"]}')
-                    if hit['_score'] > max_hit:
-                        land_id_ = hit['_id']
-                        max_hit = hit['_score']
-                    # tmp_ids[hit['_id']] = hit['_score']
-                    # tmp_res[hit['_id']] = {'_score': hit['_score'],'_id': hit['_id'], 'name': hit['_source']['name']}
-                    # tmp_res[hit['_score']] =
-                    # input(hit)
-
-                # print(sent)
+                #             landmrk += tlnd
+                #         if '##' not in tlndmrk[ide+1]:
+                #             landmrk += ' '
+                #         if ide + 2 == len(tlndmrk):
+                #             break
+                # # tmp_land = " ".join(tokens[int(land_start):int(land_end)+1])
+                # # tmp_land = tmp_land.split('##')
+                # # landmrk = ''
+                # # if len(tmp_land) > 1:
+                # #     for enu, t in enumerate(tmp_land):
+                # #         if enu%2 == 0:
+                # #             landmrk += t[:-1]
+                # #         else:
+                # #             landmrk += t
+                # # print(landmrk)
+                # # replace ITEM with the search query
+                # res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
+                # max_hit = -9999
+                # land_id_ = None
+                # for hit in res['hits']['hits']:
+                #     # print(f'_score: {hit["_score"]},_id: {hit["_id"]} name: {hit["_source"]["name"]}')
+                #     if hit['_score'] > max_hit:
+                #         land_id_ = hit['_id']
+                #         max_hit = hit['_score']
+                #     # tmp_ids[hit['_id']] = hit['_score']
+                #     # tmp_res[hit['_id']] = {'_score': hit['_score'],'_id': hit['_id'], 'name': hit['_source']['name']}
+                #     # tmp_res[hit['_score']] =
+                #     # input(hit)
+                #
+                # # print(sent)
 
                 for qid,diss,dise, ln,cln, br,l_s,l_e, l in zip(ques_id,dist_s.cpu().detach().numpy(), \
                                                 dist_e.cpu().detach().numpy(), \

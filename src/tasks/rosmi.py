@@ -448,10 +448,10 @@ class ROSMI:
                                                     label.cpu().detach().numpy()):
                     # ans = dset.label2ans[l]
                     # print(cln)
-                    if land_id_ != None:
-                        # print(text_names[int(cln)])
-                        # input(text_names[int(land_id_)])
-                        cln = land_id_
+                    # if land_id_ != None:
+                    #     # print(text_names[int(cln)])
+                    #     # input(text_names[int(land_id_)])
+                    #     cln = land_id_
                     br = dset.label2bearing[br]
                     sentid2ans[qid.item()] = (l.tolist(), int(diss), int(dise), ln.tolist(),int(cln), br, int(l_s), int(l_e))
 

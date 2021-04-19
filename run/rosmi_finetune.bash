@@ -19,8 +19,8 @@ cp $0 $output/run.bash
     # See Readme.md for option details.
     CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
         python src/tasks/rosmi.py \
-        --valid val --load /scratch/mmk11/snap/rosmi/BEST_2_t_NAME \
-        --llayers 1 --xlayers 1 --rlayers 1 --cross \
+        --train 0_train --valid 0_val  \
+        --llayers 1 --xlayers 1 --rlayers 1 \
         --dataPath /scratch/mmk11/data/rosmi/7_easy_train \
-        --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 5 --abla best_2 \
+        --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 100 --abla 7_map_fix \
         --tqdm --output $output ${@:3}

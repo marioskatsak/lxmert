@@ -360,7 +360,7 @@ class ROSMI:
 
             datum = dset.id2datum[int(ques_id[0])]
             img_info = dset.imgid2img[datum['img_id']]
-            text_names = img_info['t_names'].copy()
+            # text_names = img_info['t_names'].copy()
             # input(text_names)
 
 
@@ -389,7 +389,7 @@ class ROSMI:
                 _, land_end = land_end.max(1)
                 _, clnd = clnd.max(1)
 
-                # 
+                #
                 # # start and end id of distance
                 # tokens_a =  dset.tokenizer.tokenize(sent[0].strip())
                 # # print(tokens_a)

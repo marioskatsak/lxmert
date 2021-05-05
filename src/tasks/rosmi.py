@@ -221,18 +221,19 @@ class ROSMI:
 
 
 
-                # p_start_loss = self.bce_loss(p_start,l_start.float())
-                # total_loss += p_start_loss* p_start.size(1)
-                #
-                # p_end_loss = self.bce_loss(p_end,l_end.float())
-                # total_loss += p_end_loss* p_end.size(1)
-                #
-                #
-                #
-                cland_loss = self.bce_loss(p_cland,cland_)
+                p_start_loss = self.bce_loss(p_start,l_start.float())
+                total_loss += p_start_loss* p_start.size(1)
 
-                self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
-                total_loss += cland_loss* p_cland.size(1)*4
+                p_end_loss = self.bce_loss(p_end,l_end.float())
+                total_loss += p_end_loss* p_end.size(1)
+
+
+
+
+                # cland_loss = self.bce_loss(p_cland,cland_)
+                #
+                # self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
+                # total_loss += cland_loss* p_cland.size(1)*4
 
 
                 # total_loss /=4
@@ -589,8 +590,17 @@ def run_experiment():
             print("Train Oracle: %0.2f" % (tmpA * 100))
         else:
             print("DO NOT USE VALIDATION")
-        # input("All train good?")
         best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
+
+
+        valid_score, best_mDist, acc2, best_tacc = rosmi.evaluate(
+            get_data_tuple(args.valid, bs=1,
+                           shuffle=False, drop_last=False),
+            dump=os.path.join(args.output, f'{args.abla}_val_predict.json')
+        )
+
+        input("All train good?")
+
         return tmpA, dis, best_tacc, best_mDist
     return tmpA, dis, acc3, m_dist
 def cross_validation():

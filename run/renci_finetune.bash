@@ -9,18 +9,18 @@ cp $0 $output/run.bash
 
 # See Readme.md for option details.
 #--loadLXMERT snap/pretrained/model \
-CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
-    python src/tasks/rosmi.py \
-    --train 4_train_enc --valid 4_val_enc  \
-    --llayers 9 --xlayers 5 --rlayers 5 \
-    --loadLXMERT /scratch/mmk11/snap/pretrained/model_LXRT \
-    --dataPath /scratch/mmk11/data/renci/k \
-    --batchSize 5 --optim bert --lr 1e-3 --n_ent --epochs 100 --abla k_RENCI_meta \
-    --tqdm --output $output ${@:3}
 # CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
 #     python src/tasks/rosmi.py \
-#     --valid valid --load /scratch/mmk11/snap/rosmi/BEST_2_t_NAME \
-#     --llayers 1 --xlayers 1 --rlayers 1\
-#     --dataPath /scratch/mmk11/data/rosmi \
-#     --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 80 --abla BEST_2_t_NAME \
+#     --train 4_train_enc --valid 4_val_enc  \
+#     --llayers 9 --xlayers 5 --rlayers 5 \
+#     --loadLXMERT /scratch/mmk11/snap/pretrained/model \
+#     --dataPath /scratch/mmk11/data/renci/k \
+#     --batchSize 5 --optim bert --lr 1e-3 --n_ent --epochs 100 --abla k_RENCI_meta \
 #     --tqdm --output $output ${@:3}
+CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
+    python src/tasks/rosmi.py \
+    --train train_enc --valid val_enc  \
+    --llayers 1 --xlayers 1 --rlayers 1\
+    --dataPath /scratch/mmk11/data/renci/k --cross \
+    --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 80 --abla k_renci_cross \
+    --tqdm --output $output ${@:3}

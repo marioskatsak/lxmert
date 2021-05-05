@@ -385,6 +385,9 @@ class ROSMI:
                 _, land_end = land_end.max(1)
                 _, clnd = clnd.max(1)
 
+
+                land_id_ = None
+
                 if len(sent) == 1:
 
 
@@ -419,7 +422,6 @@ class ROSMI:
                     # replace ITEM with the search query
                     res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
                     max_hit = -9999
-                    land_id_ = None
                     for hit in res['hits']['hits']:
                         # print(f'_score: {hit["_score"]},_id: {hit["_id"]} name: {hit["_source"]["name"]}')
                         if hit['_score'] > max_hit:

@@ -313,7 +313,7 @@ class ROSMI:
                     best_acc2 = acc2
                 if acc3 > best_acc3:
                     best_acc3 = acc3
-                    self.save(f"BEST_{args.abla}")
+                    self.save(f"BEST_{args.train}_{args.abla}")
                 if m_dist[0] < best_mDist[0]:
                     best_mDist = m_dist
 
@@ -607,7 +607,7 @@ def run_experiment():
             print("DO NOT USE VALIDATION")
         best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
 
-
+        rosmi.load(f"BEST_{args.train}_{args.abla}")
         valid_score, best_mDist, best_tacc, acc3 = rosmi.evaluate(
             get_data_tuple(args.valid, bs=1,
                            shuffle=False, drop_last=False),

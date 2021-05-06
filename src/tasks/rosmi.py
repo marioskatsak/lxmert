@@ -353,7 +353,6 @@ class ROSMI:
         """
         self.model.eval()
         dset, loader, evaluator = eval_tuple
-        es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
         sentid2ans = {}
         for i, datum_tuple in enumerate(loader):
             ques_id, feats, feat_mask, boxes, names, sent, g_ds, g_de, land_,cland_, bear_ = datum_tuple[:11]   # Avoid seeing ground truth
@@ -390,6 +389,7 @@ class ROSMI:
 
                 if len(sent) == 1:
 
+                    es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 
                     datum = dset.id2datum[int(ques_id[0])]
                     img_info = dset.imgid2img[datum['img_id']]
@@ -449,6 +449,7 @@ class ROSMI:
 
 
                     if land_id_ != None:
+                        print("replacing landmark")
                         cln = land_id_
 
                     br = dset.label2bearing[br]
@@ -609,11 +610,14 @@ def run_experiment():
                            shuffle=False, drop_last=False),
             dump=os.path.join(args.output, f'{args.abla}_val_predict.json')
         )
+
         print(best_tacc)
         input("???")
 
         return tmpA, dis, best_tacc, best_mDist
-    return tmpA, dis, acc3, m_dist
+    print(acc2)
+    input("???")
+    return tmpA, dis, acc2, m_dist
 def cross_validation():
     scores = []
     scores2 = []

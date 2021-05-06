@@ -1179,4 +1179,4 @@ class RENCIEvaluator:
         print(f"Mean distance , Mean pix : {distMean} [{distsd_}] , {pixMean} [{pixsd_}]")
 
         # input(examples)
-        return target_score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios,examples), tagging_score / len(sentid2ans), meta_score/ len(sentid2ans)
+        return target_score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios,examples), meta_score/ len(sentid2ans), tagging_score / len(sentid2ans)

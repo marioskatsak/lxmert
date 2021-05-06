@@ -586,7 +586,6 @@ def run_experiment():
         )
         # print(result)
 
-    input("All val good?")
 
     if rosmi.train_tuple is not None:
         print('Splits in Train data:', rosmi.train_tuple.dataset.splits)
@@ -611,7 +610,7 @@ def run_experiment():
             dump=os.path.join(args.output, f'{args.abla}_val_predict.json')
         )
 
-        input("All train good?")
+
 
         return tmpA, dis, best_tacc, best_mDist
     return tmpA, dis, acc3, m_dist

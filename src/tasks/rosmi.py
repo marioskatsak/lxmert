@@ -400,19 +400,19 @@ class ROSMI:
                     else:
                         text_names = img_info['t_names'].copy()
 
-                    print(text_names)
+                    # print(text_names)
                     for index, item in enumerate(text_names):
                         res = es.index(index=str(ques_id[0]), id=index, body={'name': item[0]})
                     # start and end id of distance
                     tokens_a =  dset.tokenizer.tokenize(sent[0].strip())
-                    print(tokens_a)
+                    # print(tokens_a)
                     # Account for [CLS] and [SEP] with "- 2"
                     if len(tokens_a) > MAX_SENT_LENGTH - 2:
                         tokens_a = tokens_a[:(MAX_SENT_LENGTH - 2)]
 
                     # Keep segment id which allows loading BERT-weights.
                     tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-                    print(tokens[int(land_start):int(land_end)+1])
+                    # print(tokens[int(land_start):int(land_end)+1])
                     tlndmrk = tokens[int(land_start):int(land_end)+1] + ['']
                     landmrk = ''
                     if len(tlndmrk) > 1:
@@ -425,12 +425,12 @@ class ROSMI:
                                 landmrk += ' '
                             if ide + 2 == len(tlndmrk):
                                 break
-                    print(landmrk)
+                    # print(landmrk)
 
                     # replace ITEM with the search query
                     res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
                     max_hit = -9999
-                    print(res['hits']['hits'])
+                    # print(res['hits']['hits'])
                     for hit in res['hits']['hits']:
                         # print(f'_score: {hit["_score"]},_id: {hit["_id"]} name: {hit["_source"]["name"]}')
                         if hit['_score'] > max_hit:
@@ -439,7 +439,7 @@ class ROSMI:
                         # tmp_ids[hit['_id']] = hit['_score']
                         # tmp_res[hit['_id']] = {'_score': hit['_score'],'_id': hit['_id'], 'name': hit['_source']['name']}
                         # tmp_res[hit['_score']] =
-                    input(land_id_)
+                    # input(land_id_)
 
                 for qid,diss,dise, ln,cln, br,l_s,l_e, l in zip(ques_id,dist_s.cpu().detach().numpy(), \
                                                 dist_e.cpu().detach().numpy(), \
@@ -452,7 +452,7 @@ class ROSMI:
 
 
                     if land_id_ != None:
-                        print("replacing landmark")
+                        # print("replacing landmark")
                         cln = land_id_
 
                     br = dset.label2bearing[br]

@@ -607,7 +607,7 @@ def run_experiment():
             print("DO NOT USE VALIDATION")
         best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)
 
-        rosmi.load(f"BEST_{args.train}_{args.abla}")
+        rosmi.load(f"/scratch/mmk11/snap/rosmi/BEST_{args.train}_{args.abla}")
         valid_score, best_mDist, best_tacc, acc3 = rosmi.evaluate(
             get_data_tuple(args.valid, bs=1,
                            shuffle=False, drop_last=False),

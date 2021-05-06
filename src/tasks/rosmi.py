@@ -393,6 +393,7 @@ class ROSMI:
 
                     datum = dset.id2datum[int(ques_id[0])]
                     img_info = dset.imgid2img[datum['img_id']]
+                    print(img_info)
                     text_names = img_info['t_names'].copy()
                     for index, item in enumerate(text_names):
                         res = es.index(index=str(ques_id[0]), id=index, body={'name': item[0]})
@@ -574,12 +575,13 @@ def run_experiment():
         # Since part of valididation data are used in pre-training/fine-tuning,
         # only validate on the minival set.
         valid_score, m_dist, acc2, acc3 = rosmi.evaluate(
-            get_data_tuple(args.valid, bs=args.batch_size,
+            get_data_tuple(args.valid, bs=1,
                            shuffle=False, drop_last=False),
             dump=os.path.join(args.output, f'{args.abla}_val_predict.json')
         )
         # print(result)
 
+    input("All val good?")
 
     if rosmi.train_tuple is not None:
         print('Splits in Train data:', rosmi.train_tuple.dataset.splits)

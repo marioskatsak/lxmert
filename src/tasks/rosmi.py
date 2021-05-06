@@ -393,8 +393,12 @@ class ROSMI:
 
                     datum = dset.id2datum[int(ques_id[0])]
                     img_info = dset.imgid2img[datum['img_id']]
-                    print(img_info)
-                    text_names = img_info['t_names'].copy()
+
+                    if 'enc' in self.train_tuple or 'enc' in self.valid_tuple:
+                        text_names = [x['name'] for x in img_info]
+                    else:
+                        text_names = img_info['t_names'].copy()
+                        
                     for index, item in enumerate(text_names):
                         res = es.index(index=str(ques_id[0]), id=index, body={'name': item[0]})
                     # start and end id of distance

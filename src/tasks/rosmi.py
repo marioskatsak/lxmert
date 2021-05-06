@@ -430,6 +430,7 @@ class ROSMI:
                     # replace ITEM with the search query
                     res = es.search(index=str(ques_id[0]), body={'query': {'match': { 'name':{'query': landmrk, 'fuzziness':'AUTO' }}}})
                     max_hit = -9999
+                    print(res['hits']['hits'])
                     for hit in res['hits']['hits']:
                         # print(f'_score: {hit["_score"]},_id: {hit["_id"]} name: {hit["_source"]["name"]}')
                         if hit['_score'] > max_hit:

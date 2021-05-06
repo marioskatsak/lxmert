@@ -396,7 +396,7 @@ class ROSMI:
 
 
                     if 'enc' in args.train or 'enc' in args.valid:
-                        text_names = [x['name'] for x in img_info]
+                        text_names = [[x['name']] for x in img_info]
                     else:
                         text_names = img_info['t_names'].copy()
 

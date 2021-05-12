@@ -20,7 +20,7 @@ cp $0 $output/run.bash
 CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
     --train 1_train_enc --valid 1_val_enc  \
-    --llayers 0 --xlayers 1 --rlayers 0 \
+    --llayers 0 --xlayers 0 --rlayers 0 \
     --dataPath /scratch/mmk11/data/renci/k --dropout 0\
     --batchSize 32 --optim bert --lr 1e-4 --n_ent --epochs 100 --abla mapert_meta \
     --tqdm --output $output ${@:3}

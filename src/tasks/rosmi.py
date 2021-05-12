@@ -208,15 +208,15 @@ class ROSMI:
                 bear_loss = self.bce_loss(p_bear,bear_.float())
                 self.writer.add_scalar('Bearing loss', bear_loss, n_iter)
 
-                total_loss += bear_loss* p_bear.size(1)*2
+                total_loss += bear_loss* p_bear.size(1)
 
                 dists_loss = self.bce_loss(p_dist_s,dists.float())
                 self.writer.add_scalar('distance Start loss', dists_loss, n_iter)
-                total_loss += dists_loss* p_dist_s.size(1)*2
+                total_loss += dists_loss* p_dist_s.size(1)
 
                 diste_loss = self.bce_loss(p_dist_e,diste.float())
                 self.writer.add_scalar('distance End loss', diste_loss, n_iter)
-                total_loss += diste_loss* p_dist_e.size(1)*2
+                total_loss += diste_loss* p_dist_e.size(1)
 
 
 
@@ -233,7 +233,7 @@ class ROSMI:
                 cland_loss = self.bce_loss(p_cland,cland_)
 
                 self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
-                total_loss += cland_loss* p_cland.size(1)*5
+                total_loss += cland_loss* p_cland.size(1)
 
 
                 # total_loss /=4

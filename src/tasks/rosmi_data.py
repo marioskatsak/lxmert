@@ -735,7 +735,7 @@ class RENCIDataset:
         print("Load %d data from split(s) %s." % (len(self.data), self.name))
 
         # making sure no sentence with landmark is being passed
-        self.data = [datum for datum in self.data if datum['landmarks'][0]['name']][:50]
+        self.data = [datum for datum in self.data if datum['landmarks'][0]['name']][:5]
         # Convert list to dict (for evaluation)
         self.id2datum = {
             datum['sentid']: datum

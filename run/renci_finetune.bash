@@ -19,8 +19,8 @@ cp $0 $output/run.bash
 #     --tqdm --output $output ${@:3}
 CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     python src/tasks/rosmi.py \
-    --train train_enc --valid val_enc  \
+    --train 0_train_enc --valid 0_val_enc  \
     --llayers 1 --xlayers 1 --rlayers 1 \
-    --dataPath /scratch/mmk11/data/renci/k --cross \
-    --batchSize 32 --optim bert --lr 1e-3 --n_ent --epochs 100 --abla mapert_meta \
+    --dataPath /scratch/mmk11/data/renci/k \
+    --batchSize 20 --optim bert --lr 1e-4 --n_ent --epochs 100 --abla mapert_meta \
     --tqdm --output $output ${@:3}

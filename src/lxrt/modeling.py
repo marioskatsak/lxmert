@@ -871,7 +871,7 @@ class BertPooler(nn.Module):
         # to the first token.
         first_token_tensor = hidden_states[:, 0]
         pooled_output = self.dense(first_token_tensor)
-        # pooled_output = self.activation(pooled_output)
+        pooled_output = self.activation(pooled_output)
         return pooled_output
 
 class NamesPooler(nn.Module):
@@ -885,7 +885,7 @@ class NamesPooler(nn.Module):
         # to the first token.
         first_token_tensor = hidden_states[:, 0]
         pooled_output = self.dense(first_token_tensor)
-        # pooled_output = self.activation(pooled_output)
+        pooled_output = self.activation(pooled_output)
         return pooled_output
 
 

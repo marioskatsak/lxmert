@@ -22,5 +22,5 @@ CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     --train 1_train_enc --valid 1_val_enc  \
     --llayers 1 --xlayers 1 --rlayers 1 \
     --dataPath /scratch/mmk11/data/renci/k --dropout 0 \
-    --batchSize 20 --optim bert --lr 1e-3 --n_ent --epochs 100 --abla mapert_meta \
+    --batchSize 10 --optim bert --lr 1e-3 --n_ent --epochs 100 --abla mapert_meta \
     --tqdm --output $output ${@:3}

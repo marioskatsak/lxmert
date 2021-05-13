@@ -735,7 +735,7 @@ class RENCIDataset:
         print("Load %d data from split(s) %s." % (len(self.data), self.name))
 
         # making sure no sentence with landmark is being passed
-        self.data = [datum for datum in self.data if datum['landmarks'][0]['name']][:10]
+        self.data = [datum for datum in self.data if datum['landmarks'][0]['name']][:100]
         # Convert list to dict (for evaluation)
         self.id2datum = {
             datum['sentid']: datum
@@ -767,7 +767,6 @@ class RENCIDataset:
         # Convert img list to dict
         self.imgid2img = {}
         for datum in self.data:
-            input(datum['sentence']['raw'])
             tmp_lands = self.regions[datum['scenario_items']] + datum['dynamo_obj']
             random.shuffle(tmp_lands)
             self.imgid2img[datum['img_id']] = tmp_lands

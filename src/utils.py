@@ -126,7 +126,7 @@ csv.field_size_limit(sys.maxsize)
 FIELDNAMES = ["img_id", "img_h", "img_w", "objects_id", "objects_conf",
               "attrs_id", "attrs_conf", "num_boxes", "boxes", "features"]
 FIELDITEMS = ["img_id", "img_h", "img_w","num_boxes","t_num_boxes", "boxes",
-              "features","names","t_boxes","t_names"]
+              "features","names","t_boxes","t_names","box_order"]
 
 # -122.44, 34.44 etc.
 def haversine(lon1, lat1, lon2, lat2):
@@ -551,7 +551,8 @@ def load_det_obj_tsv(fname, topk=None):
                     ('t_boxes', (t_boxes, 4), np.float64),
                     ('features', (boxes, -1), np.float64),
                     ('names', (boxes, -1), np.dtype('<U100')),
-                    ('t_names', (t_boxes, -1), np.dtype('<U100'))
+                    ('t_names', (t_boxes, -1), np.dtype('<U100')),
+                    ('box_order', (t_boxes), np.float64)
                 ]
                 # input(decode_config)
                 for key, shape, dtype in decode_config:

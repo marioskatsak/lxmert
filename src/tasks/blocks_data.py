@@ -166,7 +166,8 @@ class ROSMIDataset:
                 # print(datum['instruction'])
                 # print(self.imgid2img[str(id_k)]['box_order'])
                 # print(datum['block_moved_index'])
-                landmark_id = np.where(self.imgid2img[str(id_k)]['box_order'] == datum['block_moved_index'])[0][0]
+                landmark_id = datum['block_moved_index']
+                # landmark_id = np.where(self.imgid2img[str(id_k)]['box_order'] == datum['block_moved_index'])[0][0]
                 # print(type(landmark_id))
                 # input(landmark_id)
                 # last is reserved for landmarks that do not appear in the input feat
@@ -266,6 +267,24 @@ class ROSMITorchDataset(Dataset):
         bearing[self.raw_dataset.bearing2label[datum['bearing_to_target_enum']]] = 1
 
         distance = torch.tensor([datum['distance_to_target']])
+        world_st = torch.tensor(ast.literal_eval(datum['world_state']))
+        eu_dist_ed_co = torch.cat(( torch.tensor(ast.literal_eval(datum['euclidean_distance_to_edges'])), torch.tensor(ast.literal_eval(datum['euclidean_distance_to_corners']))), 1)
+        # input(eu_dist_ed_co.shape)
+        is_stacked = torch.tensor(ast.literal_eval(datum['is_stacked'])).unsqueeze(1)
+        # print(is_stacked)
+        # input(is_stacked.shape)
+        ew_split = torch.tensor(ast.literal_eval(datum['EW_split'])).unsqueeze(1)
+        ns_split = torch.tensor(ast.literal_eval(datum['NS_split'])).unsqueeze(1)
+        # distance = torch.tensor([datum['EW_split']])
+        # print(ns_split)
+        # input(ns_split.shape)
+        # distance = torch.tensor([datum['NS_split']])
+        stacked_ew_ns = torch.cat(( ns_split, ew_split, is_stacked), 1)
+        # stacked_ew_ns = torch.cat(( stacked_ew_ns, is_stacked), 1)
+        # print(stacked_ew_ns)
+        # print(type(stacked_ew_ns))
+        # input(stacked_ew_ns.shape)
+
 
         # # start and end id of distance
         # tokens = ["[CLS]"] + self.tokenizer.tokenize(sent.strip()) + ["[SEP]"]
@@ -287,7 +306,14 @@ class ROSMITorchDataset(Dataset):
         # obj_num = img_info['t_num_boxes']
         feats = img_info['features'].copy()
         boxes = img_info['boxes'].copy()
+        # print(type(boxes))
+        # boxes = np.array(ast.literal_eval(datum['bounding_boxes']))
         names = img_info['names'].copy()
+
+        # print(datum['bounding_boxes'])
+        # input(boxes)
+
+        # print(img_info['box_order'])
         # names = img_info['t_names'].copy()
         # boxes = img_info['t_boxes'].copy()
         # print(datum['block_moved_index'])
@@ -377,20 +403,27 @@ class ROSMITorchDataset(Dataset):
 
                 feats_vis_padding = torch.zeros(((MAX_BOXES - feats.shape[0]),feats.shape[1]), dtype=torch.double)
                 box_vis_padding = torch.zeros(((MAX_BOXES - boxes.shape[0]),boxes.shape[1]), dtype=torch.double)
+                world_st_padding = torch.zeros(((MAX_BOXES - world_st.shape[0]),world_st.shape[1]), dtype=torch.double)
+                eu_dist_ed_co_padding = torch.zeros(((MAX_BOXES - eu_dist_ed_co.shape[0]),eu_dist_ed_co.shape[1]), dtype=torch.double)
+                stacked_ew_ns_padding = torch.zeros(((MAX_BOXES - stacked_ew_ns.shape[0]),stacked_ew_ns.shape[1]), dtype=torch.double)
+
                 feats = torch.cat((feats,feats_vis_padding))
                 boxes = torch.cat((boxes,box_vis_padding))
+                world_st = torch.cat((world_st,world_st_padding))
+                eu_dist_ed_co = torch.cat((eu_dist_ed_co,eu_dist_ed_co_padding))
+                stacked_ew_ns = torch.cat((stacked_ew_ns,stacked_ew_ns_padding))
 
 
             else:
                 feat_mask = torch.ones(boxes.shape[0], dtype=torch.double)
                 feats_padding = torch.zeros((MAX_BOXES - boxes.shape[0]), dtype=torch.double)
-                # # input(feats_padding.shape)
+                # input(feats_padding.shape)
                 feat_mask = torch.cat((feat_mask,feats_padding))
             # _names = 0
 
 
 
-        return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, landmark_id_, bearing,landmark_start,landmark_end, distance#bearing
+        return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, landmark_id_, bearing, world_st, eu_dist_ed_co, stacked_ew_ns, landmark_start,landmark_end, distance#bearing
         # return sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, torch.tensor([landmark_id]), bearing, target#bearing
             # else:
             #     return ques_id, feats, boxes, ques
@@ -405,7 +438,8 @@ class ROSMIEvaluator:
     def evaluate(self, sentid2ans: dict):
         target_score = 0.
         meta_score = 0.
-        block_distance = 0.
+        block_distance = []
+        source_distance = []
         br_score = 0.
         dist_score = 0.
         tagging_score = 0.
@@ -489,15 +523,18 @@ class ROSMIEvaluator:
             print(br, datum['bearing_to_target_enum'])
             # print(ln, datum['landmarks'][0]['raw_pixels'])
             try:
-                print(f"Landmark ids: {landmark_id_} {names[int(landmark_id_)]} - {ln_} {names[int(ln_)]} - {img_info['box_order'][landmark_id_]} - {img_info['box_order'][ln_]}")
+                print(f"Landmark ids: {landmark_id_} {names[int(landmark_id_)]} - {ln_} {names[int(ln_)]} - {boxes[landmark_id_]} - {boxes[ln_]}")
             except Exception as e:
                 print(f"Cannot print stats because {e}")
 
 
 
 
+            # # gold landmark
+            # ln_ = landmark_id_
 
-
+            # # gold bearing
+            # br = datum['bearing_to_target_enum']
             #
             # centre = calculateTiles(CENTRES[sn_id],ZOOMS[sn_id])
             # print(br)
@@ -506,27 +543,32 @@ class ROSMIEvaluator:
             # print(type(distance))
             # print(tmp_dist)
             # input(type(tmp_dist))
-            correct_distance =  math.sqrt( (ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])][2] - datum['block_moved_to_position'][2])**2 + (ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])][0] - datum['block_moved_to_position'][0])**2 )
+            # correct_distance =  math.sqrt( (ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])][2] - datum['block_moved_to_position'][2])**2 + (ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])][0] - datum['block_moved_to_position'][0])**2 )
 
+            correct_distance = distance[0]
+            # gold distance:
+            # correct_distance = datum['distance_to_target']
             # print(f"Distance from gold and source should be: {correct_distance}")
             # print(distance[0])
             # print(math.sin(math.radians(BEAR2NUMS[br])))
             # print(f"World state with id {img_info['box_order'][ln_]} is {ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])]}")
             # calculate new target point x and y. datum['world_state'] = xyz y is constant and is the height!
-            new_x = ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])][0]
-            new_z = ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])][2]
-            new_y = ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])][1]
+            # new_x = ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])][0]
+            new_x = ast.literal_eval(datum['world_state'])[int(ln_)][0]
+            new_z = ast.literal_eval(datum['world_state'])[int(ln_)][2]
+            new_y = ast.literal_eval(datum['world_state'])[int(ln_)][1]
             new_x = math.sin(math.radians(BEAR2NUMS[br])) * correct_distance + new_x
             new_z = math.cos(math.radians(BEAR2NUMS[br])) * correct_distance + new_z
             # print(f"Gold: {datum['block_moved_to_position']}, predicted: [{new_x},{ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])][1]},{new_z}]")
             # print(f"distance from gold target is { math.sqrt( (new_z - datum['block_moved_to_position'][2])**2 + (new_x - datum['block_moved_to_position'][0])**2 )}")
             # input(f"distance from gold and source is { math.sqrt( (ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])][2] - datum['block_moved_to_position'][2])**2 + (ast.literal_eval(datum['world_state'])[int(img_info['box_order'][ln_])][0] - datum['block_moved_to_position'][0])**2 )}")
 
-            block_distance += math.sqrt( (new_z - datum['block_moved_to_position'][2])**2 + (new_x - datum['block_moved_to_position'][0])**2 )
+            block_distance += [math.sqrt( (new_z - datum['block_moved_to_position'][2])**2 + (new_x - datum['block_moved_to_position'][0])**2 )]
+            source_distance += [math.sqrt( (ast.literal_eval(datum['world_state'])[int(ln_)][2] - ast.literal_eval(datum['world_state'])[int(landmark_id_)][2])**2 + (ast.literal_eval(datum['world_state'])[int(ln_)][0] - ast.literal_eval(datum['world_state'])[int(landmark_id_)][0])**2 )]
             # if abs(distance[0] - datum['distance_to_target']) < 0.05:
-            #     dist_score += 1
-            # if br == datum['bearing_to_target_enum']:
-            #     br_score += 1
+            dist_score += abs(distance[0] - datum['distance_to_target'])
+            if br == datum['bearing_to_target_enum']:
+                br_score += 1
             if landmark_id_ == ln_:
                 lands += 1
                 meta_score +=1
@@ -633,8 +675,8 @@ class ROSMIEvaluator:
             # examples.append({ 'id':sentid, 'img_id':datum['img_id'], 'sentence':sent, 'gold':[str(names[landmark_id_]),str(datum['landmarks'][0]['distance'])+' '+str(dists)+ ' '+str(diste),str(datum['landmarks'][0]['bearing'])], 'pred':[save_land,str(diss)+ ' '+str(dise),str(br)], 'outcome': str(siou3 > thres), 'distance':distance2 })
             #
 
-        print(f"Target Score: {target_score / len(sentid2ans)}, Meta Score: {meta_score / len(sentid2ans)}, \
-                    Mean Distance: {block_distance/ len(sentid2ans)}")
+        print(f"Target Score: {target_score / len(sentid2ans)}, Meta Score: {meta_score / len(sentid2ans)}, Bearing Score: {br_score / len(sentid2ans)},  \
+                    Mean Distance: {np.mean(block_distance)/ 0.1524}")
         # if len(pixDiff) > 0.2*len(sentid2ans):
         #     # meanD =  mDist / (len(sentid2ans) - counterDist)
         #     pixMean = int(np.mean(pixDiff))
@@ -651,5 +693,5 @@ class ROSMIEvaluator:
         print(len(sentid2ans))
         print(lands/len(sentid2ans))
         # print(f"Mean distance , Mean pix : {distMean} [{distsd_}] , {pixMean} [{pixsd_}]")
-        return target_score / len(sentid2ans), block_distance/ len(sentid2ans),tagging_score / len(sentid2ans),meta_score / len(sentid2ans)
+        return target_score / len(sentid2ans), (np.mean(block_distance)/ 0.1524, np.median(block_distance)/ 0.1524,np.std(block_distance)/ 0.1524),(br_score / len(sentid2ans), dist_score/len(sentid2ans)),(meta_score / len(sentid2ans), np.mean(source_distance)/ 0.1524, np.median(source_distance)/ 0.1524,np.std(source_distance)/ 0.1524)
         # return target_score / len(sentid2ans), (distMean,distsd_,pixMean,pixsd_,scenarios,examples),tagging_score / len(sentid2ans),meta_score / len(sentid2ans)

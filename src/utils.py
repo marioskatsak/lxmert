@@ -547,12 +547,12 @@ def load_det_obj_tsv(fname, topk=None):
                 boxes = item['num_boxes']
                 t_boxes = item['t_num_boxes']
                 decode_config = [
-                    ('boxes', (boxes, 4), np.float64),
+                    ('boxes', (t_boxes, 4), np.float64),
                     ('t_boxes', (t_boxes, 4), np.float64),
-                    ('features', (boxes, -1), np.float64),
-                    ('names', (boxes, -1), np.dtype('<U100')),
-                    ('t_names', (t_boxes, -1), np.dtype('<U100')),
-                    ('box_order', (t_boxes), np.float64)
+                    ('features', (t_boxes, -1), np.float64),
+                    ('names', (t_boxes, -1), np.dtype('<U100')),
+                    ('t_names', (t_boxes, -1), np.dtype('<U100'))
+                    # ('box_order', (t_boxes), np.float64)
                 ]
                 # input(decode_config)
                 for key, shape, dtype in decode_config:

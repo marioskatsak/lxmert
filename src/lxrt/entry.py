@@ -136,7 +136,7 @@ class LXRTEncoder(nn.Module):
 
 
         try:
-            _, _, names_features = feats
+            _, _, _, _, _, names_features = feats
         except:
             # print("No name features")
             names_features = None

@@ -85,7 +85,7 @@ class ROSMIModel(nn.Module):
         self.landmark_feed.apply(self.lxrt_encoder.model.init_bert_weights)
 
 
-    def forward(self, feat, feat_mask, pos, names, sent):
+    def forward(self, feat, feat_mask, pos, world_st, eu_dist_ed_co, stacked_ew_ns, names, sent):
         """
         b -- batch_size, o -- object_number, f -- visual_feature_size
 
@@ -96,7 +96,7 @@ class ROSMIModel(nn.Module):
         :param leng: (b,) Type -- int numpy array
         :return: (b, num_answer) The logit of each answers.
         """
-        feat_seq = self.lxrt_encoder(sent, (feat, pos, names),visual_attention_mask = feat_mask)
+        feat_seq = self.lxrt_encoder(sent, (feat, pos, world_st, eu_dist_ed_co, stacked_ew_ns, names),visual_attention_mask = feat_mask)
 
         # 0 = language 1 = vision
         # print(feat_seq[0].shape)

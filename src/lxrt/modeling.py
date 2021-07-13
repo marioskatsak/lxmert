@@ -763,6 +763,18 @@ class VisualFeatEncoder(nn.Module):
         self.box_fc = nn.Linear(pos_dim, config.hidden_size)
         self.box_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
 
+        # World state encoding
+        self.world_fc = nn.Linear(3, config.hidden_size)
+        self.world_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
+
+        # Edgess & corners encoding
+        self.edg_corn_fc = nn.Linear(8, config.hidden_size)
+        self.edg_corn_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
+
+        # Spatial encoding
+        self.spatial_fc = nn.Linear(3, config.hidden_size)
+        self.spatial_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
+
         # # Named Entities encoding
         self.names_fc = nn.Linear(config.hidden_size*2, config.hidden_size)
         self.names_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
@@ -773,7 +785,7 @@ class VisualFeatEncoder(nn.Module):
 
     def forward(self, visn_input, names_input = None):
         try:
-            feats, boxes, _ = visn_input
+            feats, boxes, world_st, eu_dist_ed_co, stacked_ew_ns, _ = visn_input
         except:
             feats, boxes = visn_input
         # print()
@@ -781,6 +793,13 @@ class VisualFeatEncoder(nn.Module):
         x = self.visn_layer_norm(x)
         y = self.box_fc(boxes)
         y = self.box_layer_norm(y)
+        wrld = self.world_fc(world_st)
+        wrld = self.world_layer_norm(wrld)
+        ed_co = self.edg_corn_fc(eu_dist_ed_co)
+        ed_co = self.edg_corn_layer_norm(ed_co)
+        stacked = self.spatial_fc(stacked_ew_ns)
+        stacked = self.spatial_layer_norm(stacked)
+
         if names_input is not None:
             z = names_input
 
@@ -802,6 +821,10 @@ class VisualFeatEncoder(nn.Module):
         else:
             output = (x + y) / 2
             # output = y
+            # output = x
+            # output = wrld
+            # output = ( wrld + ed_co) / 2
+            # output = ( wrld + stacked) / 2
         # input(output.shape)
         output = self.dropout(output)
 
@@ -1656,7 +1679,10 @@ class LXRTFeatureExtraction(BertPreTrainedModel):
 
         self.mode = mode
         self.apply(self.init_bert_weights)
-
+# (input_ids, segment_ids, input_mask,
+#                     visual_feats=feats,
+#                     visual_attention_mask=visual_attention_mask,
+#                     names_feat = names_features)
     def forward(self, input_ids, token_type_ids=None, attention_mask=None, visual_feats=None,
                 visual_attention_mask=None, names_feat=None):
         feat_seq, pooled_output, lang_out = self.bert(input_ids, token_type_ids, attention_mask,

@@ -137,14 +137,14 @@ class ROSMI:
         # self.writer.add_graph(self.model,loader)
         # self.writer.close()
         best_valid = 0.
-        best_train = 0.
-        best_acc2 = 0.
-        best_acc3 = 0
-        best_mDist = 99999
+        best_train = [0,0,0,0]
+        best_acc2 = [0,0,0,0]
+        best_acc3 = [0,0,0,0]
+        best_mDist = [9999,9999,9999,9999]
         n_iter = 0
         for epoch in tqdm(range(args.epochs)):
             sentid2ans = {}
-            for i, (sent_id, feats, feat_mask, boxes, names, sent, dists, diste, land_, cland_, bear_ ,l_start,l_end, target) in iter_wrapper(enumerate(loader)):
+            for i, (sent_id, feats, feat_mask, boxes, names, sent, dists, diste, land_, cland_, bear_ , world_st, eu_dist_ed_co, stacked_ew_ns, l_start,l_end, target) in iter_wrapper(enumerate(loader)):
 
                 total_loss = 0
 
@@ -162,9 +162,9 @@ class ROSMI:
                 else:
                     names = None
 
-                feats, feat_mask, boxes, target, dists, diste, land_, cland_, bear_, l_start, l_end = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda(), dists.cuda(), diste.cuda(), \
-                                                                                land_.cuda(), cland_.cuda(), bear_.cuda(), l_start.cuda(), l_end.cuda()
-                logit, auxilaries = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
+                feats, feat_mask, boxes, target, dists, diste, land_, cland_, bear_, l_start, l_end, world_st, eu_dist_ed_co, stacked_ew_ns = feats.cuda(), feat_mask.cuda(), boxes.cuda(), target.cuda(), dists.cuda(), diste.cuda(), \
+                                                                                land_.cuda(), cland_.cuda(), bear_.cuda(), l_start.cuda(), l_end.cuda(), world_st.cuda(), eu_dist_ed_co.cuda(), stacked_ew_ns.cuda()
+                logit, auxilaries = self.model(feats.float(), feat_mask.float(), boxes.float(), world_st, eu_dist_ed_co, stacked_ew_ns.float(), names, sent)
                 # print(names.shape)
                 # input(sent.shape)
                 # print(type(sent))
@@ -183,7 +183,7 @@ class ROSMI:
 
                 target_loss = self.mse_loss(logit, target)
                 self.writer.add_scalar('distance loss', target_loss, n_iter)
-                total_loss += target_loss*logit.size(1)*10
+                total_loss += target_loss*logit.size(1)
                 # print(logit.size(1))
                 # print(target)
                 # total_loss += iou_loss(logit, target)
@@ -198,7 +198,7 @@ class ROSMI:
                 bear_loss = self.bce_loss(p_bear,bear_.float())
                 self.writer.add_scalar('Bearing loss', bear_loss, n_iter)
 
-                total_loss += bear_loss* p_bear.size(1)*3
+                total_loss += bear_loss* p_bear.size(1)
                 #
                 # dists_loss = self.bce_loss(p_dist_s,dists.float())
                 # self.writer.add_scalar('distance Start loss', dists_loss, n_iter)
@@ -223,7 +223,7 @@ class ROSMI:
                 cland_loss = self.bce_loss(p_cland,cland_)
 
                 self.writer.add_scalar('Cls Landmark loss', cland_loss, n_iter)
-                total_loss += cland_loss* p_cland.size(1)
+                total_loss += cland_loss* p_cland.size(1)*4
 
 
                 # total_loss /=4
@@ -287,34 +287,37 @@ class ROSMI:
             # self.scheduler.step(loss)
             log_str = f"\nEpoch {epoch}: Total Loss {total_loss}\n"
             tmp_acc, mDist, acc2, train_acc3 = evaluator.evaluate(sentid2ans)
-            log_str += f"\nEpoch {epoch}: Train {train_acc3 * 100.}%\n"
-            log_str += f"\nEpoch {epoch}: Train dist {mDist}\n"
+            log_str += f"\nEpoch {epoch}: Train {train_acc3[0] * 100.}%\n"
+            log_str += f"\nEpoch {epoch}: Train dist {mDist[0]}\n"
             # log_str += f"\nEpoch {epoch}: Training Av. Distance {mDist}m\n"
-            self.writer.add_scalar('Accuracy/train [IoU=0.5]', train_acc3 * 100., n_iter)
+            self.writer.add_scalar('Accuracy/train [IoU=0.5]', train_acc3[0] * 100., n_iter)
             # awlf.writer.close()
 
             if self.valid_tuple is not None:  # Do Validation
-                valid_score, m_dist, acc2, acc3 = self.evaluate(eval_tuple)
+                valid_score, m_dist, br_error_dist, acc3 = self.evaluate(eval_tuple)
                 if valid_score > best_valid:
                     best_valid = valid_score
                     # self.save(f"BEST_{args.abla}")
-                if train_acc3 > best_train:
+                if train_acc3[0] > best_train[0]:
                     best_train = train_acc3
-                if acc2 > best_acc2:
-                    best_acc2 = acc2
-                if acc3 > best_acc3:
+                if br_error_dist[0] > best_acc2[0]:
+                    best_acc2 = br_error_dist
+                if acc3[0] > best_acc3[0]:
                     best_acc3 = acc3
                     self.save(f"BEST_{args.train}_{args.abla}")
-                if m_dist < best_mDist:
+                if m_dist[0] < best_mDist[0]:
                     best_mDist = m_dist
                 # if m_dist[0] < best_mDist[0]:
                 #     best_mDist = m_dist
 
                 self.writer.add_scalar('Accuracy/valid [IoU=0.5]', valid_score * 100., n_iter)
                 # awlf.writer.close()
-                log_str +=  f"Epoch {epoch}: Best Train {best_train * 100.}%\n" + \
-                           f"Epoch {epoch}: Best Val3 {best_acc3 * 100.}%\n" + \
-                           f"Epoch {epoch}: Best dist {best_mDist}\n"
+                log_str +=  f"Epoch {epoch}: Best Train {best_train[0] * 100.}%\n" + \
+                           f"Epoch {epoch}: Best Source acc: {best_acc3[0] * 100.}%\n" + \
+                           f"Epoch {epoch}: Best dist (mean/median/std): {best_acc3[1]} / {best_acc3[2]} / {best_acc3[3]}%\n" + \
+                           f"Epoch {epoch}: Best Bearing acc: {best_acc2[0] * 100.}%\n" + \
+                           f"Epoch {epoch}: Best dist error: {best_acc2[1]}%\n" + \
+                           f"Epoch {epoch}: Best dist (mean/median/std): {best_mDist[0]} / {best_mDist[1]} / {best_mDist[2]} \n"
 
             # if self.test_tuple is not None:  # Do Test
             #     _, test_dist, _, _, test_acc = self.evaluate(self.test_tuple)
@@ -348,7 +351,8 @@ class ROSMI:
         dset, loader, evaluator = eval_tuple
         sentid2ans = {}
         for i, datum_tuple in enumerate(loader):
-            ques_id, feats, feat_mask, boxes, names, sent, g_ds, g_de, land_,cland_, bear_ = datum_tuple[:11]   # Avoid seeing ground truth
+            # sent_id, feats, feat_mask, boxes, _names, sent,dists, diste,landmark, landmark_id_, bearing, world_st, eu_dist_ed_co, stacked_ew_ns,
+            ques_id, feats, feat_mask, boxes, names, sent, g_ds, g_de, land_,cland_, bear_, world_st, eu_dist_ed_co, stacked_ew_ns = datum_tuple[:14]   # Avoid seeing ground truth
 
 
             # input(text_names)
@@ -362,8 +366,8 @@ class ROSMI:
                                   names[2].squeeze(2).cuda())
                 else:
                     names = None
-                feats, feat_mask, boxes = feats.cuda(),feat_mask.cuda(), boxes.cuda()
-                label, aux  = self.model(feats.float(), feat_mask.float(), boxes.float(), names, sent)
+                feats, feat_mask, boxes, world_st, eu_dist_ed_co, stacked_ew_ns = feats.cuda(),feat_mask.cuda(), boxes.cuda(), world_st.cuda(), eu_dist_ed_co.cuda(), stacked_ew_ns.cuda()
+                label, aux  = self.model(feats.float(), feat_mask.float(), boxes.float(), world_st, eu_dist_ed_co, stacked_ew_ns.float(), names, sent)
                 dist_s, dist_e, lnd,clnd, brng, land_start, land_end = aux
                 # print(brng.shape)
                 # input(label.shape)
@@ -473,8 +477,7 @@ class ROSMI:
     def oracle_score(data_tuple):
         dset, loader, evaluator = data_tuple
         sentid2ans = {}
-
-        for i, (ques_id, feats, feat_mask, boxes, names, sent,dists,diste,land_,cland_, bear_,land_s,land_e, target) in enumerate(loader):
+        for i, (ques_id, feats, feat_mask, boxes, names, sent,dists,diste,land_,cland_, bear_, world_st, eu_dist_ed_co, stacked_ew_ns,land_s,land_e, target) in enumerate(loader):
             # input(target)
             label = target
             for qid,diss,dise, ln,cln, br,l_s,l_e, l in zip(ques_id,dists.cpu().detach().numpy(), \
@@ -495,7 +498,7 @@ class ROSMI:
                 br = dset.label2bearing[br]
                 sentid2ans[qid] = (l, diss,dise, ln,cln, br,l_s,l_e)
         valid_score, m_dist, acc2, acc3 = evaluator.evaluate(sentid2ans)
-        return acc3, m_dist
+        return acc2, acc3, m_dist
 
     def save(self, name, k = ''):
         torch.save(self.model.state_dict(),
@@ -567,7 +570,7 @@ def run_experiment():
     #     )
     if rosmi.valid_tuple is not None:
         print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
-        tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
+        acc2, tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
         # Since part of valididation data are used in pre-training/fine-tuning,
         # only validate on the minival set.
         valid_score, m_dist, acc2, acc3 = rosmi.evaluate(
@@ -582,14 +585,22 @@ def run_experiment():
         print('Splits in Train data:', rosmi.train_tuple.dataset.splits)
         if rosmi.valid_tuple is not None:
             print('Splits in Valid data:', rosmi.valid_tuple.dataset.splits)
-            tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
+            acc2, tmpA, dis = rosmi.oracle_score(rosmi.valid_tuple)
             # input("All val good?")
 
-            print("Valid Oracle: %0.2f" % (tmpA * 100))
-            tmpA, dis = rosmi.oracle_score(rosmi.train_tuple)
+            # print("Valid Oracle: %0.2f" % (tmpA * 100))
+            print("--------------------Oracle Valid scores---------------")
+            print( f"Best Source acc: {tmpA[0] * 100.}%\n" + \
+                    f"Best dist (mean/median/std): {tmpA[1]} / {tmpA[2]} / {tmpA[3]}\n" + \
+                    f"Best Bearing acc: {acc2[0] * 100.}%\n" + \
+                    f"Best dist error: {acc2[1]}\n" + \
+                    f"Best dist (mean/median/std): {dis[0]} / {dis[1]} / {dis[2]} \n")
 
 
-            print("Train Oracle: %0.2f" % (tmpA * 100))
+            # acc2, tmpA, dis = rosmi.oracle_score(rosmi.train_tuple)
+
+
+            # print("Train Oracle: %0.2f" % (tmpA[0] * 100))
         else:
             print("DO NOT USE VALIDATION")
         best_tacc, best_mDist = rosmi.train(rosmi.train_tuple, rosmi.valid_tuple)

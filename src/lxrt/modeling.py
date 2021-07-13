@@ -819,10 +819,10 @@ class VisualFeatEncoder(nn.Module):
             output = z
             # output = (x + y + z) / 3
         else:
-            output = (x + y) / 2
-            # output = y
+            # output = (x + y) / 2
             # output = x
-            # output = wrld
+            # output = x
+            output = wrld
             # output = ( wrld + ed_co) / 2
             # output = ( wrld + stacked) / 2
         # input(output.shape)

@@ -13,7 +13,7 @@ CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$PYTHONPATH:./src \
     --train train --valid test \
     --llayers 1 --xlayers 1 --rlayers 1 \
     --dataPath /scratch/mmk11/data/bboxes_output/images/random \
-    --batchSize 64 --optim bert --lr 1e-3 --epochs 100 --abla blocks \
+    --batchSize 32 --optim bert --lr 1e-3 --epochs 100 --abla blocks \
     --tqdm --output $output ${@:3}
   # CUDA_VISIBLE_DEVICES=3 PYTHONPATH=$PYTHONPATH:./src \
   #     python src/tasks/rosmi.py \

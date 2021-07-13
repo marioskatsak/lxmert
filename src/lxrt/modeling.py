@@ -822,8 +822,8 @@ class VisualFeatEncoder(nn.Module):
             # output = (x + y) / 2
             # output = x
             # output = x
-            output = wrld
-            # output = ( wrld + ed_co) / 2
+            # output = wrld
+            output = ( wrld + ed_co) / 2
             # output = ( wrld + stacked) / 2
         # input(output.shape)
         output = self.dropout(output)
